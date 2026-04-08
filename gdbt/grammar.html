@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comparative Grammar — DBT Gaua Languages</title>
+<link rel="stylesheet" href="style.css">
+<style>
+/* ── Grammar page ── */
+.grammar-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  min-height: calc(100vh - 52px - 80px);
+}
+
+/* Sidebar TOC */
+.toc-sidebar {
+  background: #faf6ef;
+  border-right: 1px solid var(--border);
+  padding: 1.6rem 1rem 2rem;
+  position: sticky;
+  top: 52px;
+  height: calc(100vh - 52px);
+  overflow-y: auto;
+}
+.toc-sidebar h2 {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-light);
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+.toc-list { list-style: none; }
+.toc-list li { line-height: 1.5; }
+.toc-list > li { margin-bottom: 0.5rem; }
+.toc-list > li > a {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ink-mid);
+  text-decoration: none;
+  display: block;
+  padding: 2px 6px;
+  border-radius: 3px;
+  transition: background 0.15s, color 0.15s;
+}
+.toc-list > li > a:hover,
+.toc-list > li > a.active {
+  background: #ede4d4;
+  color: var(--ink);
+}
+.toc-sub { list-style: none; padding-left: 0.9rem; margin-top: 2px; }
+.toc-sub li a {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.85rem;
+  color: var(--ink-light);
+  text-decoration: none;
+  display: block;
+  padding: 1px 6px;
+  border-radius: 3px;
+  transition: background 0.15s, color 0.15s;
+}
+.toc-sub li a:hover { background: #ede4d4; color: var(--ink); }
+
+/* Main content */
+.gram-main {
+  padding: 2.5rem 3.5rem 5rem;
+  max-width: 860px;
+}
+
+/* Chapter header */
+.chap-header {
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 1.2rem;
+  margin-bottom: 2rem;
+}
+.chap-header h1 {
+  font-family: 'EB Garamond', serif;
+  font-size: 2rem;
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.2;
+}
+.chap-header .author {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.92rem;
+  color: var(--ink-light);
+  margin-top: 0.4rem;
+}
+.chap-header .author a { color: var(--gold); text-decoration: none; }
+
+/* Sections */
+.gram-section {
+  margin-bottom: 3.5rem;
+  scroll-margin-top: 68px;
+}
+.gram-section h2 {
+  font-family: 'EB Garamond', serif;
+  font-size: 1.55rem;
+  font-weight: 500;
+  color: var(--ink);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.3rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+.gram-section h3 {
+  font-family: 'EB Garamond', serif;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--ink);
+  margin: 2rem 0 0.6rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+.gram-section h3[id], .gram-section h2[id] { scroll-margin-top: 68px; }
+.totop {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.75rem;
+  color: var(--ink-light);
+  text-decoration: none;
+  margin-left: auto;
+  letter-spacing: 0.05em;
+  border: none !important;
+}
+.totop:hover { color: var(--gold); }
+
+/* Body text */
+.gram-section p {
+  font-family: 'Crimson Pro', serif;
+  font-size: 1.07rem;
+  line-height: 1.82;
+  color: var(--ink-mid);
+  margin-bottom: 1rem;
+  max-width: 72ch;
+}
+.gram-section p em, .gram-section p i { font-style: italic; }
+.gram-section p strong { color: var(--ink); font-weight: 600; }
+.gram-section a.lexlink {
+  color: var(--gold);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--gold-lt);
+  transition: color 0.15s, border-color 0.15s;
+}
+.gram-section a.lexlink:hover { color: #b84c10; border-color: #b84c10; }
+
+/* Tables */
+.gram-table {
+  border-collapse: collapse;
+  margin: 0.8rem 0 1.8rem;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  font-size: 0.95rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,.05);
+}
+.gram-table caption {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.85rem;
+  color: var(--ink-light);
+  text-align: left;
+  padding: 0 0 6px;
+  caption-side: top;
+  font-style: italic;
+}
+.gram-table th {
+  background: #2a1810;
+  color: #e0cdb5;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 8px 16px;
+  text-align: left;
+}
+.gram-table td {
+  padding: 7px 16px;
+  font-family: 'Source Code Pro', monospace;
+  font-size: 0.88rem;
+  color: var(--ink);
+  border-bottom: 1px solid var(--border-lt);
+}
+.gram-table td:first-child {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.92rem;
+  color: var(--ink-mid);
+  font-style: italic;
+}
+.gram-table tr:last-child td { border-bottom: none; }
+.gram-table tr:hover td { background: #faf5ee; }
+
+/* Interlinear examples */
+.example {
+  background: var(--bg-card);
+  border-left: 3px solid var(--gold);
+  border-radius: 0 5px 5px 0;
+  padding: 0.9rem 1.4rem 0.9rem 1.2rem;
+  margin: 0.4rem 0 1.8rem 2rem;
+  display: inline-block;
+  min-width: 240px;
+  box-shadow: 0 1px 5px rgba(80,40,0,.06);
+  scroll-margin-top: 72px;
+}
+.ex-num {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.82rem;
+  color: var(--ink-light);
+  margin-bottom: 3px;
+  display: inline-block;
+}
+.ex-lang {
+  margin-left: 8px;
+  vertical-align: middle;
+}
+.gloss-table {
+  border-collapse: collapse;
+  margin: 6px 0 4px;
+}
+.gloss-table tr:first-child td {
+  padding: 2px 16px 2px 0;
+  vertical-align: bottom;
+}
+.gloss-table tr:first-child td a {
+  font-family: 'EB Garamond', serif;
+  font-size: 1.2rem;
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1.5px dotted var(--gold);
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+.gloss-table tr:first-child td a:hover { color: #b84c10; border-color: #b84c10; }
+.gloss-row td {
+  padding: 0 16px 0 0;
+  font-family: 'Source Code Pro', monospace;
+  font-size: 0.72rem;
+  color: var(--ink-light);
+  letter-spacing: 0.03em;
+  vertical-align: top;
+  white-space: nowrap;
+}
+.ex-transl {
+  font-family: 'Crimson Pro', serif;
+  font-style: italic;
+  font-size: 1.05rem;
+  color: var(--ink-mid);
+  margin-top: 6px;
+}
+.ex-source {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 0.68rem;
+  color: #c0a880;
+  margin-top: 3px;
+  letter-spacing: 0.03em;
+}
+
+/* Footnotes */
+.footnotes {
+  border-top: 1px solid var(--border);
+  margin-top: 3rem;
+  padding-top: 1.2rem;
+}
+.footnotes h3 {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-light);
+  margin-bottom: 0.8rem;
+}
+.footnotes ol {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.92rem;
+  color: var(--ink-mid);
+  line-height: 1.65;
+  padding-left: 1.4rem;
+}
+.footnotes ol li { margin-bottom: 0.4rem; }
+sup a {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 0.65rem;
+  color: var(--gold);
+  text-decoration: none;
+}
+
+/* Abbrev table */
+.abbrev-table { font-size: 0.88rem; }
+.abbrev-table td:first-child {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 0.78rem;
+  color: var(--ink);
+  min-width: 70px;
+}
+
+/* breadcrumb */
+.breadcrumb {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.82rem;
+  color: var(--ink-light);
+  margin-bottom: 1.5rem;
+}
+.breadcrumb a { color: var(--gold); text-decoration: none; }
+.breadcrumb a:hover { text-decoration: underline; }
+</style>
+</head>
+<body id="top">
+
+<nav class="topnav">
+  <a class="topnav-brand" href="index.html">◬ DBT Gaua</a>
+  <ul>
+    <li><a href="index.html">Home</a></li>
+    <li><a href="grammar.html" class="active">Grammar</a></li>
+    <li><a href="texts.html">Texts</a></li>
+    <li><a href="dictionary.html">Dictionary</a></li>
+  </ul>
+  <div class="topnav-right">Gaua · Banks Islands · Vanuatu</div>
+</nav>
+
+<div class="grammar-layout">
+  <!-- TOC Sidebar -->
+  <aside class="toc-sidebar">
+    <h2>Contents</h2>
+    <ul class="toc-list" id="toc"></ul>
+    <hr style="border:none;border-top:1px solid var(--border);margin:1.2rem 0;">
+    <div style="font-family:'Crimson Pro',serif;font-size:0.8rem;color:var(--ink-light);line-height:1.6;">
+      <strong style="color:var(--ink-mid);display:block;margin-bottom:4px;">Morpheme links</strong>
+      Every word in a glossed example links to its dictionary entry.
+    </div>
+    <hr style="border:none;border-top:1px solid var(--border);margin:1.2rem 0;">
+    <div style="font-family:'Crimson Pro',serif;font-size:0.8rem;color:var(--ink-light);">
+      <strong style="color:var(--ink-mid);display:block;margin-bottom:6px;">Languages</strong>
+      <span class="chip" style="background:#2e5c8a;margin:2px 2px 2px 0;">Nume</span>
+      <span class="chip" style="background:#c07820;margin:2px 2px 2px 0;">Dorig</span>
+      <span class="chip" style="background:#922810;margin:2px 2px 2px 0;">Koro</span>
+      <span class="chip" style="background:#267040;margin:2px 2px 2px 0;">Olrat</span>
+      <span class="chip" style="background:#5c2878;margin:2px 2px 2px 0;">Lakon</span>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="gram-main">
+    <div class="breadcrumb">
+      <a href="index.html">DBT Gaua</a> &rsaquo; Comparative Grammar
+    </div>
+    <div class="chap-header">
+      <h1>Comparative Grammar of the Gaua Languages</h1>
+      <div class="author">
+        <a href="https://lacito.cnrs.fr" target="_blank">Alexandre François</a>
+        &nbsp;·&nbsp; LACITO, CNRS / The Australian National University
+      </div>
+    </div>
+
+    <!-- Sections injected by JS -->
+    <div id="grammar-body"></div>
+
+    <!-- Abbreviations -->
+    <section class="gram-section" id="abbrev">
+      <h2>Abbreviations <a href="#top" class="totop">↑ top</a></h2>
+      <table class="gram-table abbrev-table">
+        <thead><tr><th>Abbreviation</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td>1SG</td><td>first person singular</td></tr>
+          <tr><td>2SG</td><td>second person singular</td></tr>
+          <tr><td>3SG</td><td>third person singular</td></tr>
+          <tr><td>COMPL</td><td>completive aspect</td></tr>
+          <tr><td>DEM</td><td>demonstrative</td></tr>
+          <tr><td>NEG</td><td>negation particle</td></tr>
+          <tr><td>n.</td><td>noun</td></tr>
+          <tr><td>v.tr.</td><td>transitive verb</td></tr>
+          <tr><td>v.intr.</td><td>intransitive verb</td></tr>
+          <tr><td>v.stat.</td><td>stative verb</td></tr>
+          <tr><td>det.</td><td>determiner</td></tr>
+          <tr><td>part.</td><td>particle</td></tr>
+          <tr><td>pro.</td><td>pronoun</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Footnotes -->
+    <div class="footnotes">
+      <h3>Notes</h3>
+      <ol>
+        <li id="fn1">On the typology of clusivity in Oceanic languages see Lichtenberk (1985) and François (2016).</li>
+        <li id="fn2">The term "Boasian Trilogy" is discussed in Woodbury (2011) and Himmelmann (2012).</li>
+      </ol>
+    </div>
+  </main>
+</div>
+
+<footer>
+  LACITO &nbsp;/&nbsp; Pangloss Collection &nbsp;·&nbsp; CNRS &nbsp;·&nbsp;
+  Documentation: Alexandre François &nbsp;·&nbsp;
+  Gaua Island, Banks Islands, Vanuatu &nbsp;·&nbsp;
+  <a href="https://pangloss.cnrs.fr" target="_blank">pangloss.cnrs.fr</a>
+</footer>
+
+<script src="data.js"></script>
+<script>
+// Build TOC
+const toc = document.getElementById('toc');
+GRAMMAR.forEach(sec => {
+  const li = document.createElement('li');
+  const a = document.createElement('a');
+  a.href = '#' + sec.id;
+  a.textContent = sec.num + '. ' + sec.title;
+  li.appendChild(a);
+  if (sec.subsections && sec.subsections.length) {
+    const ul = document.createElement('ul');
+    ul.className = 'toc-sub';
+    sec.subsections.forEach(sub => {
+      const sli = document.createElement('li');
+      const sa = document.createElement('a');
+      sa.href = '#' + sub.id;
+      sa.textContent = sub.num + ' ' + sub.title;
+      sli.appendChild(sa);
+      ul.appendChild(sli);
+    });
+    li.appendChild(ul);
+  }
+  toc.appendChild(li);
+});
+// Abbrev link
+const abli = document.createElement('li');
+abli.innerHTML = '<a href="#abbrev">Abbreviations</a>';
+toc.appendChild(abli);
+
+// Build sections
+const body = document.getElementById('grammar-body');
+GRAMMAR.forEach(sec => {
+  const section = document.createElement('section');
+  section.className = 'gram-section';
+  section.id = sec.id;
+  section.innerHTML = `
+    <h2>${sec.num}. ${sec.title} <a href="#top" class="totop">↑ top</a></h2>
+    ${sec.body}
+  `;
+  body.appendChild(section);
+});
+
+// Highlight active TOC link on scroll
+const allSections = document.querySelectorAll('.gram-section');
+const tocLinks    = document.querySelectorAll('.toc-list a');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      tocLinks.forEach(a => {
+        a.classList.toggle('active', a.getAttribute('href') === '#'+e.target.id);
+      });
+    }
+  });
+}, { rootMargin:'-20% 0px -70% 0px' });
+allSections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

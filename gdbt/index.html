@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Digital Boasian Trilogy — Gaua Languages</title>
+<link rel="stylesheet" href="style.css">
+<style>
+/* ── Homepage-specific ── */
+.hero {
+  display: grid;
+  grid-template-columns: 1fr 440px;
+  gap: 3.5rem;
+  align-items: center;
+  padding: 4rem 5vw 4rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.hero-text h1 {
+  font-family: 'EB Garamond', serif;
+  font-size: 3rem;
+  font-weight: 500;
+  line-height: 1.12;
+  color: var(--ink);
+  margin-bottom: 0.5rem;
+}
+.hero-text .byline {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.82rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-light);
+  margin-bottom: 1.5rem;
+}
+.hero-text p {
+  font-family: 'Crimson Pro', serif;
+  font-size: 1.08rem;
+  line-height: 1.82;
+  color: var(--ink-mid);
+  max-width: 54ch;
+}
+.hero-triangle { display: flex; justify-content: center; align-items: center; }
+
+/* ── Triangle SVG nodes ── */
+.tri-node { cursor: pointer; transition: opacity 0.2s; }
+.tri-node:hover { opacity: 0.88; }
+
+/* ── Cards strip ── */
+.cards-strip {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 1.5rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 5vw 3rem;
+}
+.dbt-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1.6rem 1.8rem;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.dbt-card:hover {
+  box-shadow: 0 6px 20px rgba(80,40,0,.1);
+  transform: translateY(-2px);
+}
+.dbt-card .card-icon {
+  font-size: 1.8rem;
+  margin-bottom: 0.7rem;
+  display: block;
+}
+.dbt-card h3 {
+  font-family: 'EB Garamond', serif;
+  font-size: 1.4rem;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 0.5rem;
+}
+.dbt-card p {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.97rem;
+  line-height: 1.7;
+  color: var(--ink-mid);
+  margin-bottom: 1.2rem;
+}
+.btn-link {
+  display: inline-block;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--gold);
+  text-decoration: none;
+  border-bottom: 1.5px solid var(--gold-lt);
+  padding-bottom: 1px;
+  transition: color 0.15s, border-color 0.15s;
+}
+.btn-link:hover { color: #b84c10; border-color: #b84c10; }
+
+/* ── Lang strip ── */
+.lang-strip {
+  background: var(--nav-bg);
+  display: flex;
+  border-top: 1px solid #3a2010;
+}
+.lang-cell {
+  flex: 1;
+  padding: 1.3rem 1rem;
+  text-align: center;
+  border-right: 1px solid #3a2010;
+  transition: background 0.2s;
+}
+.lang-cell:last-child { border-right: none; }
+.lang-cell:hover { background: #281408; }
+.lang-cell .lname {
+  font-family: 'EB Garamond', serif;
+  font-size: 1.3rem;
+  font-weight: 500;
+  display: block;
+  color: #f0dfc0;
+}
+.lang-cell .lpos {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #7a6040;
+  display: block;
+  margin-top: 2px;
+}
+.lang-cell .ldot {
+  display: inline-block;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  margin-bottom: 6px;
+}
+
+/* ── Divider ── */
+.divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 0 5vw;
+}
+</style>
+</head>
+<body id="top">
+
+<!-- Navbar -->
+<nav class="topnav">
+  <a class="topnav-brand" href="index.html">◬ DBT Gaua</a>
+  <ul>
+    <li><a href="index.html" class="active">Home</a></li>
+    <li><a href="grammar.html">Grammar</a></li>
+    <li><a href="texts.html">Texts</a></li>
+    <li><a href="dictionary.html">Dictionary</a></li>
+  </ul>
+  <div class="topnav-right">Gaua Island · Banks Islands · Vanuatu</div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-text">
+    <h1>Digital Boasian<br>Trilogy</h1>
+    <div class="byline">Gaua Languages &nbsp;·&nbsp; Oceanic · Austronesian &nbsp;·&nbsp; Vanuatu</div>
+    <p>Named after the American anthropologist <strong>Franz Boas</strong>, the <em>Boasian Trilogy</em>
+    holds that a comprehensive language documentation should comprise three main components:
+    a <strong>grammar</strong>, a <strong>dictionary</strong>, and a <strong>corpus of texts</strong>.
+    Rather than producing three separate outputs, this project reconceives the trilogy as an
+    interactive, persistently interconnected resource — one in which every grammatical claim is
+    traceable to its textual evidence, every lexical item is linked to its morphosyntactic
+    properties, and every archived text is navigable through the grammatical and lexical
+    apparatus that describes it.</p>
+    <p style="margin-top:1rem;">The five languages documented here —
+    <strong>Nume, Dorig, Koro, Olrat</strong>, and <strong>Lakon</strong> — are spoken on
+    Gaua Island (Banks Islands, Vanuatu), distributed from east to west.</p>
+  </div>
+
+  <!-- SVG Triangle -->
+  <div class="hero-triangle">
+    <svg viewBox="0 0 400 360" width="400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The Boasian Trilogy triangle linking Grammar, Dictionary, and Texts">
+      <defs>
+        <marker id="arr" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+          <path d="M0,0 L7,3.5 L0,7 Z" fill="#c9a458" opacity="0.7"/>
+        </marker>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+          <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+
+      <!-- Edges -->
+      <line x1="200" y1="68" x2="68" y2="290" stroke="#c9a458" stroke-width="1.5" opacity="0.5"
+            marker-end="url(#arr)" marker-start="url(#arr)"/>
+      <line x1="200" y1="68" x2="332" y2="290" stroke="#c9a458" stroke-width="1.5" opacity="0.5"
+            marker-end="url(#arr)" marker-start="url(#arr)"/>
+      <line x1="82"  y1="302" x2="318" y2="302" stroke="#c9a458" stroke-width="1.5" opacity="0.5"
+            marker-end="url(#arr)" marker-start="url(#arr)"/>
+
+      <!-- Edge labels -->
+      <text font-family="'Crimson Pro',serif" font-style="italic" font-size="11" fill="#9a7840" text-anchor="middle" transform="rotate(-57,135,182)">
+        <textPath href="#e1">morphosyntactic properties</textPath>
+      </text>
+      <defs>
+        <path id="e1" d="M 68,290 L 200,68"/>
+        <path id="e2" d="M 200,68 L 332,290"/>
+        <path id="e3" d="M 80,310 L 320,310"/>
+      </defs>
+      <text font-family="'Crimson Pro',serif" font-style="italic" font-size="11" fill="#9a7840">
+        <textPath href="#e2" startOffset="50%" text-anchor="middle">textual evidence</textPath>
+      </text>
+      <text font-family="'Crimson Pro',serif" font-style="italic" font-size="11" fill="#9a7840">
+        <textPath href="#e3" startOffset="50%" text-anchor="middle">lexical apparatus</textPath>
+      </text>
+
+      <!-- Grammar node (top) -->
+      <a href="grammar.html" class="tri-node">
+        <circle cx="200" cy="58" r="56" fill="#1c0f06" filter="url(#glow)"/>
+        <circle cx="200" cy="58" r="56" fill="none" stroke="#8a5f18" stroke-width="1.5"/>
+        <text x="200" y="52" text-anchor="middle"
+              font-family="'EB Garamond',serif" font-size="19" font-weight="500" fill="#f0dfc0">Grammar</text>
+        <text x="200" y="71" text-anchor="middle"
+              font-family="'Crimson Pro',serif" font-size="11" fill="#c9a458" font-style="italic">comparative</text>
+      </a>
+
+      <!-- Dictionary node (bottom-left) -->
+      <a href="dictionary.html" class="tri-node">
+        <circle cx="60" cy="302" r="56" fill="#1a0828" filter="url(#glow)"/>
+        <circle cx="60" cy="302" r="56" fill="none" stroke="#8a5f18" stroke-width="1.5"/>
+        <text x="60" y="296" text-anchor="middle"
+              font-family="'EB Garamond',serif" font-size="19" font-weight="500" fill="#f0dfc0">Dict-</text>
+        <text x="60" y="315" text-anchor="middle"
+              font-family="'EB Garamond',serif" font-size="19" font-weight="500" fill="#f0dfc0">ionary</text>
+      </a>
+
+      <!-- Texts node (bottom-right) -->
+      <a href="texts.html" class="tri-node">
+        <circle cx="340" cy="302" r="56" fill="#3a0808" filter="url(#glow)"/>
+        <circle cx="340" cy="302" r="56" fill="none" stroke="#8a5f18" stroke-width="1.5"/>
+        <text x="340" y="296" text-anchor="middle"
+              font-family="'EB Garamond',serif" font-size="19" font-weight="500" fill="#f0dfc0">Texts</text>
+        <text x="340" y="315" text-anchor="middle"
+              font-family="'Crimson Pro',serif" font-size="11" fill="#c9a458" font-style="italic">Pangloss archive</text>
+      </a>
+
+      <!-- Centre label -->
+      <text x="200" y="192" text-anchor="middle"
+            font-family="'EB Garamond',serif" font-size="11" fill="#c9a458" font-style="italic" opacity="0.6">
+        Digital Boasian Trilogy
+      </text>
+    </svg>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- Cards strip -->
+<section class="cards-strip" style="margin-top:2.5rem;">
+  <div class="dbt-card" style="border-top:3px solid #1c0f06;">
+    <span class="card-icon">📐</span>
+    <h3>Comparative Grammar</h3>
+    <p>A systematic comparative description of grammatical structures across all five Gaua languages.
+    Every claim is illustrated with interlinear glossed examples; every morpheme links to the dictionary.</p>
+    <a class="btn-link" href="grammar.html">Open Grammar →</a>
+  </div>
+  <div class="dbt-card" style="border-top:3px solid #3a0808;">
+    <span class="card-icon">📚</span>
+    <h3>Archived Texts</h3>
+    <p>A curated index of natural language texts — myths, procedural texts, narratives, and ritual speech —
+    each linking directly to its archived item in the LACITO Pangloss Collection.</p>
+    <a class="btn-link" href="texts.html">Open Texts →</a>
+  </div>
+  <div class="dbt-card" style="border-top:3px solid #1a0828;">
+    <span class="card-icon">📖</span>
+    <h3>Dictionary</h3>
+    <p>A comparative lexicon giving each form across all five languages, with part of speech, semantic gloss,
+    usage notes, and bidirectional links to the glossed grammatical examples.</p>
+    <a class="btn-link" href="dictionary.html">Open Dictionary →</a>
+  </div>
+</section>
+
+<!-- Language strip -->
+<div class="lang-strip">
+  <div class="lang-cell">
+    <span class="ldot" style="background:#2e5c8a;"></span>
+    <span class="lname">Nume</span>
+    <span class="lpos">Eastern</span>
+  </div>
+  <div class="lang-cell">
+    <span class="ldot" style="background:#c07820;"></span>
+    <span class="lname">Dorig</span>
+    <span class="lpos">East-central</span>
+  </div>
+  <div class="lang-cell">
+    <span class="ldot" style="background:#922810;"></span>
+    <span class="lname">Koro</span>
+    <span class="lpos">Central</span>
+  </div>
+  <div class="lang-cell">
+    <span class="ldot" style="background:#267040;"></span>
+    <span class="lname">Olrat</span>
+    <span class="lpos">West-central</span>
+  </div>
+  <div class="lang-cell">
+    <span class="ldot" style="background:#5c2878;"></span>
+    <span class="lname">Lakon</span>
+    <span class="lpos">Western</span>
+  </div>
+</div>
+
+<footer>
+  LACITO &nbsp;/&nbsp; Pangloss Collection &nbsp;·&nbsp; CNRS &nbsp;·&nbsp;
+  Documentation: Alexandre François &nbsp;·&nbsp;
+  Gaua Island, Banks Islands, Vanuatu &nbsp;·&nbsp;
+  <a href="https://pangloss.cnrs.fr" target="_blank">pangloss.cnrs.fr</a>
+</footer>
+</body>
+</html>
