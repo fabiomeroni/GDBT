@@ -1,0 +1,163 @@
+/* ============================================================
+   Digital Boasian Trilogy — Gaua Languages
+   Shared stylesheet
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,600&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Source+Code+Pro:ital,wght@0,400;0,500;1,400&display=swap');
+
+/* ── Variables ── */
+:root {
+  --ink:       #1a1108;
+  --ink-mid:   #3d2f1e;
+  --ink-light: #7a6a55;
+  --bg:        #f7f2ea;
+  --bg-card:   #fffdf8;
+  --gold:      #8a5f18;
+  --gold-lt:   #c9a458;
+  --border:    #ddd0bb;
+  --border-lt: #ede4d4;
+  --nav-bg:    #1c0f06;
+  --nav-text:  #e8d9c0;
+  --font-serif: 'EB Garamond', 'Palatino Linotype', Georgia, serif;
+  --font-body:  'Crimson Pro', 'Palatino Linotype', Georgia, serif;
+  --font-mono:  'Source Code Pro', 'Courier New', monospace;
+}
+
+/* ── Reset / Base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--gold); }
+a:hover { color: #b84c10; }
+
+/* ── Top navbar ── */
+.topnav {
+  background: var(--nav-bg);
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center;
+  padding: 0 1.8rem;
+  height: 52px;
+  border-bottom: 1.5px solid #3a2010;
+}
+.topnav-brand {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: #f0dfc0;
+  text-decoration: none;
+  letter-spacing: 0.01em;
+  margin-right: 2.5rem;
+  white-space: nowrap;
+}
+.topnav-brand:hover { color: #fff; }
+.topnav ul {
+  list-style: none;
+  display: flex;
+  gap: 0;
+  align-items: center;
+  height: 100%;
+}
+.topnav ul li a {
+  display: block;
+  padding: 0 1rem;
+  height: 52px;
+  line-height: 52px;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.95rem;
+  color: var(--nav-text);
+  text-decoration: none;
+  border-bottom: 2.5px solid transparent;
+  transition: border-color 0.15s, color 0.15s;
+}
+.topnav ul li a:hover,
+.topnav ul li a.active {
+  color: #fff;
+  border-bottom-color: var(--gold-lt);
+}
+.topnav-right {
+  margin-left: auto;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.78rem;
+  color: #9a8060;
+  letter-spacing: 0.04em;
+}
+
+/* ── Language chips ── */
+.chip {
+  display: inline-block;
+  padding: 1px 9px 2px;
+  border-radius: 2px;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: white;
+  vertical-align: middle;
+}
+
+/* ── Page header banner ── */
+.page-header {
+  background: var(--nav-bg);
+  padding: 2.2rem 2rem 1.6rem;
+  border-bottom: 2px solid var(--gold);
+}
+.page-header h1 {
+  font-family: var(--font-serif);
+  font-size: 2.1rem;
+  font-weight: 500;
+  color: #f0dfc0;
+  line-height: 1.2;
+}
+.page-header .sub {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.85rem;
+  color: #9a8060;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: 0.3rem;
+}
+
+/* ── Two-column layout ── */
+.layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 0;
+  min-height: calc(100vh - 52px);
+}
+.sidebar {
+  background: #faf6ef;
+  border-right: 1px solid var(--border);
+  padding: 1.5rem 1rem;
+  position: sticky;
+  top: 52px;
+  height: calc(100vh - 52px);
+  overflow-y: auto;
+}
+.main-content {
+  padding: 2rem 3rem 4rem;
+  max-width: 820px;
+}
+
+/* ── Footer ── */
+footer {
+  background: var(--nav-bg);
+  color: #6a5540;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.82rem;
+  padding: 1.2rem 2rem;
+  text-align: center;
+  letter-spacing: 0.03em;
+  border-top: 1px solid #3a2010;
+}
+footer a { color: #9a8060; }
+
+/* ── Utilities ── */
+.sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); }
