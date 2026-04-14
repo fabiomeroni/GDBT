@@ -185,49 +185,75 @@
         </marker>
         <filter id="glow">
           <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-          <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          <feMerge>
+            <feMergeNode in="coloredBlur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
         </filter>
       </defs>
-
+    
       <!-- Edges -->
       <line x1="200" y1="68" x2="68" y2="290" stroke="#c9a458" stroke-width="1.5" opacity="0.5"
             marker-end="url(#arr)" marker-start="url(#arr)"/>
       <line x1="200" y1="68" x2="332" y2="290" stroke="#c9a458" stroke-width="1.5" opacity="0.5"
             marker-end="url(#arr)" marker-start="url(#arr)"/>
-      <line x1="82"  y1="302" x2="318" y2="302" stroke="#c9a458" stroke-width="1.5" opacity="0.5"
+      <line x1="82" y1="302" x2="318" y2="302" stroke="#c9a458" stroke-width="1.5" opacity="0.5"
             marker-end="url(#arr)" marker-start="url(#arr)"/>
-
-
-
-      <!-- Grammar node (top) -->
+    
+      <!-- Grammar node -->
       <a href="grammar.html" class="tri-node">
         <circle cx="200" cy="58" r="56" fill="#1c0f06" filter="url(#glow)"/>
         <circle cx="200" cy="58" r="56" fill="none" stroke="#8a5f18" stroke-width="1.5"/>
-        <text x="200" y="52" text-anchor="middle"
-              font-family="'EB Garamond',serif" font-size="19" font-weight="500" fill="#f0dfc0">Grammar</text>
-        
+        <text x="200" y="58"
+              text-anchor="middle"
+              dominant-baseline="middle"
+              font-family="'EB Garamond',serif"
+              font-size="19"
+              font-weight="500"
+              fill="#f0dfc0">
+          Grammar
+        </text>
       </a>
-
-      <!-- Dictionary node (bottom-left) -->
+    
+      <!-- Dictionary node -->
       <a href="dictionary.html" class="tri-node">
         <circle cx="60" cy="302" r="56" fill="#1a0828" filter="url(#glow)"/>
         <circle cx="60" cy="302" r="56" fill="none" stroke="#8a5f18" stroke-width="1.5"/>
-        <text x="60" y="307" text-anchor="middle"
-              font-family="'EB Garamond',serif" font-size="15" font-weight="500" fill="#f0dfc0">Dictionary</text>
+        <text x="60" y="302"
+              text-anchor="middle"
+              dominant-baseline="middle"
+              font-family="'EB Garamond',serif"
+              font-size="15"
+              font-weight="500"
+              fill="#f0dfc0">
+          Dictionary
+        </text>
       </a>
-
-      <!-- Texts node (bottom-right) -->
+    
+      <!-- Texts node -->
       <a href="texts.html" class="tri-node">
         <circle cx="340" cy="302" r="56" fill="#3a0808" filter="url(#glow)"/>
         <circle cx="340" cy="302" r="56" fill="none" stroke="#8a5f18" stroke-width="1.5"/>
-        <text x="340" y="296" text-anchor="middle"
-              font-family="'EB Garamond',serif" font-size="19" font-weight="500" fill="#f0dfc0">Texts</text>
-
+        <text x="340" y="302"
+              text-anchor="middle"
+              dominant-baseline="middle"
+              font-family="'EB Garamond',serif"
+              font-size="19"
+              font-weight="500"
+              fill="#f0dfc0">
+          Texts
+        </text>
       </a>
-
+    
       <!-- Centre label -->
-      <text x="200" y="192" text-anchor="middle"
-            font-family="'EB Garamond',serif" font-size="11" fill="#c9a458" font-style="italic" opacity="0.6">
+      <text x="200" y="192"
+            text-anchor="middle"
+            dominant-baseline="middle"
+            font-family="'EB Garamond',serif"
+            font-size="11"
+            fill="#c9a458"
+            font-style="italic"
+            opacity="0.6">
         Digital Boasian Trilogy
       </text>
     </svg>
