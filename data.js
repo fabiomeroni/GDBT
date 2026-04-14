@@ -470,12 +470,12 @@ family yet consistent across the entire dialect chain.</p>
   <caption>Table 1 — Consonant inventory (shared across all five languages)</caption>
   <thead><tr><th></th><th>Labial</th><th>Alveolar</th><th>Velar</th><th>Uvular</th></tr></thead>
   <tbody>
-    <tr><td>Plain stop</td><td>p</td><td>t</td><td>k</td><td>q</td></tr>
-    <tr><td>Prenasalised</td><td>mb</td><td>nd</td><td>ngg</td><td>—</td></tr>
-    <tr><td>Nasal</td><td>m</td><td>n</td><td>ng</td><td>—</td></tr>
-    <tr><td>Fricative</td><td>v</td><td>s</td><td>—</td><td>—</td></tr>
-    <tr><td>Lateral / Rhotic</td><td>—</td><td>l, r</td><td>—</td><td>—</td></tr>
-    <tr><td>Glide</td><td>w</td><td>—</td><td>—</td><td>—</td></tr>
+    <tr><td>Plain stops</td><td>p</td><td>t</td><td>k</td><td>q</td></tr>
+    <tr><td>Prenasalised stops</td><td>mb</td><td>nd</td><td>ngg</td><td>—</td></tr>
+    <tr><td>Nasals</td><td>m</td><td>n</td><td>ng</td><td>—</td></tr>
+    <tr><td>Fricatives</td><td>v</td><td>s</td><td>—</td><td>—</td></tr>
+    <tr><td>Laterals / Rhotic</td><td>—</td><td>l, r</td><td>—</td><td>—</td></tr>
+    <tr><td>Approximants</td><td>w</td><td>—</td><td>—</td><td>—</td></tr>
   </tbody>
 </table>
 <h3 id="s2-2">2.2 Vowel length <a href="#top" class="totop">↑</a></h3>
