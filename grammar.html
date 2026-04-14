@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Comparative Grammar — DBT Gaua Languages</title>
+<title>Comparative Grammar of Gaua Languages</title>
 <link rel="stylesheet" href="style.css">
 <style>
-/* ── Layout ── */
+/* ── Layout ─────────────────────────────────────────────────── */
 .grammar-layout {
   display: grid;
   grid-template-columns: 220px 1fr;
@@ -44,255 +44,234 @@
   border-radius: 3px;
   transition: background 0.15s, color 0.15s;
 }
-.toc-list > li > a:hover, .toc-list > li > a.active { background:#ede4d4; color:var(--ink); }
-.toc-sub { list-style:none; padding-left:0.9rem; margin-top:2px; }
-.toc-sub li a {
-  font-family:'Crimson Pro',serif; font-size:0.85rem; color:var(--ink-light);
-  text-decoration:none; display:block; padding:1px 6px; border-radius:3px;
-  transition: background 0.15s, color 0.15s;
-}
-.toc-sub li a:hover { background:#ede4d4; color:var(--ink); }
+.toc-list > li > a:hover,
+.toc-list > li > a.active { background: #ede4d4; color: var(--ink); }
 
 .gram-main { padding: 2.5rem 3.5rem 5rem; max-width: 860px; }
 
 .chap-header { border-bottom: 2px solid var(--border); padding-bottom: 1.2rem; margin-bottom: 2rem; }
-.chap-header h1 { font-family:'EB Garamond',serif; font-size:2rem; font-weight:500; color:var(--ink); line-height:1.2; }
-.chap-header .author { font-family:'Crimson Pro',serif; font-size:0.92rem; color:var(--ink-light); margin-top:0.4rem; }
-.chap-header .author a { color:var(--gold); text-decoration:none; }
+.chap-header h1 { font-family: 'EB Garamond', serif; font-size: 2rem; font-weight: 500; color: var(--ink); }
+.chap-header .author { font-family: 'Crimson Pro', serif; font-size: 0.92rem; color: var(--ink-light); margin-top: 0.4rem; }
+.chap-header .author a { color: var(--gold); text-decoration: none; }
 
 .gram-section { margin-bottom: 3.5rem; scroll-margin-top: 68px; }
 .gram-section h2 {
-  font-family:'EB Garamond',serif; font-size:1.55rem; font-weight:500; color:var(--ink);
-  border-bottom:1px solid var(--border); padding-bottom:0.3rem; margin-bottom:1rem;
-  display:flex; align-items:baseline; gap:0.5rem;
+  font-family: 'EB Garamond', serif;
+  font-size: 1.55rem;
+  font-weight: 500;
+  color: var(--ink);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.3rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
 }
-.gram-section h3 {
-  font-family:'EB Garamond',serif; font-size:1.2rem; font-weight:500; color:var(--ink);
-  margin:2rem 0 0.6rem; display:flex; align-items:baseline; gap:0.5rem;
-}
-.gram-section h3[id], .gram-section h2[id] { scroll-margin-top: 68px; }
-.totop { font-family:'Crimson Pro',serif; font-size:0.75rem; color:var(--ink-light); text-decoration:none; margin-left:auto; border:none !important; }
+.totop { font-family: 'Crimson Pro', serif; font-size: 0.75rem; color: var(--ink-light); text-decoration: none; margin-left: auto; border: none !important; }
 .totop:hover { color: var(--gold); }
 
-.gram-section p { font-family:'Crimson Pro',serif; font-size:1.07rem; line-height:1.82; color:var(--ink-mid); margin-bottom:1rem; max-width:72ch; }
-.gram-section p em, .gram-section p i { font-style:italic; }
-.gram-section p strong { color:var(--ink); font-weight:600; }
+.gram-section p {
+  font-family: 'Crimson Pro', serif;
+  font-size: 1.07rem;
+  line-height: 1.82;
+  color: var(--ink-mid);
+  margin-bottom: 1rem;
+  max-width: 72ch;
+}
+.gram-section em, .gram-section i { font-style: italic; }
+.gram-section strong { color: var(--ink); font-weight: 600; }
 .gram-section a.lexlink {
-  color:var(--gold); text-decoration:none; border-bottom:1px dotted var(--gold-lt);
-  transition:color 0.15s, border-color 0.15s; cursor:pointer;
+  color: var(--gold);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--gold-lt);
+  transition: color 0.15s, border-color 0.15s;
 }
-.gram-section a.lexlink:hover { color:#b84c10; border-color:#b84c10; }
+.gram-section a.lexlink:hover { color: #b84c10; border-color: #b84c10; }
 
-/* ── Paradigm tables ── */
+/* ── Paradigm tables ─────────────────────────────────────────── */
 .gram-table {
-  border-collapse:collapse; margin:0.8rem 0 1.8rem; background:white;
-  border:1px solid var(--border); border-radius:4px; overflow:hidden;
-  font-size:0.95rem; box-shadow:0 1px 4px rgba(0,0,0,.05);
+  border-collapse: collapse;
+  margin: 0.8rem 0 1.8rem;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,.05);
 }
-.gram-table caption { font-family:'Crimson Pro',serif; font-size:0.85rem; color:var(--ink-light); text-align:left; padding:0 0 6px; caption-side:top; font-style:italic; }
-.gram-table th { background:#2a1810; color:#e0cdb5; font-family:'Crimson Pro',serif; font-size:0.82rem; font-weight:600; letter-spacing:0.06em; padding:8px 16px; text-align:left; }
-.gram-table td { padding:7px 16px; font-family:'Source Code Pro',monospace; font-size:0.88rem; color:var(--ink); border-bottom:1px solid var(--border-lt); }
-.gram-table td:first-child { font-family:'Crimson Pro',serif; font-size:0.92rem; color:var(--ink-mid); font-style:italic; }
-.gram-table tr:last-child td { border-bottom:none; }
-.gram-table tr:hover td { background:#faf5ee; }
+.gram-table caption { font-family: 'Crimson Pro', serif; font-size: 0.85rem; color: var(--ink-light); text-align: left; padding: 0 0 6px; caption-side: top; font-style: italic; }
+.gram-table th { background: #2a1810; color: #e0cdb5; font-family: 'Crimson Pro', serif; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.06em; padding: 8px 16px; text-align: left; }
+.gram-table td { padding: 7px 16px; font-family: 'Source Code Pro', monospace; font-size: 0.88rem; color: var(--ink); border-bottom: 1px solid var(--border-lt); }
+.gram-table td:first-child { font-family: 'Crimson Pro', serif; font-size: 0.92rem; color: var(--ink-mid); font-style: italic; }
+.gram-table tr:last-child td { border-bottom: none; }
+.gram-table tr:hover td { background: #faf5ee; }
 
-/* ═══════════════════════════════════════════════════════
-   COMPARATIVE GLOSS TABLE
-   Layout mirrors the image:
-     row per language  +  single shared gloss line
-═══════════════════════════════════════════════════════ */
-.ex-wrap {
-  margin: 0.5rem 0 2rem 0;
-  scroll-margin-top: 72px;
+/* ═══════════════════════════════════════════════════════════════
+   INTERACTIVE NEGATION EXAMPLE WIDGET
+═══════════════════════════════════════════════════════════════ */
+.neg-widget {
+  margin: 1.2rem 0 2rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--bg-card);
+  box-shadow: 0 1px 6px rgba(80,40,0,.07);
 }
 
-/* example number + label row */
-.ex-meta {
+/* Top bar with example number + collapse toggle */
+.neg-widget-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 6px;
+  justify-content: space-between;
+  padding: 0.65rem 1.1rem;
+  background: #f4ede0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+  gap: 1rem;
 }
-.ex-num {
+.neg-widget-header:hover { background: #ede4d0; }
+.neg-ex-num {
   font-family: 'Crimson Pro', serif;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: var(--ink-light);
-  min-width: 2rem;
+  flex-shrink: 0;
 }
+.neg-lang-filters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+/* Language toggle pills inside the header */
+.lang-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'Crimson Pro', serif;
+  font-variant: small-caps;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  padding: 2px 9px 3px;
+  border-radius: 3px;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: opacity 0.15s, border-color 0.15s, background 0.15s;
+  color: white;
+}
+.lang-toggle.off {
+  opacity: 0.3;
+  filter: grayscale(0.8);
+}
+.lang-toggle input { display: none; }
 
-/* the table itself */
-.cmp-table {
+/* Collapse chevron */
+.neg-toggle-btn {
+  font-size: 0.78rem;
+  color: var(--ink-light);
+  flex-shrink: 0;
+  transition: transform 0.2s;
+  font-family: 'Crimson Pro', serif;
+}
+.neg-widget.collapsed .neg-toggle-btn { transform: rotate(-90deg); }
+
+/* Body (collapsible) */
+.neg-widget-body {
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  max-height: 800px;
+}
+.neg-widget.collapsed .neg-widget-body { max-height: 0; }
+
+/* The interlinear table */
+.neg-table-wrap { padding: 1rem 1.2rem 0.6rem; overflow-x: auto; }
+.neg-cmp-table {
   border-collapse: collapse;
-  font-size: 1rem;
-  /* no outer border — visual separation comes from the gloss row */
+  font-size: 0.97rem;
+  white-space: nowrap;
 }
 
-/* left-hand language abbreviation cell */
-.cmp-table .lang-abbr {
+/* Language abbr column */
+.neg-cmp-table .lang-abbr {
   font-family: 'Crimson Pro', serif;
   font-variant: small-caps;
   font-size: 0.88rem;
   font-weight: 600;
   letter-spacing: 0.06em;
   color: var(--ink-light);
-  padding: 2px 18px 2px 0;
-  white-space: nowrap;
+  padding: 3px 18px 3px 0;
   vertical-align: baseline;
-  text-align: left;
   border: none;
 }
 
-/* form cells (original language words) */
-.cmp-table .form-cell {
-  padding: 2px 22px 2px 0;
-  vertical-align: baseline;
-  border: none;
-}
-.cmp-table .form-cell a.lexlink {
+/* Form cells */
+.neg-cmp-table .form-cell {
   font-family: 'EB Garamond', serif;
-  font-size: 1.2rem;
+  font-size: 1.18rem;
   color: var(--ink);
-  text-decoration: none;
-  border-bottom: 1.5px dotted var(--gold);
-  border-radius: 2px;
-  padding: 0 2px;
-  transition: color 0.15s, border-color 0.15s, background 0.15s;
-  white-space: nowrap;
-  cursor: pointer;
+  padding: 3px 20px 3px 0;
+  vertical-align: baseline;
+  border: none;
 }
-.cmp-table .form-cell a.lexlink:hover {
-  color: #b84c10;
-  border-bottom-color: #b84c10;
-  background: #fff5e8;
-}
+.neg-cmp-table .form-cell.empty { color: var(--border); }
 
-/* separator row (thin line between last lang row and gloss row) */
-.cmp-table .sep-row td {
+/* Separator + gloss row */
+.neg-cmp-table .sep-row td {
   border-top: 1px solid var(--border);
   padding: 0;
+  height: 0;
   border-bottom: none;
 }
-
-/* gloss line (shared, single) */
-.cmp-table .gloss-abbr {
-  font-family: 'Crimson Pro', serif;
-  font-size: 0.75rem;
-  color: var(--ink-light);
-  padding: 5px 18px 3px 0;
-  vertical-align: baseline;
-  text-align: left;
+.neg-cmp-table .gloss-abbr {
+  padding: 6px 18px 4px 0;
   border: none;
-  /* invisible placeholder for lang-abbr column */
+  vertical-align: baseline;
 }
-.cmp-table .gloss-cell {
+.neg-cmp-table .gloss-cell {
   font-family: 'Source Code Pro', monospace;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   letter-spacing: 0.04em;
   color: var(--ink-light);
-  padding: 5px 22px 3px 0;
+  text-transform: uppercase;
+  padding: 6px 20px 4px 0;
   vertical-align: baseline;
   border: none;
-  white-space: nowrap;
-  text-transform: uppercase;
 }
 
-/* translation line */
-.ex-transl {
+/* Translation + source strip */
+.neg-footer {
+  padding: 0.4rem 1.2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.neg-transl {
   font-family: 'Crimson Pro', serif;
   font-style: italic;
   font-size: 1.05rem;
   color: var(--ink-mid);
-  margin-top: 5px;
-  padding-left: 0;
 }
-
-/* source / text link row */
-.ex-source-row {
+.neg-source-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 8px;
-  padding-top: 7px;
-  border-top: 1px solid var(--border-lt);
   flex-wrap: wrap;
+  border-top: 1px solid var(--border-lt);
+  padding-top: 7px;
 }
-.ex-source-label {
-  font-family: 'Source Code Pro', monospace;
-  font-size: 0.67rem;
-  color: #b8a080;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-.ex-source-link {
-  font-family: 'Crimson Pro', serif;
-  font-size: 0.82rem;
-  color: var(--gold);
-  text-decoration: none;
-  border-bottom: 1px solid var(--gold-lt);
-  transition: color 0.15s;
-}
-.ex-source-link:hover { color:#b84c10; border-bottom-color:#b84c10; }
-.ex-pangloss-link {
-  font-family: 'Crimson Pro', serif;
-  font-size: 0.75rem;
-  color: white;
-  background: #2a4a6a;
-  border-radius: 2px;
-  padding: 1px 8px 2px;
-  text-decoration: none;
-  transition: background 0.15s;
-  white-space: nowrap;
-}
-.ex-pangloss-link:hover { background:#1c3a55; }
+.neg-source-label { font-family: 'Source Code Pro', monospace; font-size: 0.67rem; color: #b8a080; letter-spacing: 0.04em; text-transform: uppercase; }
+.neg-source-link { font-family: 'Crimson Pro', serif; font-size: 0.82rem; color: var(--gold); text-decoration: none; border-bottom: 1px solid var(--gold-lt); }
+.neg-source-link:hover { color: #b84c10; }
+.neg-pangloss-link { font-family: 'Crimson Pro', serif; font-size: 0.75rem; color: white; background: #2a4a6a; border-radius: 2px; padding: 1px 8px 2px; text-decoration: none; }
+.neg-pangloss-link:hover { background: #1c3a55; }
 
-/* ── Floating tooltip ── */
-#lex-tooltip {
-  position: fixed;
-  z-index: 9999;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.1s ease;
-  max-width: 300px;
-}
-#lex-tooltip.visible { opacity: 1; }
-#lex-tooltip .tt-inner {
-  background: #1c0f06;
-  color: #f0dfc0;
-  border-radius: 5px;
-  padding: 9px 14px 10px;
-  box-shadow: 0 4px 18px rgba(0,0,0,.35), 0 0 0 1px rgba(201,164,88,.25);
-  font-family: 'Crimson Pro', serif;
-  font-size: 0.9rem;
-  line-height: 1.5;
-}
-#lex-tooltip .tt-hw  { font-family:'EB Garamond',serif; font-size:1.15rem; font-weight:500; color:#fdeec8; margin-right:6px; }
-#lex-tooltip .tt-pos { font-style:italic; font-size:0.78rem; color:#c9a458; }
-#lex-tooltip .tt-gloss { color:#e8d0a8; margin-top:3px; font-size:0.88rem; }
-
-/* Footnotes */
-.footnotes { border-top:1px solid var(--border); margin-top:3rem; padding-top:1.2rem; }
-.footnotes h3 { font-family:'Crimson Pro',serif; font-size:0.78rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-light); margin-bottom:0.8rem; }
-.footnotes ol { font-family:'Crimson Pro',serif; font-size:0.92rem; color:var(--ink-mid); line-height:1.65; padding-left:1.4rem; }
-.footnotes ol li { margin-bottom:0.4rem; }
-sup a { font-size:0.65rem; color:var(--gold); text-decoration:none; }
-
-/* Abbrev table */
-.abbrev-table td:first-child { font-family:'Source Code Pro',monospace; font-size:0.78rem; color:var(--ink); min-width:70px; }
-
-/* Breadcrumb */
-.breadcrumb { font-family:'Crimson Pro',serif; font-size:0.82rem; color:var(--ink-light); margin-bottom:1.5rem; }
-.breadcrumb a { color:var(--gold); text-decoration:none; }
+/* Abbreviations */
+.abbrev-table td:first-child { font-family: 'Source Code Pro', monospace; font-size: 0.78rem; color: var(--ink); min-width: 80px; }
+.breadcrumb { font-family: 'Crimson Pro', serif; font-size: 0.82rem; color: var(--ink-light); margin-bottom: 1.5rem; }
+.breadcrumb a { color: var(--gold); text-decoration: none; }
 </style>
 </head>
 <body id="top">
-
-<!-- Tooltip -->
-<div id="lex-tooltip" role="tooltip" aria-hidden="true">
-  <div class="tt-inner">
-    <span class="tt-hw" id="tt-hw"></span><span class="tt-pos" id="tt-pos"></span>
-    <div class="tt-gloss" id="tt-gloss"></div>
-  </div>
-</div>
 
 <nav class="topnav">
   <a class="topnav-brand" href="index.html">◬ DBT Gaua</a>
@@ -311,8 +290,9 @@ sup a { font-size:0.65rem; color:var(--gold); text-decoration:none; }
     <ul class="toc-list" id="toc"></ul>
     <hr style="border:none;border-top:1px solid var(--border);margin:1.2rem 0;">
     <div style="font-family:'Crimson Pro',serif;font-size:0.78rem;color:var(--ink-light);line-height:1.65;">
-      <strong style="color:var(--ink-mid);display:block;margin-bottom:4px;">Hover for definition</strong>
-      In glossed examples, hover any word to see its dictionary entry. Click to open the full entry.
+      <strong style="color:var(--ink-mid);display:block;margin-bottom:4px;">Interactive examples</strong>
+      Use the language toggles on each example to show or hide individual languages. Click the header to
+      collapse or expand.
     </div>
     <hr style="border:none;border-top:1px solid var(--border);margin:1.2rem 0;">
     <div style="font-family:'Crimson Pro',serif;font-size:0.78rem;color:var(--ink-light);">
@@ -343,29 +323,20 @@ sup a { font-size:0.65rem; color:var(--gold); text-decoration:none; }
       <table class="gram-table abbrev-table">
         <thead><tr><th>Abbreviation</th><th>Meaning</th></tr></thead>
         <tbody>
-          <tr><td>1SG</td><td>first person singular</td></tr>
-          <tr><td>2SG</td><td>second person singular</td></tr>
-          <tr><td>3SG</td><td>third person singular</td></tr>
-          <tr><td>COMPL</td><td>completive aspect</td></tr>
-          <tr><td>DEM</td><td>demonstrative</td></tr>
-          <tr><td>NEG</td><td>negation particle</td></tr>
+          <tr><td>1INCL.PL</td><td>1st person inclusive plural</td></tr>
+          <tr><td>3PL</td><td>3rd person plural</td></tr>
+          <tr><td>ART</td><td>article</td></tr>
+          <tr><td>NONDUM₁</td><td>pre-verbal negator (lit. 'not yet')</td></tr>
+          <tr><td>NONDUM₂</td><td>post-verbal negator (bound, discontinuous)</td></tr>
+          <tr><td>POSS</td><td>possessive classifier</td></tr>
           <tr><td>n.</td><td>noun</td></tr>
           <tr><td>v.tr.</td><td>transitive verb</td></tr>
           <tr><td>v.intr.</td><td>intransitive verb</td></tr>
-          <tr><td>v.stat.</td><td>stative verb</td></tr>
-          <tr><td>det.</td><td>determiner</td></tr>
           <tr><td>part.</td><td>particle</td></tr>
           <tr><td>pro.</td><td>pronoun</td></tr>
         </tbody>
       </table>
     </section>
-
-    <div class="footnotes">
-      <h3>Notes</h3>
-      <ol>
-        <li id="fn1">On the typology of clusivity in Oceanic languages see Lichtenberk (1985) and François (2016).</li>
-      </ol>
-    </div>
   </main>
 </div>
 
@@ -379,86 +350,8 @@ sup a { font-size:0.65rem; color:var(--gold); text-decoration:none; }
 <script src="data.js"></script>
 <script>
 // ── Lookup maps ───────────────────────────────────────────────
-const DICT_MAP = {};
-DICTIONARY.forEach(e => { DICT_MAP[e.id] = e; });
-
 const TEXT_MAP = {};
 TEXTS.forEach(t => { TEXT_MAP[t.lang + '||' + t.title] = t; });
-
-// ── Comparative gloss table builder ───────────────────────────
-// exData = { cols, rows, translation, textLang, textTitle }
-// exNum  = "(1)" label string
-function buildGlossTable(exData, exNum, exId) {
-  const { cols, rows, translation, textLang, textTitle } = exData;
-
-  // Build morpheme link HTML for one cell
-  // ids = array of dict IDs (e.g. ["no","kan"] for a portmanteau)
-  // form = the surface form string
-  function formCell(ids, form) {
-    // split on = to preserve clitic boundary visually but still linkable
-    // We wrap the whole form in one link per the first id, tooltip shows all
-    const primaryId = ids[0];
-    // build a composite gloss for multi-id cells
-    const compositeGloss = ids.map(id => DICT_MAP[id] ? DICT_MAP[id].gloss : '').filter(Boolean).join(' + ');
-    const href = 'dictionary.html#' + primaryId;
-    const allIds = JSON.stringify(ids);
-    return `<td class="form-cell"><a class="lexlink" href="${href}" data-ids='${allIds}'>${form}</a></td>`;
-  }
-
-  // Separator line (empty cells, full width)
-  const sepCells = '<td></td>' + cols.map(() => '<td></td>').join('');
-
-  // Language rows
-  const langRows = rows.map(row => {
-    const abbr  = LANG_ABBR[row.lang] || row.lang;
-    const color = LANG_COLORS[row.lang] || '#888';
-    const formCells = cols.map((col, i) =>
-      formCell(col.ids, row.forms[i] || '—')
-    ).join('');
-    return `<tr>
-      <td class="lang-abbr" style="color:${color};">${abbr}</td>
-      ${formCells}
-    </tr>`;
-  }).join('');
-
-  // Gloss row
-  const glossCells = cols.map(col =>
-    `<td class="gloss-cell">${col.gl}</td>`
-  ).join('');
-
-  // Source row
-  const textRecord = TEXT_MAP[textLang + '||' + textTitle];
-  const textsHref  = 'texts.html#' + textSlug(textLang, textTitle);
-  const panglossHref = textRecord ? textRecord.url : 'https://pangloss.cnrs.fr';
-  const langColor  = LANG_COLORS[textLang] || '#888';
-
-  const sourceRow = `<div class="ex-source-row">
-    <span class="ex-source-label">Source</span>
-    <a class="ex-source-link" href="${textsHref}">
-      <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${langColor};margin-right:5px;vertical-align:middle;"></span>${textTitle} <span style="opacity:.55">(${textLang})</span>
-    </a>
-    <a class="ex-pangloss-link" href="${panglossHref}" target="_blank">Pangloss ↗</a>
-  </div>`;
-
-  const wrap = document.createElement('div');
-  wrap.className = 'ex-wrap';
-  if (exId) wrap.id = exId;
-  wrap.innerHTML = `
-    <div class="ex-meta">
-      <span class="ex-num">${exNum}</span>
-    </div>
-    <table class="cmp-table">
-      ${langRows}
-      <tr class="sep-row">${sepCells}</tr>
-      <tr>
-        <td class="gloss-abbr"></td>
-        ${glossCells}
-      </tr>
-    </table>
-    <div class="ex-transl">'${translation}'</div>
-    ${sourceRow}`;
-  return wrap;
-}
 
 // ── Build TOC ─────────────────────────────────────────────────
 const toc = document.getElementById('toc');
@@ -468,28 +361,149 @@ GRAMMAR.forEach(sec => {
   a.href = '#' + sec.id;
   a.textContent = sec.num + '. ' + sec.title;
   li.appendChild(a);
-  if (sec.subsections && sec.subsections.length) {
-    const ul = document.createElement('ul');
-    ul.className = 'toc-sub';
-    sec.subsections.forEach(sub => {
-      const sli = document.createElement('li');
-      const sa  = document.createElement('a');
-      sa.href = '#' + sub.id;
-      sa.textContent = sub.num + ' ' + sub.title;
-      sli.appendChild(sa);
-      ul.appendChild(sli);
-    });
-    li.appendChild(ul);
-  }
   toc.appendChild(li);
 });
 const abLi = document.createElement('li');
 abLi.innerHTML = '<a href="#abbrev">Abbreviations</a>';
 toc.appendChild(abLi);
 
-// ── Render grammar sections ───────────────────────────────────
+// ── Build the interactive negation widget ────────────────────
+function buildNegationWidget() {
+  const ex = NEGATION_EXAMPLE;
+
+  // Visible langs state
+  const visible = new Set(ex.rows.map(r => r.lang));
+
+  // Source lookup
+  const textRec  = TEXT_MAP[ex.textLang + '||' + ex.textTitle];
+  const textsHref = 'texts.html#' + textSlug(ex.textLang, ex.textTitle);
+  const pangHref  = textRec ? textRec.url : 'https://pangloss.cnrs.fr';
+  const langColor = LANG_COLORS[ex.textLang] || '#888';
+
+  // Outer widget shell
+  const widget = document.createElement('div');
+  widget.className = 'neg-widget';
+
+  // ── Header bar ──────────────────────────────────────────────
+  const header = document.createElement('div');
+  header.className = 'neg-widget-header';
+
+  const numSpan = document.createElement('span');
+  numSpan.className = 'neg-ex-num';
+  numSpan.textContent = '(1)';
+
+  const filtersDiv = document.createElement('div');
+  filtersDiv.className = 'neg-lang-filters';
+
+  // One toggle pill per language
+  ex.rows.forEach(row => {
+    const color  = LANG_COLORS[row.lang] || '#888';
+    const pill   = document.createElement('label');
+    pill.className = 'lang-toggle';
+    pill.style.background   = color;
+    pill.style.borderColor  = color;
+    pill.title = row.lang;
+
+    const cb = document.createElement('input');
+    cb.type    = 'checkbox';
+    cb.checked = true;
+    cb.addEventListener('change', () => {
+      if (cb.checked) visible.add(row.lang);
+      else            visible.delete(row.lang);
+      pill.classList.toggle('off', !cb.checked);
+      renderTable();
+    });
+
+    pill.appendChild(cb);
+    pill.appendChild(document.createTextNode(row.abbr));
+    filtersDiv.appendChild(pill);
+  });
+
+  const chevron = document.createElement('span');
+  chevron.className = 'neg-toggle-btn';
+  chevron.textContent = '▾ collapse';
+
+  header.appendChild(numSpan);
+  header.appendChild(filtersDiv);
+  header.appendChild(chevron);
+
+  // Toggle collapse on header click (but not on pill clicks)
+  header.addEventListener('click', e => {
+    if (e.target.closest('.lang-toggle')) return;
+    widget.classList.toggle('collapsed');
+    chevron.textContent = widget.classList.contains('collapsed') ? '▸ expand' : '▾ collapse';
+  });
+
+  // ── Body ────────────────────────────────────────────────────
+  const body = document.createElement('div');
+  body.className = 'neg-widget-body';
+
+  const tableWrap = document.createElement('div');
+  tableWrap.className = 'neg-table-wrap';
+
+  const table = document.createElement('table');
+  table.className = 'neg-cmp-table';
+  tableWrap.appendChild(table);
+
+  // Footer (translation + source — always visible)
+  const footer = document.createElement('div');
+  footer.className = 'neg-footer';
+  footer.innerHTML = `
+    <div class="neg-transl">${ex.translation}</div>
+    <div class="neg-source-row">
+      <span class="neg-source-label">Source</span>
+      <a class="neg-source-link" href="${textsHref}">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${langColor};margin-right:5px;vertical-align:middle;"></span>${ex.textTitle} <span style="opacity:.55">(${ex.textLang})</span>
+      </a>
+      <a class="neg-pangloss-link" href="${pangHref}" target="_blank">Pangloss ↗</a>
+    </div>`;
+
+  body.appendChild(tableWrap);
+  body.appendChild(footer);
+
+  widget.appendChild(header);
+  widget.appendChild(body);
+
+  // ── Table renderer (called on filter change) ─────────────────
+  function renderTable() {
+    table.innerHTML = '';
+    const cols = ex.cols;
+    const sepCells = '<td></td>' + cols.map(() => '<td></td>').join('');
+
+    // Language rows
+    ex.rows.forEach(row => {
+      if (!visible.has(row.lang)) return;
+      const color = LANG_COLORS[row.lang] || '#888';
+      const tr    = document.createElement('tr');
+      tr.innerHTML =
+        `<td class="lang-abbr" style="color:${color};">${row.abbr}</td>` +
+        cols.map((col, i) => {
+          const f = row.forms[i] ?? '';
+          return `<td class="form-cell${f === '' ? ' empty' : ''}">${f === '' ? '—' : f}</td>`;
+        }).join('');
+      table.appendChild(tr);
+    });
+
+    // Separator
+    const sep = document.createElement('tr');
+    sep.className = 'sep-row';
+    sep.innerHTML = sepCells;
+    table.appendChild(sep);
+
+    // Gloss row
+    const glossTr = document.createElement('tr');
+    glossTr.innerHTML =
+      `<td class="gloss-abbr"></td>` +
+      cols.map(col => `<td class="gloss-cell">${col.gl}</td>`).join('');
+    table.appendChild(glossTr);
+  }
+
+  renderTable();
+  return widget;
+}
+
+// ── Render sections ───────────────────────────────────────────
 const gramBody = document.getElementById('grammar-body');
-let exCounter  = 0;
 
 GRAMMAR.forEach(sec => {
   const section = document.createElement('section');
@@ -497,96 +511,19 @@ GRAMMAR.forEach(sec => {
   section.id = sec.id;
   section.innerHTML = `<h2>${sec.num}. ${sec.title} <a href="#top" class="totop">↑ top</a></h2>${sec.body}`;
 
-  // Replace <gloss id="exN"/> placeholders with built tables
-  section.querySelectorAll('gloss').forEach(placeholder => {
-    const exId  = placeholder.getAttribute('id');
-    const exData = GRAMMAR_EXAMPLES[exId];
-    if (!exData) { placeholder.remove(); return; }
-    exCounter++;
-    const table = buildGlossTable(exData, '(' + exCounter + ')', exId);
-    placeholder.replaceWith(table);
-  });
+  // Replace <negation-example> placeholder
+  const placeholder = section.querySelector('negation-example');
+  if (placeholder) {
+    placeholder.replaceWith(buildNegationWidget());
+  }
 
   gramBody.appendChild(section);
-});
-
-// ── Tooltip engine ────────────────────────────────────────────
-const tooltip = document.getElementById('lex-tooltip');
-const ttHw    = document.getElementById('tt-hw');
-const ttPos   = document.getElementById('tt-pos');
-const ttGloss = document.getElementById('tt-gloss');
-let hideTimer = null;
-
-function getTooltipEntry(link) {
-  let ids;
-  try { ids = JSON.parse(link.dataset.ids || '[]'); } catch(e) { ids = []; }
-  if (!ids.length) {
-    const href = link.getAttribute('href') || '';
-    ids = [href.split('#')[1]].filter(Boolean);
-  }
-  // Prefer the first id that has a dict entry; show combined gloss for portmanteau
-  const entries = ids.map(id => DICT_MAP[id]).filter(Boolean);
-  if (!entries.length) return null;
-  if (entries.length === 1) return entries[0];
-  // Multiple morphemes fused: show combined hw and gloss
-  return {
-    hw:    entries.map(e => e.hw).join('='),
-    pos:   entries.map(e => e.pos).join(' + '),
-    gloss: entries.map(e => e.gloss).join(' + '),
-  };
-}
-
-function positionTooltip(el) {
-  const rect = el.getBoundingClientRect();
-  const gap  = 10;
-  const tw   = 300;
-  let left   = rect.left + rect.width / 2 - 20;
-  if (left + tw > window.innerWidth - 8) left = window.innerWidth - tw - 8;
-  if (left < 8) left = 8;
-  const top  = rect.top - 10; // will be adjusted after measuring
-  tooltip.style.left = left + 'px';
-  // Position above; flip below if too close to top
-  const ttH = tooltip.offsetHeight || 70;
-  tooltip.style.top = (rect.top - ttH - gap < 8)
-    ? (rect.bottom + gap) + 'px'
-    : (rect.top - ttH - gap) + 'px';
-}
-
-document.addEventListener('mouseover', e => {
-  const link = e.target.closest('a.lexlink');
-  if (!link) return;
-  const entry = getTooltipEntry(link);
-  if (!entry) return;
-  clearTimeout(hideTimer);
-  ttHw.textContent    = entry.hw;
-  ttPos.textContent   = '  ' + entry.pos;
-  ttGloss.textContent = entry.gloss;
-  tooltip.classList.add('visible');
-  positionTooltip(link);
-});
-document.addEventListener('mouseout', e => {
-  if (e.target.closest('a.lexlink'))
-    hideTimer = setTimeout(() => tooltip.classList.remove('visible'), 80);
-});
-document.addEventListener('mousemove', e => {
-  if (!tooltip.classList.contains('visible')) return;
-  const link = e.target.closest('a.lexlink');
-  if (link) positionTooltip(link);
 });
 
 // ── TOC active on scroll ──────────────────────────────────────
 const allSections = document.querySelectorAll('.gram-section');
 const tocLinks    = document.querySelectorAll('.toc-list a');
-new IntersectionObserver(entries => {
-  entries.forEach(e => {
-    if (e.isIntersecting) {
-      tocLinks.forEach(a =>
-        a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id)
-      );
-    }
-  });
-}, { rootMargin: '-20% 0px -70% 0px' }).observe
-&& allSections.forEach(s =>
+allSections.forEach(s => {
   new IntersectionObserver(entries => {
     entries.forEach(e => {
       if (e.isIntersecting)
@@ -594,8 +531,8 @@ new IntersectionObserver(entries => {
           a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id)
         );
     });
-  }, { rootMargin: '-20% 0px -70% 0px' }).observe(s)
-);
+  }, { rootMargin: '-20% 0px -70% 0px' }).observe(s);
+});
 </script>
 </body>
 </html>
