@@ -3,10 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Comparative Grammar of Gaua Languages</title>
+<title>Comparative Grammar — DBT Gaua Languages</title>
 <link rel="stylesheet" href="style.css">
 <style>
-/* ── Layout ─────────────────────────────────────────────────── */
 .grammar-layout {
   display: grid;
   grid-template-columns: 220px 1fr;
@@ -16,39 +15,27 @@
   background: #faf6ef;
   border-right: 1px solid var(--border);
   padding: 1.6rem 1rem 2rem;
-  position: sticky;
-  top: 52px;
+  position: sticky; top: 52px;
   height: calc(100vh - 52px);
   overflow-y: auto;
 }
 .toc-sidebar h2 {
   font-family: 'Crimson Pro', serif;
-  font-size: 0.7rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-light);
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border);
+  font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-light); margin-bottom: 1rem;
+  padding-bottom: 0.5rem; border-bottom: 1px solid var(--border);
 }
 .toc-list { list-style: none; }
 .toc-list > li { margin-bottom: 0.5rem; }
 .toc-list > li > a {
-  font-family: 'Crimson Pro', serif;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--ink-mid);
-  text-decoration: none;
-  display: block;
-  padding: 2px 6px;
-  border-radius: 3px;
+  font-family: 'Crimson Pro', serif; font-size: 0.95rem; font-weight: 600;
+  color: var(--ink-mid); text-decoration: none; display: block;
+  padding: 2px 6px; border-radius: 3px;
   transition: background 0.15s, color 0.15s;
 }
-.toc-list > li > a:hover,
-.toc-list > li > a.active { background: #ede4d4; color: var(--ink); }
+.toc-list > li > a:hover, .toc-list > li > a.active { background: #ede4d4; color: var(--ink); }
 
 .gram-main { padding: 2.5rem 3.5rem 5rem; max-width: 860px; }
-
 .chap-header { border-bottom: 2px solid var(--border); padding-bottom: 1.2rem; margin-bottom: 2rem; }
 .chap-header h1 { font-family: 'EB Garamond', serif; font-size: 2rem; font-weight: 500; color: var(--ink); }
 .chap-header .author { font-family: 'Crimson Pro', serif; font-size: 0.92rem; color: var(--ink-light); margin-top: 0.4rem; }
@@ -56,46 +43,28 @@
 
 .gram-section { margin-bottom: 3.5rem; scroll-margin-top: 68px; }
 .gram-section h2 {
-  font-family: 'EB Garamond', serif;
-  font-size: 1.55rem;
-  font-weight: 500;
-  color: var(--ink);
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 0.3rem;
-  margin-bottom: 1rem;
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
+  font-family: 'EB Garamond', serif; font-size: 1.55rem; font-weight: 500; color: var(--ink);
+  border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; margin-bottom: 1rem;
+  display: flex; align-items: baseline; gap: 0.5rem;
 }
 .totop { font-family: 'Crimson Pro', serif; font-size: 0.75rem; color: var(--ink-light); text-decoration: none; margin-left: auto; border: none !important; }
 .totop:hover { color: var(--gold); }
-
 .gram-section p {
-  font-family: 'Crimson Pro', serif;
-  font-size: 1.07rem;
-  line-height: 1.82;
-  color: var(--ink-mid);
-  margin-bottom: 1rem;
-  max-width: 72ch;
+  font-family: 'Crimson Pro', serif; font-size: 1.07rem; line-height: 1.82;
+  color: var(--ink-mid); margin-bottom: 1rem; max-width: 72ch;
 }
-.gram-section em, .gram-section i { font-style: italic; }
-.gram-section strong { color: var(--ink); font-weight: 600; }
+.gram-section p strong { color: var(--ink); font-weight: 600; }
+.gram-section p em { font-style: italic; }
 .gram-section a.lexlink {
-  color: var(--gold);
-  text-decoration: none;
-  border-bottom: 1px dotted var(--gold-lt);
+  color: var(--gold); text-decoration: none; border-bottom: 1px dotted var(--gold-lt);
   transition: color 0.15s, border-color 0.15s;
 }
 .gram-section a.lexlink:hover { color: #b84c10; border-color: #b84c10; }
 
-/* ── Paradigm tables ─────────────────────────────────────────── */
+/* ── Abbreviations table ── */
 .gram-table {
-  border-collapse: collapse;
-  margin: 0.8rem 0 1.8rem;
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  overflow: hidden;
+  border-collapse: collapse; margin: 0.8rem 0 1.8rem; background: white;
+  border: 1px solid var(--border); border-radius: 4px; overflow: hidden;
   box-shadow: 0 1px 4px rgba(0,0,0,.05);
 }
 .gram-table caption { font-family: 'Crimson Pro', serif; font-size: 0.85rem; color: var(--ink-light); text-align: left; padding: 0 0 6px; caption-side: top; font-style: italic; }
@@ -105,9 +74,9 @@
 .gram-table tr:last-child td { border-bottom: none; }
 .gram-table tr:hover td { background: #faf5ee; }
 
-/* ═══════════════════════════════════════════════════════════════
-   INTERACTIVE NEGATION EXAMPLE WIDGET
-═══════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════
+   INTERACTIVE NEGATION WIDGET
+═══════════════════════════════════════════════════════════ */
 .neg-widget {
   margin: 1.2rem 0 2rem;
   border: 1px solid var(--border);
@@ -116,162 +85,107 @@
   background: var(--bg-card);
   box-shadow: 0 1px 6px rgba(80,40,0,.07);
 }
-
-/* Top bar with example number + collapse toggle */
 .neg-widget-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.65rem 1.1rem;
-  background: #f4ede0;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.65rem 1.1rem; background: #f4ede0;
   border-bottom: 1px solid var(--border);
-  cursor: pointer;
-  user-select: none;
-  gap: 1rem;
+  cursor: pointer; user-select: none; gap: 1rem;
 }
 .neg-widget-header:hover { background: #ede4d0; }
-.neg-ex-num {
-  font-family: 'Crimson Pro', serif;
-  font-size: 0.9rem;
-  color: var(--ink-light);
-  flex-shrink: 0;
-}
-.neg-lang-filters {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  flex: 1;
-}
-/* Language toggle pills inside the header */
+.neg-ex-num { font-family: 'Crimson Pro', serif; font-size: 0.9rem; color: var(--ink-light); flex-shrink: 0; }
+.neg-lang-filters { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
 .lang-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-family: 'Crimson Pro', serif;
-  font-variant: small-caps;
-  font-size: 0.82rem;
-  font-weight: 600;
-  letter-spacing: 0.07em;
-  padding: 2px 9px 3px;
-  border-radius: 3px;
-  border: 1.5px solid transparent;
-  cursor: pointer;
-  transition: opacity 0.15s, border-color 0.15s, background 0.15s;
-  color: white;
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: 'Crimson Pro', serif; font-variant: small-caps;
+  font-size: 0.82rem; font-weight: 600; letter-spacing: 0.07em;
+  padding: 2px 9px 3px; border-radius: 3px; border: 1.5px solid transparent;
+  cursor: pointer; transition: opacity 0.15s, filter 0.15s; color: white;
 }
-.lang-toggle.off {
-  opacity: 0.3;
-  filter: grayscale(0.8);
-}
+.lang-toggle.off { opacity: 0.3; filter: grayscale(0.8); }
 .lang-toggle input { display: none; }
+.neg-toggle-btn { font-size: 0.78rem; color: var(--ink-light); flex-shrink: 0; font-family: 'Crimson Pro', serif; }
+.neg-widget.collapsed .neg-toggle-btn::before { content: "▸ expand"; }
+.neg-widget:not(.collapsed) .neg-toggle-btn::before { content: "▾ collapse"; }
 
-/* Collapse chevron */
-.neg-toggle-btn {
-  font-size: 0.78rem;
-  color: var(--ink-light);
-  flex-shrink: 0;
-  transition: transform 0.2s;
-  font-family: 'Crimson Pro', serif;
-}
-.neg-widget.collapsed .neg-toggle-btn { transform: rotate(-90deg); }
-
-/* Body (collapsible) */
-.neg-widget-body {
-  overflow: hidden;
-  transition: max-height 0.3s ease;
-  max-height: 800px;
-}
+.neg-widget-body { overflow: hidden; transition: max-height 0.3s ease; max-height: 900px; }
 .neg-widget.collapsed .neg-widget-body { max-height: 0; }
 
-/* The interlinear table */
-.neg-table-wrap { padding: 1rem 1.2rem 0.6rem; overflow-x: auto; }
-.neg-cmp-table {
-  border-collapse: collapse;
-  font-size: 0.97rem;
-  white-space: nowrap;
-}
+.neg-table-wrap { padding: 1rem 1.2rem 0.4rem; overflow-x: auto; }
 
-/* Language abbr column */
+/* Comparative table */
+.neg-cmp-table { border-collapse: collapse; font-size: 0.97rem; white-space: nowrap; }
 .neg-cmp-table .lang-abbr {
-  font-family: 'Crimson Pro', serif;
-  font-variant: small-caps;
-  font-size: 0.88rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  color: var(--ink-light);
-  padding: 3px 18px 3px 0;
-  vertical-align: baseline;
-  border: none;
+  font-family: 'Crimson Pro', serif; font-variant: small-caps;
+  font-size: 0.88rem; font-weight: 600; letter-spacing: 0.06em; color: var(--ink-light);
+  padding: 3px 18px 3px 0; vertical-align: baseline; border: none;
 }
-
-/* Form cells */
 .neg-cmp-table .form-cell {
-  font-family: 'EB Garamond', serif;
-  font-size: 1.18rem;
-  color: var(--ink);
-  padding: 3px 20px 3px 0;
-  vertical-align: baseline;
-  border: none;
+  padding: 3px 22px 3px 0; vertical-align: baseline; border: none;
 }
-.neg-cmp-table .form-cell.empty { color: var(--border); }
-
-/* Separator + gloss row */
-.neg-cmp-table .sep-row td {
-  border-top: 1px solid var(--border);
-  padding: 0;
-  height: 0;
-  border-bottom: none;
+/* Forms are now <a> lexlinks */
+.neg-cmp-table .form-cell a.lexlink {
+  font-family: 'EB Garamond', serif; font-size: 1.2rem; color: var(--ink);
+  text-decoration: none; border-bottom: 1.5px dotted var(--gold);
+  border-radius: 2px; padding: 0 2px; white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  cursor: pointer;
 }
-.neg-cmp-table .gloss-abbr {
-  padding: 6px 18px 4px 0;
-  border: none;
-  vertical-align: baseline;
+.neg-cmp-table .form-cell a.lexlink:hover {
+  color: #b84c10; border-bottom-color: #b84c10; background: #fff5e8;
 }
+/* Empty cell (—) — no link */
+.neg-cmp-table .form-cell.empty {
+  font-family: 'EB Garamond', serif; font-size: 1.2rem; color: #ccc;
+}
+.neg-cmp-table .sep-row td { border-top: 1px solid var(--border); padding: 0; height: 0; border-bottom: none; }
+.neg-cmp-table .gloss-abbr { padding: 6px 18px 4px 0; border: none; vertical-align: baseline; }
 .neg-cmp-table .gloss-cell {
-  font-family: 'Source Code Pro', monospace;
-  font-size: 0.68rem;
-  letter-spacing: 0.04em;
-  color: var(--ink-light);
-  text-transform: uppercase;
-  padding: 6px 20px 4px 0;
-  vertical-align: baseline;
-  border: none;
+  font-family: 'Source Code Pro', monospace; font-size: 0.68rem;
+  letter-spacing: 0.04em; color: var(--ink-light); text-transform: uppercase;
+  padding: 6px 22px 4px 0; vertical-align: baseline; border: none; white-space: nowrap;
 }
+/* Highlight gloss cell when its column is hovered */
+.neg-cmp-table .gloss-cell.col-hover { color: var(--gold); }
 
-/* Translation + source strip */
-.neg-footer {
-  padding: 0.4rem 1.2rem 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-}
-.neg-transl {
-  font-family: 'Crimson Pro', serif;
-  font-style: italic;
-  font-size: 1.05rem;
-  color: var(--ink-mid);
-}
-.neg-source-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  border-top: 1px solid var(--border-lt);
-  padding-top: 7px;
-}
+.neg-footer { padding: 0.4rem 1.2rem 1rem; display: flex; flex-direction: column; gap: 7px; }
+.neg-transl { font-family: 'Crimson Pro', serif; font-style: italic; font-size: 1.05rem; color: var(--ink-mid); }
+.neg-source-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; border-top: 1px solid var(--border-lt); padding-top: 7px; }
 .neg-source-label { font-family: 'Source Code Pro', monospace; font-size: 0.67rem; color: #b8a080; letter-spacing: 0.04em; text-transform: uppercase; }
 .neg-source-link { font-family: 'Crimson Pro', serif; font-size: 0.82rem; color: var(--gold); text-decoration: none; border-bottom: 1px solid var(--gold-lt); }
 .neg-source-link:hover { color: #b84c10; }
 .neg-pangloss-link { font-family: 'Crimson Pro', serif; font-size: 0.75rem; color: white; background: #2a4a6a; border-radius: 2px; padding: 1px 8px 2px; text-decoration: none; }
 .neg-pangloss-link:hover { background: #1c3a55; }
 
-/* Abbreviations */
-.abbrev-table td:first-child { font-family: 'Source Code Pro', monospace; font-size: 0.78rem; color: var(--ink); min-width: 80px; }
+/* ── Floating tooltip ── */
+#lex-tooltip { position: fixed; z-index: 9999; pointer-events: none; opacity: 0; transition: opacity 0.1s ease; max-width: 320px; }
+#lex-tooltip.visible { opacity: 1; }
+#lex-tooltip .tt-inner {
+  background: #1c0f06; color: #f0dfc0; border-radius: 5px;
+  padding: 9px 14px 10px;
+  box-shadow: 0 4px 18px rgba(0,0,0,.35), 0 0 0 1px rgba(201,164,88,.25);
+  font-family: 'Crimson Pro', serif; font-size: 0.9rem; line-height: 1.5;
+}
+#lex-tooltip .tt-hw  { font-family: 'EB Garamond', serif; font-size: 1.15rem; font-weight: 500; color: #fdeec8; margin-right: 6px; }
+#lex-tooltip .tt-pos { font-style: italic; font-size: 0.78rem; color: #c9a458; }
+#lex-tooltip .tt-gloss { color: #e8d0a8; margin-top: 3px; font-size: 0.88rem; }
+#lex-tooltip .tt-langs { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px; }
+#lex-tooltip .tt-lang-form { font-family: 'Source Code Pro', monospace; font-size: 0.72rem; background: rgba(255,255,255,.08); border-radius: 2px; padding: 1px 6px; }
+#lex-tooltip .tt-lang-form b { color: #c9a458; font-weight: 500; }
+
 .breadcrumb { font-family: 'Crimson Pro', serif; font-size: 0.82rem; color: var(--ink-light); margin-bottom: 1.5rem; }
 .breadcrumb a { color: var(--gold); text-decoration: none; }
 </style>
 </head>
 <body id="top">
+
+<!-- Tooltip -->
+<div id="lex-tooltip" role="tooltip" aria-hidden="true">
+  <div class="tt-inner">
+    <div><span class="tt-hw" id="tt-hw"></span><span class="tt-pos" id="tt-pos"></span></div>
+    <div class="tt-gloss" id="tt-gloss"></div>
+    <div class="tt-langs" id="tt-langs"></div>
+  </div>
+</div>
 
 <nav class="topnav">
   <a class="topnav-brand" href="index.html">◬ DBT Gaua</a>
@@ -290,9 +204,8 @@
     <ul class="toc-list" id="toc"></ul>
     <hr style="border:none;border-top:1px solid var(--border);margin:1.2rem 0;">
     <div style="font-family:'Crimson Pro',serif;font-size:0.78rem;color:var(--ink-light);line-height:1.65;">
-      <strong style="color:var(--ink-mid);display:block;margin-bottom:4px;">Interactive examples</strong>
-      Use the language toggles on each example to show or hide individual languages. Click the header to
-      collapse or expand.
+      <strong style="color:var(--ink-mid);display:block;margin-bottom:4px;">Interactive example</strong>
+      Toggle languages with the coloured pills. Hover any form for its dictionary preview. Click the header to collapse.
     </div>
     <hr style="border:none;border-top:1px solid var(--border);margin:1.2rem 0;">
     <div style="font-family:'Crimson Pro',serif;font-size:0.78rem;color:var(--ink-light);">
@@ -320,20 +233,22 @@
     <!-- Abbreviations -->
     <section class="gram-section" id="abbrev">
       <h2>Abbreviations <a href="#top" class="totop">↑ top</a></h2>
-      <table class="gram-table abbrev-table">
+      <table class="gram-table">
         <thead><tr><th>Abbreviation</th><th>Meaning</th></tr></thead>
         <tbody>
           <tr><td>1INCL.PL</td><td>1st person inclusive plural</td></tr>
           <tr><td>3PL</td><td>3rd person plural</td></tr>
-          <tr><td>ART</td><td>article</td></tr>
-          <tr><td>NONDUM₁</td><td>pre-verbal negator (lit. 'not yet')</td></tr>
-          <tr><td>NONDUM₂</td><td>post-verbal negator (bound, discontinuous)</td></tr>
-          <tr><td>POSS</td><td>possessive classifier</td></tr>
+          <tr><td>ART</td><td>article (nominal determiner)</td></tr>
+          <tr><td>NONDUM₁</td><td>pre-verbal negator</td></tr>
+          <tr><td>NONDUM₂</td><td>post-verbal negator (bound)</td></tr>
+          <tr><td>POSS</td><td>possessive marker</td></tr>
           <tr><td>n.</td><td>noun</td></tr>
           <tr><td>v.tr.</td><td>transitive verb</td></tr>
-          <tr><td>v.intr.</td><td>intransitive verb</td></tr>
+          <tr><td>adv.</td><td>adverb</td></tr>
           <tr><td>part.</td><td>particle</td></tr>
           <tr><td>pro.</td><td>pronoun</td></tr>
+          <tr><td>poss.</td><td>possessive clitic</td></tr>
+          <tr><td>det.</td><td>determiner</td></tr>
         </tbody>
       </table>
     </section>
@@ -349,71 +264,62 @@
 
 <script src="data.js"></script>
 <script>
-// ── Lookup maps ───────────────────────────────────────────────
+// ── Dict lookup ───────────────────────────────────────────────
+const DICT_MAP = {};
+DICTIONARY.forEach(e => { DICT_MAP[e.id] = e; });
+
 const TEXT_MAP = {};
 TEXTS.forEach(t => { TEXT_MAP[t.lang + '||' + t.title] = t; });
 
-// ── Build TOC ─────────────────────────────────────────────────
+// ── TOC ───────────────────────────────────────────────────────
 const toc = document.getElementById('toc');
 GRAMMAR.forEach(sec => {
   const li = document.createElement('li');
   const a  = document.createElement('a');
-  a.href = '#' + sec.id;
-  a.textContent = sec.num + '. ' + sec.title;
-  li.appendChild(a);
-  toc.appendChild(li);
+  a.href = '#' + sec.id; a.textContent = sec.num + '. ' + sec.title;
+  li.appendChild(a); toc.appendChild(li);
 });
 const abLi = document.createElement('li');
 abLi.innerHTML = '<a href="#abbrev">Abbreviations</a>';
 toc.appendChild(abLi);
 
-// ── Build the interactive negation widget ────────────────────
+// ── Build interactive negation widget ─────────────────────────
 function buildNegationWidget() {
-  const ex = NEGATION_EXAMPLE;
-
-  // Visible langs state
-  const visible = new Set(ex.rows.map(r => r.lang));
-
-  // Source lookup
+  const ex       = NEGATION_EXAMPLE;
+  const visible  = new Set(ex.rows.map(r => r.lang));
   const textRec  = TEXT_MAP[ex.textLang + '||' + ex.textTitle];
   const textsHref = 'texts.html#' + textSlug(ex.textLang, ex.textTitle);
   const pangHref  = textRec ? textRec.url : 'https://pangloss.cnrs.fr';
   const langColor = LANG_COLORS[ex.textLang] || '#888';
 
-  // Outer widget shell
+  // Widget shell
   const widget = document.createElement('div');
   widget.className = 'neg-widget';
 
-  // ── Header bar ──────────────────────────────────────────────
+  // Header
   const header = document.createElement('div');
   header.className = 'neg-widget-header';
 
   const numSpan = document.createElement('span');
-  numSpan.className = 'neg-ex-num';
-  numSpan.textContent = '(1)';
+  numSpan.className = 'neg-ex-num'; numSpan.textContent = '(1)';
 
   const filtersDiv = document.createElement('div');
   filtersDiv.className = 'neg-lang-filters';
 
-  // One toggle pill per language
   ex.rows.forEach(row => {
-    const color  = LANG_COLORS[row.lang] || '#888';
-    const pill   = document.createElement('label');
+    const color = LANG_COLORS[row.lang] || '#888';
+    const pill  = document.createElement('label');
     pill.className = 'lang-toggle';
-    pill.style.background   = color;
-    pill.style.borderColor  = color;
+    pill.style.background  = color;
+    pill.style.borderColor = color;
     pill.title = row.lang;
-
     const cb = document.createElement('input');
-    cb.type    = 'checkbox';
-    cb.checked = true;
+    cb.type = 'checkbox'; cb.checked = true;
     cb.addEventListener('change', () => {
-      if (cb.checked) visible.add(row.lang);
-      else            visible.delete(row.lang);
+      visible[cb.checked ? 'add' : 'delete'](row.lang);
       pill.classList.toggle('off', !cb.checked);
       renderTable();
     });
-
     pill.appendChild(cb);
     pill.appendChild(document.createTextNode(row.abbr));
     filtersDiv.appendChild(pill);
@@ -421,31 +327,26 @@ function buildNegationWidget() {
 
   const chevron = document.createElement('span');
   chevron.className = 'neg-toggle-btn';
-  chevron.textContent = '▾ collapse';
 
   header.appendChild(numSpan);
   header.appendChild(filtersDiv);
   header.appendChild(chevron);
-
-  // Toggle collapse on header click (but not on pill clicks)
   header.addEventListener('click', e => {
     if (e.target.closest('.lang-toggle')) return;
     widget.classList.toggle('collapsed');
-    chevron.textContent = widget.classList.contains('collapsed') ? '▸ expand' : '▾ collapse';
   });
 
-  // ── Body ────────────────────────────────────────────────────
+  // Body
   const body = document.createElement('div');
   body.className = 'neg-widget-body';
 
   const tableWrap = document.createElement('div');
   tableWrap.className = 'neg-table-wrap';
-
   const table = document.createElement('table');
   table.className = 'neg-cmp-table';
   tableWrap.appendChild(table);
 
-  // Footer (translation + source — always visible)
+  // Footer
   const footer = document.createElement('div');
   footer.className = 'neg-footer';
   footer.innerHTML = `
@@ -453,83 +354,171 @@ function buildNegationWidget() {
     <div class="neg-source-row">
       <span class="neg-source-label">Source</span>
       <a class="neg-source-link" href="${textsHref}">
-        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${langColor};margin-right:5px;vertical-align:middle;"></span>${ex.textTitle} <span style="opacity:.55">(${ex.textLang})</span>
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;
+          background:${langColor};margin-right:5px;vertical-align:middle;"></span>${ex.textTitle}
+        <span style="opacity:.55">(${ex.textLang})</span>
       </a>
       <a class="neg-pangloss-link" href="${pangHref}" target="_blank">Pangloss ↗</a>
     </div>`;
 
   body.appendChild(tableWrap);
   body.appendChild(footer);
-
   widget.appendChild(header);
   widget.appendChild(body);
 
-  // ── Table renderer (called on filter change) ─────────────────
+  // Gloss cells cache (so we can highlight on hover)
+  let glossCells = [];
+
   function renderTable() {
     table.innerHTML = '';
-    const cols = ex.cols;
-    const sepCells = '<td></td>' + cols.map(() => '<td></td>').join('');
+    glossCells = [];
+    const cols    = ex.cols;
+    const nCols   = cols.length;
+    const sepCols = '<td></td>' + cols.map(() => '<td></td>').join('');
 
-    // Language rows
     ex.rows.forEach(row => {
       if (!visible.has(row.lang)) return;
       const color = LANG_COLORS[row.lang] || '#888';
       const tr    = document.createElement('tr');
-      tr.innerHTML =
-        `<td class="lang-abbr" style="color:${color};">${row.abbr}</td>` +
-        cols.map((col, i) => {
-          const f = row.forms[i] ?? '';
-          return `<td class="form-cell${f === '' ? ' empty' : ''}">${f === '' ? '—' : f}</td>`;
-        }).join('');
+
+      // Lang abbr
+      const abbrTd = document.createElement('td');
+      abbrTd.className = 'lang-abbr';
+      abbrTd.style.color = color;
+      abbrTd.textContent = row.abbr;
+      tr.appendChild(abbrTd);
+
+      // Form cells
+      cols.forEach((col, i) => {
+        const f   = row.forms[i] ?? '';
+        const td  = document.createElement('td');
+        td.className = 'form-cell';
+        td.dataset.col = i;
+
+        if (f === '') {
+          td.classList.add('empty');
+          td.textContent = '—';
+        } else {
+          const a  = document.createElement('a');
+          a.className = 'lexlink';
+          a.href      = 'dictionary.html#' + col.dictId;
+          a.dataset.dictId = col.dictId;
+          a.dataset.col    = i;
+          a.textContent    = f;
+          td.appendChild(a);
+        }
+        tr.appendChild(td);
+      });
+
       table.appendChild(tr);
     });
 
     // Separator
     const sep = document.createElement('tr');
     sep.className = 'sep-row';
-    sep.innerHTML = sepCells;
+    sep.innerHTML = sepCols;
     table.appendChild(sep);
 
     // Gloss row
     const glossTr = document.createElement('tr');
-    glossTr.innerHTML =
-      `<td class="gloss-abbr"></td>` +
-      cols.map(col => `<td class="gloss-cell">${col.gl}</td>`).join('');
+    const emptyTd = document.createElement('td');
+    emptyTd.className = 'gloss-abbr';
+    glossTr.appendChild(emptyTd);
+    cols.forEach((col, i) => {
+      const td = document.createElement('td');
+      td.className = 'gloss-cell';
+      td.dataset.col = i;
+      td.textContent = col.gl;
+      glossTr.appendChild(td);
+      glossCells.push(td);
+    });
     table.appendChild(glossTr);
   }
+
+  // Column highlight on link hover
+  table.addEventListener('mouseover', e => {
+    const a = e.target.closest('a.lexlink');
+    if (!a) return;
+    const col = a.dataset.col;
+    glossCells.forEach(td => td.classList.toggle('col-hover', td.dataset.col === col));
+  });
+  table.addEventListener('mouseout', e => {
+    if (e.target.closest('a.lexlink'))
+      glossCells.forEach(td => td.classList.remove('col-hover'));
+  });
 
   renderTable();
   return widget;
 }
 
-// ── Render sections ───────────────────────────────────────────
+// ── Render grammar sections ───────────────────────────────────
 const gramBody = document.getElementById('grammar-body');
-
 GRAMMAR.forEach(sec => {
   const section = document.createElement('section');
   section.className = 'gram-section';
   section.id = sec.id;
   section.innerHTML = `<h2>${sec.num}. ${sec.title} <a href="#top" class="totop">↑ top</a></h2>${sec.body}`;
-
-  // Replace <negation-example> placeholder
   const placeholder = section.querySelector('negation-example');
-  if (placeholder) {
-    placeholder.replaceWith(buildNegationWidget());
-  }
-
+  if (placeholder) placeholder.replaceWith(buildNegationWidget());
   gramBody.appendChild(section);
 });
 
+// ── Floating tooltip ──────────────────────────────────────────
+const tooltip  = document.getElementById('lex-tooltip');
+const ttHw     = document.getElementById('tt-hw');
+const ttPos    = document.getElementById('tt-pos');
+const ttGloss  = document.getElementById('tt-gloss');
+const ttLangs  = document.getElementById('tt-langs');
+let hideTimer  = null;
+
+function positionTooltip(el) {
+  const rect = el.getBoundingClientRect();
+  const tw   = 320;
+  const ttH  = tooltip.offsetHeight || 90;
+  const gap  = 10;
+  let left   = rect.left + rect.width / 2 - 24;
+  if (left + tw > window.innerWidth - 8) left = window.innerWidth - tw - 8;
+  if (left < 8) left = 8;
+  tooltip.style.left = left + 'px';
+  tooltip.style.top  = (rect.top - ttH - gap < 8)
+    ? (rect.bottom + gap) + 'px'
+    : (rect.top - ttH - gap) + 'px';
+}
+
+document.addEventListener('mouseover', e => {
+  const a = e.target.closest('a.lexlink');
+  if (!a) return;
+  const id    = a.dataset.dictId || (a.getAttribute('href') || '').split('#')[1];
+  const entry = id && DICT_MAP[id];
+  if (!entry) return;
+  clearTimeout(hideTimer);
+  ttHw.textContent    = entry.hw;
+  ttPos.textContent   = '  ' + entry.pos;
+  ttGloss.textContent = entry.gloss;
+  // Show per-language forms
+  ttLangs.innerHTML = Object.entries(entry.langs).map(([lang, form]) =>
+    `<span class="tt-lang-form"><b>${LANG_ABBR[lang] || lang}</b> ${form}</span>`
+  ).join('');
+  tooltip.classList.add('visible');
+  positionTooltip(a);
+});
+document.addEventListener('mouseout', e => {
+  if (e.target.closest('a.lexlink'))
+    hideTimer = setTimeout(() => tooltip.classList.remove('visible'), 80);
+});
+document.addEventListener('mousemove', e => {
+  if (!tooltip.classList.contains('visible')) return;
+  const a = e.target.closest('a.lexlink');
+  if (a) positionTooltip(a);
+});
+
 // ── TOC active on scroll ──────────────────────────────────────
-const allSections = document.querySelectorAll('.gram-section');
-const tocLinks    = document.querySelectorAll('.toc-list a');
-allSections.forEach(s => {
+const tocLinks = document.querySelectorAll('.toc-list a');
+document.querySelectorAll('.gram-section').forEach(s => {
   new IntersectionObserver(entries => {
     entries.forEach(e => {
       if (e.isIntersecting)
-        tocLinks.forEach(a =>
-          a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id)
-        );
+        tocLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id));
     });
   }, { rootMargin: '-20% 0px -70% 0px' }).observe(s);
 });
