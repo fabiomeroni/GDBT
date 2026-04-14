@@ -439,129 +439,73 @@ const GRAMMAR_EXAMPLES = {
   },
 };
 
-// ── Grammar narrative sections ────────────────────────────────
-// <gloss id="ex1"/> placeholders are replaced at runtime with
-// buildGlossTable(GRAMMAR_EXAMPLES.ex1).
+// ── Raw comparative example: negation (real IPA data) ─────────
+// No dictionary links — plain IPA forms; rendered by buildRawGlossTable()
+const NEGATION_EXAMPLE = {
+  textLang:"Koro", textTitle:"Preparing a garden",
+  cols:[
+    {gl:"3PL"},
+    {gl:"NONDUM₁"},
+    {gl:"know"},
+    {gl:"properly"},
+    {gl:"NONDUM₂"},
+    {gl:"ART"},
+    {gl:"speech"},
+    {gl:"POSS:1INCL.PL"},
+  ],
+  rows:[
+    {lang:"Nume",  abbr:"Num", forms:["nir",   "βitis",  "ɣil",    "liŋliŋi","mi",         "u",  "luwluw",   "namɣin"]},
+    {lang:"Dorig", abbr:"Drg", forms:["nɪr",   "sɔwsɛ",  "βrɪɣɪl", "taβul",  "tɛ",         "na", "lŋa",      "‑ɣɪn"]},
+    {lang:"Koro",  abbr:"Kro", forms:["nɪr",   "tɪ",     "rɔŋ",    "taβul",  "wʊsmɛlɛ",    "ɔ",  "βalβalaw", "namɪɣɪn"]},
+    {lang:"Olrat", abbr:"Olr", forms:["nɪj",   "tɪ",     "rɔŋ",    "βɪlɪː",  "wʊsmɛlɛ",    "",   "ususraː",  "mʊʧ"]},
+    {lang:"Lakon", abbr:"Lkn", forms:["ɣɪː",   "atɪ",    "rɔŋ",    "kɛrɛ",   "aβʊh.malɛ",  "",   "ɛlŋa",     "‑nɣɪʧ"]},
+  ],
+  translation:"'They don't know our language very well yet.'",
+};
+
+// ── Grammar narrative sections (only 2) ───────────────────────
 const GRAMMAR = [
   {
-    id:"s1", num:"1", title:"Introduction", subsections:[],
-    body:`<p>This chapter provides a comparative grammatical description of the five languages of Gaua Island:
-<strong>Nume</strong>, <strong>Dorig</strong>, <strong>Koro</strong>, <strong>Olrat</strong>, and
-<strong>Lakon</strong>, distributed from east to west. All five are closely related Oceanic languages of the
-Austronesian family, forming a coherent dialect chain.</p>
-<p>All grammatical claims are illustrated by comparative interlinear glossed examples. Each example shows all
-five languages stacked vertically, sharing a single gloss line at the bottom.
-<strong>Hover over any form</strong> to see its definition; <strong>click</strong> to open its full entry in
-the <a href="dictionary.html">Dictionary</a>. Each example also links to its source text in the
-<a href="texts.html">Texts</a> archive.</p>
-<p>Language abbreviations: <b>Num</b> Nume · <b>Drg</b> Dorig · <b>Kro</b> Koro · <b>Olr</b> Olrat · <b>Lkn</b> Lakon.</p>`
-  },
-  {
-    id:"s2", num:"2", title:"Phonology",
-    subsections:[
-      {id:"s2-1",num:"2.1",title:"Phoneme inventory"},
-      {id:"s2-2",num:"2.2",title:"Vowel length"},
-    ],
-    body:`<h3 id="s2-1">2.1 Phoneme inventory <a href="#top" class="totop">↑</a></h3>
-<p>The five languages share a consonant inventory inherited from Proto-Oceanic, including prenasalised stops
-(<em>mb, nd, ngg</em>), a uvular stop /q/, and a mid-back rounded vowel /ō/ — both rare in the wider Oceanic
-family yet consistent across the entire dialect chain.</p>
+    id:"s1", num:"1", title:"Phoneme inventory",
+    subsections:[],
+    body:`<p>The five languages of Gaua share a consonant inventory inherited from Proto-Oceanic, though each
+has developed distinct local innovations. All five possess a series of prenasalised stops
+(<em>mb, nd, ngg</em>), contrasting with plain stops. A uvular stop /q/ and a mid-back rounded vowel /ō/ —
+both rare in the wider Oceanic family — are nonetheless consistent across the entire Gaua dialect chain.</p>
 <table class="gram-table">
   <caption>Table 1 — Consonant inventory (shared across all five languages)</caption>
   <thead><tr><th></th><th>Labial</th><th>Alveolar</th><th>Velar</th><th>Uvular</th></tr></thead>
   <tbody>
-    <tr><td>Plain stops</td><td>p</td><td>t</td><td>k</td><td>q</td></tr>
-    <tr><td>Prenasalised stops</td><td>mb</td><td>nd</td><td>ngg</td><td>—</td></tr>
-    <tr><td>Nasals</td><td>m</td><td>n</td><td>ng</td><td>—</td></tr>
-    <tr><td>Fricatives</td><td>v</td><td>s</td><td>—</td><td>—</td></tr>
-    <tr><td>Laterals / Rhotic</td><td>—</td><td>l, r</td><td>—</td><td>—</td></tr>
-    <tr><td>Approximants</td><td>w</td><td>—</td><td>—</td><td>—</td></tr>
+    <tr><td>Plain stop</td><td>p, b</td><td>t, d</td><td>k, g</td><td>q</td></tr>
+    <tr><td>Prenasalised</td><td>mb</td><td>nd</td><td>ngg</td><td>—</td></tr>
+    <tr><td>Nasal</td><td>m</td><td>n</td><td>ng</td><td>—</td></tr>
+    <tr><td>Fricative</td><td>β, v</td><td>s</td><td>ɣ</td><td>—</td></tr>
+    <tr><td>Lateral / Rhotic</td><td>—</td><td>l, r</td><td>—</td><td>—</td></tr>
+    <tr><td>Glide</td><td>w</td><td>—</td><td>—</td><td>—</td></tr>
   </tbody>
 </table>
-<h3 id="s2-2">2.2 Vowel length <a href="#top" class="totop">↑</a></h3>
-<p>Vowel length is phonemically distinctive in all five languages, as illustrated by minimal pairs such as
-<a class="lexlink" href="dictionary.html#gor"><em>gōr</em></a> 'man' (long <em>ō</em>) vs.
-<em>gor</em> 'to call' (short <em>o</em>). Stress is penultimate, shifting to the final syllable before
-the completive particle <a class="lexlink" href="dictionary.html#qet"><em>qēt</em></a>.</p>
-<gloss id="ex1"></gloss>`
-  },
-  {
-    id:"s3", num:"3", title:"Personal pronouns",
-    subsections:[
-      {id:"s3-1",num:"3.1",title:"Singular forms"},
-      {id:"s3-2",num:"3.2",title:"Non-singular and clusivity"},
-    ],
-    body:`<p>The Gaua languages have a rich pronominal system with distinctions of person (1st, 2nd, 3rd),
-number (singular, dual, paucal, plural), and clusivity (inclusive vs. exclusive in non-singular 1st person).
-Subject pronouns function as proclitics attaching to the left edge of the verb, marked by <strong>=</strong>.</p>
-<h3 id="s3-1">3.1 Singular forms <a href="#top" class="totop">↑</a></h3>
-<p>The singular forms are near-identical across all five languages, attesting to the conservative nature of
-this paradigm within the Gaua dialect chain.</p>
 <table class="gram-table">
-  <caption>Table 2 — Singular subject proclitics</caption>
-  <thead><tr><th>Person</th><th>Gloss</th><th>Num</th><th>Drg</th><th>Kro</th><th>Olr</th><th>Lkn</th></tr></thead>
+  <caption>Table 2 — Vowel inventory</caption>
+  <thead><tr><th></th><th>Front</th><th>Central</th><th>Back</th></tr></thead>
   <tbody>
-    <tr><td>1sg</td><td>I</td><td>no=</td><td>no=</td><td>no=</td><td>no=</td><td>no=</td></tr>
-    <tr><td>2sg</td><td>you</td><td>u=</td><td>u=</td><td>u=</td><td>u=</td><td>u=</td></tr>
-    <tr><td>3sg</td><td>s/he/it</td><td>o=</td><td>o=</td><td>o=</td><td>o=</td><td>o=</td></tr>
+    <tr><td>High</td><td>i, iː</td><td>—</td><td>u, uː</td></tr>
+    <tr><td>Mid</td><td>e, ɛ</td><td>—</td><td>o, ɔ, ō</td></tr>
+    <tr><td>Low</td><td>—</td><td>a, aː</td><td>—</td></tr>
   </tbody>
 </table>
-<gloss id="ex2"></gloss>
-<gloss id="ex3"></gloss>
-<h3 id="s3-2">3.2 Non-singular and clusivity <a href="#top" class="totop">↑</a></h3>
-<p>The dual, paucal, and plural series each require a separate proclitic paradigm. The 1st person non-singular
-distinguishes <em>inclusive</em> (speaker + addressee + others) from <em>exclusive</em> (speaker + others)
-forms in all five languages.<sup><a href="#fn1">1</a></sup></p>`
+<p>Vowel length is phonemically distinctive across all five languages. Stress is generally penultimate,
+but shifts to the final syllable in verb stems followed by post-verbal aspect particles.</p>`
   },
   {
-    id:"s4", num:"4", title:"Verb morphology",
-    subsections:[
-      {id:"s4-1",num:"4.1",title:"Aspect marking"},
-      {id:"s4-2",num:"4.2",title:"Transitivity"},
-    ],
-    body:`<p>Verbs do not inflect for tense, aspect, or mood through affixation; these meanings are expressed
-through post-verbal particles.</p>
-<h3 id="s4-1">4.1 Aspect marking <a href="#top" class="totop">↑</a></h3>
-<p>The completive aspect is marked by
-<a class="lexlink" href="dictionary.html#qet"><em>qēt</em></a>,
-found in identical form across all five languages — one of the most remarkable isoglosses of the Gaua dialect
-chain.</p>
-<gloss id="ex4"></gloss>
-<gloss id="ex5"></gloss>
-<h3 id="s4-2">4.2 Transitivity <a href="#top" class="totop">↑</a></h3>
-<p>Transitive verbs (<a class="lexlink" href="dictionary.html#kan"><em>kan</em></a> 'eat',
-<a class="lexlink" href="dictionary.html#wia"><em>wia</em></a> 'see',
-<a class="lexlink" href="dictionary.html#qol"><em>qōl</em></a> 'plant') require a direct object; intransitive
-verbs (<a class="lexlink" href="dictionary.html#lo"><em>lō</em></a> 'go',
-<a class="lexlink" href="dictionary.html#wer"><em>wer</em></a> 'be big') do not.</p>`
-  },
-  {
-    id:"s5", num:"5", title:"Possessive constructions",
-    subsections:[{id:"s5-1",num:"5.1",title:"Classifier classes"}],
-    body:`<p>Possession is encoded through possessive classifiers, a well-known feature of Oceanic languages.</p>
-<h3 id="s5-1">5.1 Classifier classes <a href="#top" class="totop">↑</a></h3>
-<table class="gram-table">
-  <caption>Table 3 — Possessive classifier classes</caption>
-  <thead><tr><th>Form</th><th>Class</th><th>Nouns covered</th></tr></thead>
-  <tbody>
-    <tr><td><em>no-</em></td><td>Consumable</td><td>Food and drink consumed by the possessor</td></tr>
-    <tr><td><em>me-</em></td><td>Locative</td><td>Items associated with possessor's location</td></tr>
-    <tr><td><em>ne-</em></td><td>Neutral</td><td>All other alienable objects</td></tr>
-  </tbody>
-</table>
-<p>This tripartite distinction is preserved intact across all five languages.</p>
-<gloss id="ex6"></gloss>`
-  },
-  {
-    id:"s6", num:"6", title:"Negation",
-    subsections:[{id:"s6-1",num:"6.1",title:"The discontinuous construction"}],
-    body:`<p>Verbal negation uses the pre-verbal particle
-<a class="lexlink" href="dictionary.html#to"><em>tō</em></a>.</p>
-<h3 id="s6-1">6.1 The discontinuous construction <a href="#top" class="totop">↑</a></h3>
-<p>In some registers a post-verbal suffix <em>-(V)t</em> co-occurs with <em>tō</em>, creating a
-discontinuous pattern parallel to the Jespersen cycle. In casual speech the post-verbal element is
-frequently dropped, especially in Lakon and Olrat.</p>
-<gloss id="ex7"></gloss>
-<gloss id="ex8"></gloss>`
+    id:"s2", num:"2", title:"Negation",
+    subsections:[],
+    body:`<p>Verbal negation across the five Gaua languages involves a split construction in which a
+pre-verbal negator and a post-verbal bound morpheme together express sentential negation. This discontinuous
+pattern is highly stable across the dialect chain, though the specific forms of each component vary from language to language.</p>
+<p>The pre-verbal negator occupies the position immediately before the subject–verb complex. The post-verbal
+element (glossed <strong>NONDUM₂</strong> below) may be suffixed to the final verb or to a post-verbal
+particle, and can be omitted in casual registers, particularly in Lakon and Olrat. The example below
+illustrates the full construction across all five languages:</p>
+<negation-example></negation-example>`
   },
 ];
