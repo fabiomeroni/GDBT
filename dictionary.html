@@ -6,7 +6,6 @@
 <title>Dictionary — DBT Gaua Languages</title>
 <link rel="stylesheet" href="style.css">
 <style>
-/* ── Dictionary layout ── */
 .dict-layout {
   display: grid;
   grid-template-columns: 200px 1fr;
@@ -16,147 +15,134 @@
   background: #faf6ef;
   border-right: 1px solid var(--border);
   padding: 1.4rem 0.8rem 2rem;
-  position: sticky;
-  top: 52px;
+  position: sticky; top: 52px;
   height: calc(100vh - 52px);
   overflow-y: auto;
 }
 .alpha-sidebar h2 {
-  font-family:'Crimson Pro',serif; font-size:0.7rem; letter-spacing:0.14em;
-  text-transform:uppercase; color:var(--ink-light); margin-bottom:0.8rem;
-  padding-bottom:0.5rem; border-bottom:1px solid var(--border); padding-left:4px;
+  font-family: 'Crimson Pro', serif; font-size: 0.7rem; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink-light); margin-bottom: 0.8rem;
+  padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); padding-left: 4px;
 }
-.alpha-list { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:1.4rem; }
+.alpha-list { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 1.4rem; }
 .alpha-list a {
-  display:inline-block; width:30px; height:30px; line-height:30px; text-align:center;
-  font-family:'EB Garamond',serif; font-size:1.05rem; font-weight:500; color:var(--ink-mid);
-  text-decoration:none; border-radius:3px; transition:background 0.15s,color 0.15s;
+  display: inline-block; width: 30px; height: 30px; line-height: 30px; text-align: center;
+  font-family: 'EB Garamond', serif; font-size: 1.05rem; font-weight: 500; color: var(--ink-mid);
+  text-decoration: none; border-radius: 3px; transition: background 0.15s, color 0.15s;
 }
-.alpha-list a:hover,.alpha-list a.active { background:#1c0f06; color:#f0dfc0; }
-.alpha-list a.inactive { color:var(--border); pointer-events:none; }
+.alpha-list a:hover, .alpha-list a.active { background: #1c0f06; color: #f0dfc0; }
+.alpha-list a.inactive { color: var(--border); pointer-events: none; }
 
-/* Search + filters */
 .dict-searchbox {
   padding: 1rem 1rem 0;
-  position: sticky; top: 52px;
-  background: var(--bg); z-index: 10;
+  position: sticky; top: 52px; background: var(--bg); z-index: 10;
   border-bottom: 1px solid var(--border);
 }
 .dict-searchbox input {
-  width:100%; font-family:'EB Garamond',serif; font-size:1rem;
-  padding:0.5rem 0.9rem; border:1px solid var(--border); border-radius:4px;
-  background:white; color:var(--ink); outline:none; transition:border-color 0.15s;
-  margin-bottom:0.7rem;
+  width: 100%; font-family: 'EB Garamond', serif; font-size: 1rem;
+  padding: 0.5rem 0.9rem; border: 1px solid var(--border); border-radius: 4px;
+  background: white; color: var(--ink); outline: none;
+  transition: border-color 0.15s; margin-bottom: 0.7rem;
 }
-.dict-searchbox input:focus { border-color:var(--gold); }
-.dict-searchbox input::placeholder { color:#c0b090; font-style:italic; }
-.filter-row { display:flex; gap:0.5rem; margin-bottom:0.8rem; flex-wrap:wrap; }
+.dict-searchbox input:focus { border-color: var(--gold); }
+.dict-searchbox input::placeholder { color: #c0b090; font-style: italic; }
+.filter-row { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; flex-wrap: wrap; }
 .filter-btn {
-  font-family:'Crimson Pro',serif; font-size:0.82rem; padding:3px 12px 4px;
-  border:1px solid var(--border); border-radius:3px; background:white; color:var(--ink-mid);
-  cursor:pointer; transition:background 0.15s,border-color 0.15s,color 0.15s;
+  font-family: 'Crimson Pro', serif; font-size: 0.82rem; padding: 3px 12px 4px;
+  border: 1px solid var(--border); border-radius: 3px; background: white; color: var(--ink-mid);
+  cursor: pointer; transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
-.filter-btn.active { background:#1c0f06; border-color:#1c0f06; color:#f0dfc0; }
-.filter-btn:hover:not(.active) { border-color:var(--gold); color:var(--gold); }
+.filter-btn.active { background: #1c0f06; border-color: #1c0f06; color: #f0dfc0; }
+.filter-btn:hover:not(.active) { border-color: var(--gold); color: var(--gold); }
 
-/* Main area */
-.dict-main { padding:0; overflow-y:auto; }
-.dict-content { padding:0 3rem 4rem; }
+.dict-main { padding: 0; overflow-y: auto; }
+.dict-content { padding: 0 3rem 4rem; }
 .result-count {
-  font-family:'Crimson Pro',serif; font-size:0.85rem; color:var(--ink-light);
-  padding:0.5rem 3rem; background:var(--bg); border-bottom:1px solid var(--border-lt);
-  position:sticky; top:110px; z-index:5;
+  font-family: 'Crimson Pro', serif; font-size: 0.85rem; color: var(--ink-light);
+  padding: 0.5rem 3rem; background: var(--bg); border-bottom: 1px solid var(--border-lt);
+  position: sticky; top: 110px; z-index: 5;
 }
-.no-results { padding:3rem; font-family:'Crimson Pro',serif; font-size:1.05rem; color:var(--ink-light); font-style:italic; }
+.no-results { padding: 3rem; font-family: 'Crimson Pro', serif; font-size: 1.05rem; color: var(--ink-light); font-style: italic; }
 
-/* Letter group */
-.letter-group { margin-top:2.5rem; scroll-margin-top:112px; }
+.letter-group { margin-top: 2.5rem; scroll-margin-top: 112px; }
 .letter-heading {
-  font-family:'EB Garamond',serif; font-size:2rem; font-weight:500; color:var(--ink);
-  border-bottom:2px solid var(--gold); padding-bottom:0.2rem; margin-bottom:1rem;
-  display:inline-block; min-width:2rem;
+  font-family: 'EB Garamond', serif; font-size: 2rem; font-weight: 500; color: var(--ink);
+  border-bottom: 2px solid var(--gold); padding-bottom: 0.2rem; margin-bottom: 1rem;
+  display: inline-block; min-width: 2rem;
 }
 
 /* Entry */
 .entry {
-  border-bottom:1px solid var(--border-lt);
-  padding:1rem 0 1.2rem;
-  scroll-margin-top:120px;
-  transition:background 0.15s;
+  border-bottom: 1px solid var(--border-lt); padding: 1.1rem 0 1.3rem;
+  scroll-margin-top: 120px; transition: background 0.15s;
 }
-.entry:hover { background:#fffdf5; }
+.entry:hover { background: #fffdf5; }
 .entry.highlighted {
-  background:#fffaec;
-  border-left:3px solid var(--gold);
-  padding-left:1rem; margin-left:-1rem;
-  border-radius:0 4px 4px 0;
+  background: #fffaec; border-left: 3px solid var(--gold);
+  padding-left: 1rem; margin-left: -1rem; border-radius: 0 4px 4px 0;
 }
-.entry-header { display:flex; align-items:baseline; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.3rem; }
-.headword { font-family:'EB Garamond',serif; font-size:1.75rem; font-weight:500; color:var(--ink); letter-spacing:-0.02em; }
+.entry-header { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.4rem; }
+.headword { font-family: 'EB Garamond', serif; font-size: 1.75rem; font-weight: 500; color: var(--ink); letter-spacing: -0.02em; }
 .pos-tag {
-  font-family:'Crimson Pro',serif; font-style:italic; font-size:0.9rem; color:var(--ink-light);
-  font-variant:small-caps; border:1px solid var(--border); border-radius:2px; padding:0 5px; line-height:1.4;
+  font-family: 'Crimson Pro', serif; font-style: italic; font-size: 0.9rem; color: var(--ink-light);
+  font-variant: small-caps; border: 1px solid var(--border); border-radius: 2px; padding: 0 5px; line-height: 1.4;
 }
 .domain-tag {
-  font-family:'Crimson Pro',serif; font-size:0.75rem; letter-spacing:0.08em;
-  text-transform:uppercase; color:white; background:var(--gold); border-radius:2px; padding:1px 7px 2px;
+  font-family: 'Crimson Pro', serif; font-size: 0.75rem; letter-spacing: 0.08em;
+  text-transform: uppercase; color: white; background: var(--gold); border-radius: 2px; padding: 1px 7px 2px;
 }
-.entry-gloss { font-family:'Crimson Pro',serif; font-size:1.08rem; color:var(--ink-mid); line-height:1.7; margin-bottom:0.4rem; }
-.entry-gloss em { font-style:italic; }
-.entry-notes { font-family:'Crimson Pro',serif; font-size:0.95rem; color:var(--ink-light); font-style:italic; line-height:1.65; margin-bottom:0.6rem; }
-.entry-notes a { color:var(--gold); border-bottom:1px dotted var(--gold-lt); text-decoration:none; }
-.entry-notes a:hover { color:#b84c10; }
+.entry-gloss { font-family: 'Crimson Pro', serif; font-size: 1.08rem; color: var(--ink-mid); line-height: 1.7; margin-bottom: 0.5rem; }
+.entry-gloss em { font-style: italic; }
+.entry-notes {
+  font-family: 'Crimson Pro', serif; font-size: 0.95rem; color: var(--ink-light);
+  font-style: italic; line-height: 1.65; margin-bottom: 0.8rem; max-width: 66ch;
+}
 
-/* Cross-language table */
-.lang-table { border-collapse:collapse; margin:0.5rem 0 0.7rem; font-size:0.9rem; border:1px solid var(--border-lt); border-radius:3px; overflow:hidden; background:white; }
-.lang-table th { background:#f0e8d8; font-family:'Crimson Pro',serif; font-size:0.72rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-mid); padding:4px 12px; text-align:left; border-right:1px solid var(--border-lt); }
-.lang-table td { padding:4px 12px; font-family:'Source Code Pro',monospace; font-size:0.88rem; color:var(--ink); border-right:1px solid var(--border-lt); }
-.lang-table th:last-child,.lang-table td:last-child { border-right:none; }
-.lang-dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:5px; vertical-align:middle; }
+/* Cross-language forms table */
+.lang-table {
+  border-collapse: collapse; margin: 0.2rem 0 0.3rem; font-size: 0.9rem;
+  border: 1px solid var(--border-lt); border-radius: 3px; overflow: hidden; background: white;
+}
+.lang-table th {
+  background: #f0e8d8; font-family: 'Crimson Pro', serif; font-size: 0.72rem;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mid);
+  padding: 5px 14px; text-align: left; border-right: 1px solid var(--border-lt);
+}
+.lang-table td {
+  padding: 5px 14px; font-family: 'EB Garamond', serif; font-size: 1.1rem; color: var(--ink);
+  border-right: 1px solid var(--border-lt);
+}
+.lang-table th:last-child, .lang-table td:last-child { border-right: none; }
+.lang-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
 
-/* ── Comparative gloss table (same as grammar, inlined) ── */
-.ex-header-label {
-  font-family:'Crimson Pro',serif; font-size:0.72rem; letter-spacing:0.1em;
-  text-transform:uppercase; color:var(--ink-light); margin:0.8rem 0 0.4rem;
+/* "See in grammar" badge */
+.grammar-ref {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: 'Crimson Pro', serif; font-size: 0.82rem;
+  color: #2a4a6a; border: 1px solid #a0bcd0; border-radius: 3px;
+  padding: 2px 10px 3px; text-decoration: none; margin-top: 0.5rem;
+  transition: background 0.15s, color 0.15s;
 }
-.ex-wrap-dict {
-  margin: 0.3rem 0 0.8rem 0;
-}
-.cmp-table { border-collapse:collapse; font-size:0.95rem; }
-.cmp-table .lang-abbr {
-  font-family:'Crimson Pro',serif; font-variant:small-caps; font-size:0.85rem;
-  font-weight:600; letter-spacing:0.06em; color:var(--ink-light);
-  padding:2px 16px 2px 0; white-space:nowrap; vertical-align:baseline; border:none;
-}
-.cmp-table .form-cell { padding:2px 20px 2px 0; vertical-align:baseline; border:none; }
-.cmp-table .form-cell a.lexlink {
-  font-family:'EB Garamond',serif; font-size:1.12rem; color:var(--ink);
-  text-decoration:none; border-bottom:1.5px dotted var(--gold);
-  border-radius:2px; padding:0 2px;
-  transition:color 0.15s,border-color 0.15s,background 0.15s;
-  white-space:nowrap; cursor:pointer;
-}
-.cmp-table .form-cell a.lexlink:hover { color:#b84c10; border-bottom-color:#b84c10; background:#fff5e8; }
-.cmp-table .sep-row td { border-top:1px solid var(--border); padding:0; border-bottom:none; }
-.cmp-table .gloss-abbr { font-family:'Crimson Pro',serif; font-size:0.72rem; color:transparent; padding:5px 16px 3px 0; vertical-align:baseline; border:none; }
-.cmp-table .gloss-cell { font-family:'Source Code Pro',monospace; font-size:0.68rem; letter-spacing:0.04em; color:var(--ink-light); padding:5px 20px 3px 0; vertical-align:baseline; border:none; white-space:nowrap; text-transform:uppercase; }
-.ex-transl-dict { font-family:'Crimson Pro',serif; font-style:italic; font-size:1rem; color:var(--ink-mid); margin-top:4px; }
+.grammar-ref:hover { background: #2a4a6a; color: white; border-color: #2a4a6a; }
 
 /* Tooltip */
-#lex-tooltip { position:fixed; z-index:9999; pointer-events:none; opacity:0; transition:opacity 0.1s ease; max-width:300px; }
-#lex-tooltip.visible { opacity:1; }
-#lex-tooltip .tt-inner { background:#1c0f06; color:#f0dfc0; border-radius:5px; padding:9px 14px 10px; box-shadow:0 4px 18px rgba(0,0,0,.35),0 0 0 1px rgba(201,164,88,.25); font-family:'Crimson Pro',serif; font-size:0.9rem; line-height:1.5; }
-#lex-tooltip .tt-hw { font-family:'EB Garamond',serif; font-size:1.15rem; font-weight:500; color:#fdeec8; margin-right:6px; }
-#lex-tooltip .tt-pos { font-style:italic; font-size:0.78rem; color:#c9a458; }
-#lex-tooltip .tt-gloss { color:#e8d0a8; margin-top:3px; font-size:0.88rem; }
+#lex-tooltip { position: fixed; z-index: 9999; pointer-events: none; opacity: 0; transition: opacity 0.1s ease; max-width: 300px; }
+#lex-tooltip.visible { opacity: 1; }
+#lex-tooltip .tt-inner {
+  background: #1c0f06; color: #f0dfc0; border-radius: 5px; padding: 9px 14px 10px;
+  box-shadow: 0 4px 18px rgba(0,0,0,.35), 0 0 0 1px rgba(201,164,88,.25);
+  font-family: 'Crimson Pro', serif; font-size: 0.9rem; line-height: 1.5;
+}
+#lex-tooltip .tt-hw  { font-family: 'EB Garamond', serif; font-size: 1.15rem; font-weight: 500; color: #fdeec8; margin-right: 6px; }
+#lex-tooltip .tt-pos { font-style: italic; font-size: 0.78rem; color: #c9a458; }
+#lex-tooltip .tt-gloss { color: #e8d0a8; margin-top: 3px; font-size: 0.88rem; }
 </style>
 </head>
 <body id="top">
 
-<!-- Tooltip -->
 <div id="lex-tooltip" role="tooltip" aria-hidden="true">
   <div class="tt-inner">
-    <span class="tt-hw" id="tt-hw"></span><span class="tt-pos" id="tt-pos"></span>
+    <div><span class="tt-hw" id="tt-hw"></span><span class="tt-pos" id="tt-pos"></span></div>
     <div class="tt-gloss" id="tt-gloss"></div>
   </div>
 </div>
@@ -177,14 +163,14 @@
     <h2>Index</h2>
     <div class="alpha-list" id="alpha-index"></div>
     <hr style="border:none;border-top:1px solid var(--border);margin:0.8rem 0;">
-    <h2>Part of speech</h2>
-    <div id="pos-filter" style="display:flex;flex-direction:column;gap:4px;"></div>
+    <h2>Domain</h2>
+    <div id="domain-filter-side" style="display:flex;flex-direction:column;gap:4px;"></div>
     <hr style="border:none;border-top:1px solid var(--border);margin:0.8rem 0;">
     <div style="font-family:'Crimson Pro',serif;font-size:0.78rem;color:var(--ink-light);line-height:1.6;">
       <strong style="color:var(--ink-mid);">Languages</strong><br>
-      <span class="lang-dot" style="background:#2e5c8a;"></span>Nume<br>
+      <span class="lang-dot" style="background:#2e5c8a;"></span>Nume &nbsp;
       <span class="lang-dot" style="background:#c07820;"></span>Dorig<br>
-      <span class="lang-dot" style="background:#922810;"></span>Koro<br>
+      <span class="lang-dot" style="background:#922810;"></span>Koro &nbsp;
       <span class="lang-dot" style="background:#267040;"></span>Olrat<br>
       <span class="lang-dot" style="background:#5c2878;"></span>Lakon
     </div>
@@ -193,7 +179,6 @@
   <main class="dict-main">
     <div class="dict-searchbox">
       <input type="search" id="search-input" placeholder="Search headword or meaning…" autocomplete="off">
-      <div class="filter-row" id="domain-filter"></div>
     </div>
     <div class="result-count" id="result-count"></div>
     <div class="dict-content" id="dict-content"></div>
@@ -210,95 +195,56 @@
 <script src="data.js"></script>
 <script>
 const LANG_DOTS = { Nume:"#2e5c8a", Dorig:"#c07820", Koro:"#922810", Olrat:"#267040", Lakon:"#5c2878" };
-const TARGET   = new URLSearchParams(location.search).get('word') || location.hash.slice(1) || '';
-
-// ── Dict lookup ───────────────────────────────────────────────
-const DICT_MAP = {};
+const DICT_MAP  = {};
 DICTIONARY.forEach(e => { DICT_MAP[e.id] = e; });
 
-// ── Comparative gloss table for dictionary examples ───────────
-function buildDictGloss(exData) {
-  function formCell(ids, form) {
-    const primaryId = ids[0];
-    const allIds = JSON.stringify(ids);
-    return `<td class="form-cell"><a class="lexlink" href="dictionary.html#${primaryId}" data-ids='${allIds}'>${form}</a></td>`;
-  }
-  const sepCells = '<td></td>' + exData.cols.map(() => '<td></td>').join('');
-  const langRows = exData.rows.map(row => {
-    const abbr  = LANG_ABBR[row.lang] || row.lang;
-    const color = LANG_COLORS[row.lang] || '#888';
-    return `<tr>
-      <td class="lang-abbr" style="color:${color};">${abbr}</td>
-      ${exData.cols.map((col,i) => formCell(col.ids, row.forms[i] || '—')).join('')}
-    </tr>`;
-  }).join('');
-  const glossCells = exData.cols.map(col => `<td class="gloss-cell">${col.gl}</td>`).join('');
+// Target word from URL hash or query param
+const TARGET = location.hash.slice(1) || new URLSearchParams(location.search).get('word') || '';
 
-  return `<div class="ex-wrap-dict">
-    <table class="cmp-table">
-      ${langRows}
-      <tr class="sep-row">${sepCells}</tr>
-      <tr><td class="gloss-abbr"></td>${glossCells}</tr>
-    </table>
-    <div class="ex-transl-dict">'${exData.translation}'</div>
-  </div>`;
-}
+// ── Domain filter (sidebar) ───────────────────────────────────
+const allDomains = ['All', ...new Set(DICTIONARY.map(e => e.domain))].sort();
+let activeDomain = 'All';
+let searchQ      = '';
 
-// ── Filter controls ───────────────────────────────────────────
-const allPOS     = ['All', ...new Set(DICTIONARY.map(e=>e.pos))].sort();
-const allDomains = ['All', ...new Set(DICTIONARY.map(e=>e.domain))].sort();
-let activePOS = 'All', activeDomain = 'All', searchQ = '';
-
-const posDiv = document.getElementById('pos-filter');
-allPOS.forEach(p => {
-  const b = document.createElement('button');
-  b.className = 'filter-btn' + (p==='All'?' active':'');
-  b.textContent = p; b.dataset.pos = p;
-  b.addEventListener('click', () => {
-    activePOS = p;
-    posDiv.querySelectorAll('.filter-btn').forEach(x=>x.classList.toggle('active',x.dataset.pos===p));
-    render();
-  });
-  posDiv.appendChild(b);
-});
-const domDiv = document.getElementById('domain-filter');
+const domSide = document.getElementById('domain-filter-side');
 allDomains.forEach(d => {
   const b = document.createElement('button');
-  b.className = 'filter-btn' + (d==='All'?' active':'');
+  b.className = 'filter-btn' + (d === 'All' ? ' active' : '');
   b.textContent = d; b.dataset.dom = d;
   b.addEventListener('click', () => {
     activeDomain = d;
-    domDiv.querySelectorAll('.filter-btn').forEach(x=>x.classList.toggle('active',x.dataset.dom===d));
+    domSide.querySelectorAll('.filter-btn').forEach(x => x.classList.toggle('active', x.dataset.dom === d));
     render();
   });
-  domDiv.appendChild(b);
+  domSide.appendChild(b);
 });
+
+// Search
 const searchInput = document.getElementById('search-input');
 searchInput.addEventListener('input', e => { searchQ = e.target.value.toLowerCase(); render(); });
 if (TARGET) { searchInput.value = TARGET; searchQ = TARGET.toLowerCase(); }
 
-// ── Filter ────────────────────────────────────────────────────
+// ── Filtered entries ──────────────────────────────────────────
 function filtered() {
   return DICTIONARY.filter(e => {
     const q = searchQ;
-    const matchQ = !q || e.hw.toLowerCase().includes(q)
+    const matchQ = !q
+      || e.hw.toLowerCase().includes(q)
       || e.gloss.toLowerCase().includes(q)
-      || Object.values(e.langs).some(v=>v.toLowerCase().includes(q));
-    return matchQ
-      && (activePOS    === 'All' || e.pos    === activePOS)
-      && (activeDomain === 'All' || e.domain === activeDomain);
+      || Object.values(e.langs).some(v => v.toLowerCase().includes(q));
+    return matchQ && (activeDomain === 'All' || e.domain === activeDomain);
   });
 }
 
 // ── Alpha index ───────────────────────────────────────────────
 const alphaDiv = document.getElementById('alpha-index');
 function buildAlpha(entries) {
-  const letters = new Set(entries.map(e=>e.hw[0].toUpperCase()));
+  const letters = new Set(entries.map(e => e.hw[0].toUpperCase()));
   alphaDiv.innerHTML = '';
-  'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(l=>{
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(l => {
     const a = document.createElement('a');
     a.textContent = l;
-    if (letters.has(l)) a.href = '#letter-'+l;
+    if (letters.has(l)) a.href = '#letter-' + l;
     else a.className = 'inactive';
     alphaDiv.appendChild(a);
   });
@@ -306,13 +252,19 @@ function buildAlpha(entries) {
 
 // ── Entry HTML ────────────────────────────────────────────────
 function entryHTML(e) {
-  const hl = (e.id===TARGET||e.hw===TARGET) ? ' highlighted' : '';
-  const langCells = ['Nume','Dorig','Koro','Olrat','Lakon']
-    .map(ln=>`<th><span class="lang-dot" style="background:${LANG_DOTS[ln]}"></span>${ln}</th>`).join('');
-  const langVals  = ['Nume','Dorig','Koro','Olrat','Lakon']
-    .map(ln=>`<td>${e.langs[ln]||'—'}</td>`).join('');
+  const hl = (e.id === TARGET || e.hw === TARGET) ? ' highlighted' : '';
 
-  const exHTML = e.examples.map(ex => buildDictGloss(ex)).join('');
+  // Language forms table — each form links to grammar example
+  const langCols = ['Nume','Dorig','Koro','Olrat','Lakon'].map(ln =>
+    `<th><span class="lang-dot" style="background:${LANG_DOTS[ln]}"></span>${ln}</th>`
+  ).join('');
+  const langVals = ['Nume','Dorig','Koro','Olrat','Lakon'].map(ln => {
+    const form = e.langs[ln] || '—';
+    // Link each form back to the grammar example (with tooltip via lexlink class)
+    return form === '—'
+      ? `<td style="color:#ccc">—</td>`
+      : `<td><a class="lexlink" href="grammar.html#s1" data-dict-id="${e.id}" style="font-family:'EB Garamond',serif;font-size:1.1rem;color:var(--ink);text-decoration:none;border-bottom:1.5px dotted var(--gold);border-radius:2px;padding:0 2px;transition:color 0.15s,border-color 0.15s,background 0.15s;">${form}</a></td>`;
+  }).join('');
 
   return `<div class="entry${hl}" id="${e.id}">
     <div class="entry-header">
@@ -322,25 +274,34 @@ function entryHTML(e) {
     </div>
     <div class="entry-gloss">${e.glossRich}</div>
     <table class="lang-table">
-      <thead><tr>${langCells}</tr></thead>
+      <thead><tr>${langCols}</tr></thead>
       <tbody><tr>${langVals}</tr></tbody>
     </table>
     <div class="entry-notes">${e.notes}</div>
-    ${e.examples.length ? `<div class="ex-header-label">Examples</div>${exHTML}` : ''}
+    <a class="grammar-ref" href="grammar.html#s1">📐 See in Comparative Grammar →</a>
   </div>`;
 }
 
 // ── Render ────────────────────────────────────────────────────
 function render() {
-  const entries  = filtered();
-  const content  = document.getElementById('dict-content');
-  document.getElementById('result-count').textContent = entries.length + ' entr' + (entries.length===1?'y':'ies');
+  const entries = filtered();
+  const content = document.getElementById('dict-content');
+  document.getElementById('result-count').textContent =
+    entries.length + ' entr' + (entries.length === 1 ? 'y' : 'ies');
 
-  if (!entries.length) { content.innerHTML = '<div class="no-results">No entries found.</div>'; buildAlpha([]); return; }
+  if (!entries.length) {
+    content.innerHTML = '<div class="no-results">No entries found.</div>';
+    buildAlpha([]); return;
+  }
   buildAlpha(entries);
 
+  // Group by first letter of headword
   const groups = {};
-  entries.forEach(e => { const l=e.hw[0].toUpperCase(); if(!groups[l])groups[l]=[]; groups[l].push(e); });
+  entries.forEach(e => {
+    const l = e.hw[0].toUpperCase();
+    if (!groups[l]) groups[l] = [];
+    groups[l].push(e);
+  });
 
   content.innerHTML = Object.keys(groups).sort().map(l =>
     `<div class="letter-group" id="letter-${l}">
@@ -350,19 +311,18 @@ function render() {
   ).join('');
 
   const hl = content.querySelector('.highlighted');
-  if (hl) setTimeout(()=>hl.scrollIntoView({behavior:'smooth',block:'center'}),120);
+  if (hl) setTimeout(() => hl.scrollIntoView({ behavior: 'smooth', block: 'center' }), 120);
 }
 render();
 
 // ── Alpha active on scroll ────────────────────────────────────
-const dictMain = document.querySelector('.dict-main');
-dictMain.addEventListener('scroll', () => {
+document.querySelector('.dict-main').addEventListener('scroll', () => {
   let active = null;
   document.querySelectorAll('.letter-group').forEach(g => {
-    if (g.getBoundingClientRect().top < 160) active = g.id.replace('letter-','');
+    if (g.getBoundingClientRect().top < 160) active = g.id.replace('letter-', '');
   });
   alphaDiv.querySelectorAll('a:not(.inactive)').forEach(a =>
-    a.classList.toggle('active', a.textContent===active)
+    a.classList.toggle('active', a.textContent === active)
   );
 });
 
@@ -373,37 +333,36 @@ const ttPos   = document.getElementById('tt-pos');
 const ttGloss = document.getElementById('tt-gloss');
 let hideTimer = null;
 
-function getEntry(link) {
-  let ids;
-  try { ids = JSON.parse(link.dataset.ids||'[]'); } catch(e) { ids=[]; }
-  if(!ids.length){ const href=link.getAttribute('href')||''; ids=[href.split('#')[1]].filter(Boolean); }
-  const entries = ids.map(id=>DICT_MAP[id]).filter(Boolean);
-  if(!entries.length) return null;
-  if(entries.length===1) return entries[0];
-  return { hw:entries.map(e=>e.hw).join('='), pos:entries.map(e=>e.pos).join('+'), gloss:entries.map(e=>e.gloss).join(' + ') };
-}
 function positionTooltip(el) {
-  const rect=el.getBoundingClientRect(), gap=10, tw=300;
-  let left=rect.left+rect.width/2-20;
-  if(left+tw>window.innerWidth-8) left=window.innerWidth-tw-8;
-  if(left<8) left=8;
-  const ttH=tooltip.offsetHeight||70;
-  tooltip.style.left=left+'px';
-  tooltip.style.top=((rect.top-ttH-gap<8)?rect.bottom+gap:rect.top-ttH-gap)+'px';
+  const rect = el.getBoundingClientRect(), tw = 300, ttH = tooltip.offsetHeight || 80, gap = 10;
+  let left = rect.left + rect.width / 2 - 20;
+  if (left + tw > window.innerWidth - 8) left = window.innerWidth - tw - 8;
+  if (left < 8) left = 8;
+  tooltip.style.left = left + 'px';
+  tooltip.style.top  = (rect.top - ttH - gap < 8) ? (rect.bottom + gap) + 'px' : (rect.top - ttH - gap) + 'px';
 }
+
 document.addEventListener('mouseover', e => {
-  const link=e.target.closest('a.lexlink'); if(!link) return;
-  const entry=getEntry(link); if(!entry) return;
+  const a = e.target.closest('a.lexlink');
+  if (!a) return;
+  const id    = a.dataset.dictId || (a.getAttribute('href') || '').split('#')[1];
+  const entry = id && DICT_MAP[id];
+  if (!entry) return;
   clearTimeout(hideTimer);
-  ttHw.textContent=entry.hw; ttPos.textContent='  '+entry.pos; ttGloss.textContent=entry.gloss;
-  tooltip.classList.add('visible'); positionTooltip(link);
+  ttHw.textContent    = entry.hw;
+  ttPos.textContent   = '  ' + entry.pos;
+  ttGloss.textContent = entry.gloss;
+  tooltip.classList.add('visible');
+  positionTooltip(a);
 });
 document.addEventListener('mouseout', e => {
-  if(e.target.closest('a.lexlink')) hideTimer=setTimeout(()=>tooltip.classList.remove('visible'),80);
+  if (e.target.closest('a.lexlink'))
+    hideTimer = setTimeout(() => tooltip.classList.remove('visible'), 80);
 });
 document.addEventListener('mousemove', e => {
-  if(!tooltip.classList.contains('visible')) return;
-  const link=e.target.closest('a.lexlink'); if(link) positionTooltip(link);
+  if (!tooltip.classList.contains('visible')) return;
+  const a = e.target.closest('a.lexlink');
+  if (a) positionTooltip(a);
 });
 </script>
 </body>
