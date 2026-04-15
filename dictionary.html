@@ -34,10 +34,51 @@
 .alpha-list a.inactive { color: var(--border); pointer-events: none; }
 
 .dict-searchbox {
-  padding: 1rem 1rem 0;
+  padding: 0.85rem 1rem 0;
   position: sticky; top: 52px; background: var(--bg); z-index: 10;
   border-bottom: 1px solid var(--border);
 }
+
+/* Language-as-headword selector */
+.lang-selector-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+.lang-selector-label {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-light);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.lang-sel-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'Crimson Pro', serif;
+  font-variant: small-caps;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  padding: 3px 11px 4px;
+  border-radius: 3px;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  color: white;
+  transition: opacity 0.15s, box-shadow 0.15s;
+  opacity: 0.45;
+}
+.lang-sel-btn.active {
+  opacity: 1;
+  box-shadow: 0 0 0 2px white, 0 0 0 3.5px currentColor;
+}
+.lang-sel-btn:hover { opacity: 0.85; }
+
 .dict-searchbox input {
   width: 100%; font-family: 'EB Garamond', serif; font-size: 1rem;
   padding: 0.5rem 0.9rem; border: 1px solid var(--border); border-radius: 4px;
@@ -178,6 +219,14 @@
 
   <main class="dict-main">
     <div class="dict-searchbox">
+      <div class="lang-selector-row">
+        <span class="lang-selector-label">Headword language</span>
+        <button class="lang-sel-btn active" data-lang="Koro"  style="background:#922810;color:white;">Koro</button>
+        <button class="lang-sel-btn"        data-lang="Nume"  style="background:#2e5c8a;color:white;">Nume</button>
+        <button class="lang-sel-btn"        data-lang="Dorig" style="background:#c07820;color:white;">Dorig</button>
+        <button class="lang-sel-btn"        data-lang="Olrat" style="background:#267040;color:white;">Olrat</button>
+        <button class="lang-sel-btn"        data-lang="Lakon" style="background:#5c2878;color:white;">Lakon</button>
+      </div>
       <input type="search" id="search-input" placeholder="Search headword or meaning…" autocomplete="off">
     </div>
     <div class="result-count" id="result-count"></div>
@@ -198,13 +247,26 @@ const LANG_DOTS = { Nume:"#2e5c8a", Dorig:"#c07820", Koro:"#922810", Olrat:"#267
 const DICT_MAP  = {};
 DICTIONARY.forEach(e => { DICT_MAP[e.id] = e; });
 
-// Target word from URL hash or query param
 const TARGET = location.hash.slice(1) || new URLSearchParams(location.search).get('word') || '';
+
+// ── Active headword language ──────────────────────────────────
+let activeLang   = 'Koro';   // default
+let activeDomain = 'All';
+let searchQ      = '';
+
+// Wire language selector buttons
+document.querySelectorAll('.lang-sel-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    activeLang = btn.dataset.lang;
+    document.querySelectorAll('.lang-sel-btn').forEach(b =>
+      b.classList.toggle('active', b.dataset.lang === activeLang)
+    );
+    render();
+  });
+});
 
 // ── Domain filter (sidebar) ───────────────────────────────────
 const allDomains = ['All', ...new Set(DICTIONARY.map(e => e.domain))].sort();
-let activeDomain = 'All';
-let searchQ      = '';
 
 const domSide = document.getElementById('domain-filter-side');
 allDomains.forEach(d => {
@@ -228,18 +290,22 @@ if (TARGET) { searchInput.value = TARGET; searchQ = TARGET.toLowerCase(); }
 function filtered() {
   return DICTIONARY.filter(e => {
     const q = searchQ;
+    // search against the active-language form as headword, plus gloss
+    const activeForm = (e.langs[activeLang] || '').toLowerCase();
     const matchQ = !q
-      || e.hw.toLowerCase().includes(q)
+      || activeForm.includes(q)
       || e.gloss.toLowerCase().includes(q)
       || Object.values(e.langs).some(v => v.toLowerCase().includes(q));
     return matchQ && (activeDomain === 'All' || e.domain === activeDomain);
   });
 }
 
-// ── Alpha index ───────────────────────────────────────────────
+// ── Alpha index — keyed to active-language headword ───────────
 const alphaDiv = document.getElementById('alpha-index');
 function buildAlpha(entries) {
-  const letters = new Set(entries.map(e => e.hw[0].toUpperCase()));
+  const letters = new Set(
+    entries.map(e => (e.langs[activeLang] || e.hw)[0].toUpperCase())
+  );
   alphaDiv.innerHTML = '';
   'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(l => {
     const a = document.createElement('a');
@@ -253,22 +319,30 @@ function buildAlpha(entries) {
 // ── Entry HTML ────────────────────────────────────────────────
 function entryHTML(e) {
   const hl = (e.id === TARGET || e.hw === TARGET) ? ' highlighted' : '';
+  // Headword = form in the selected language
+  const displayHw = e.langs[activeLang] || e.hw;
+  const hwColor   = LANG_COLORS[activeLang] || 'var(--ink)';
 
-  // Language forms table — each form links to grammar example
   const langCols = ['Nume','Dorig','Koro','Olrat','Lakon'].map(ln =>
     `<th><span class="lang-dot" style="background:${LANG_DOTS[ln]}"></span>${ln}</th>`
   ).join('');
   const langVals = ['Nume','Dorig','Koro','Olrat','Lakon'].map(ln => {
     const form = e.langs[ln] || '—';
-    // Link each form back to the grammar example (with tooltip via lexlink class)
+    const isActive = ln === activeLang;
     return form === '—'
       ? `<td style="color:#ccc">—</td>`
-      : `<td><a class="lexlink" href="grammar.html#s1" data-dict-id="${e.id}" style="font-family:'EB Garamond',serif;font-size:1.1rem;color:var(--ink);text-decoration:none;border-bottom:1.5px dotted var(--gold);border-radius:2px;padding:0 2px;transition:color 0.15s,border-color 0.15s,background 0.15s;">${form}</a></td>`;
+      : `<td style="${isActive ? 'font-weight:600;' : ''}">
+           <a class="lexlink" href="grammar.html#s1" data-dict-id="${e.id}"
+              style="font-family:'EB Garamond',serif;font-size:1.1rem;color:${isActive ? hwColor : 'var(--ink)'};
+                     text-decoration:none;border-bottom:1.5px dotted var(--gold);
+                     border-radius:2px;padding:0 2px;
+                     transition:color 0.15s,border-color 0.15s,background 0.15s;">${form}</a>
+         </td>`;
   }).join('');
 
   return `<div class="entry${hl}" id="${e.id}">
     <div class="entry-header">
-      <span class="headword">${e.hw}</span>
+      <span class="headword" style="color:${hwColor};">${displayHw}</span>
       <span class="pos-tag">${e.pos}</span>
       <span class="domain-tag">${e.domain}</span>
     </div>
@@ -287,7 +361,8 @@ function render() {
   const entries = filtered();
   const content = document.getElementById('dict-content');
   document.getElementById('result-count').textContent =
-    entries.length + ' entr' + (entries.length === 1 ? 'y' : 'ies');
+    entries.length + ' entr' + (entries.length === 1 ? 'y' : 'ies') +
+    ' · headword language: ' + activeLang;
 
   if (!entries.length) {
     content.innerHTML = '<div class="no-results">No entries found.</div>';
@@ -295,17 +370,23 @@ function render() {
   }
   buildAlpha(entries);
 
-  // Group by first letter of headword
+  // Group by first letter of the active-language form
   const groups = {};
   entries.forEach(e => {
-    const l = e.hw[0].toUpperCase();
+    const form = e.langs[activeLang] || e.hw;
+    const l    = form[0].toUpperCase();
     if (!groups[l]) groups[l] = [];
     groups[l].push(e);
   });
 
+  // Sort entries within each group by active-language form
+  Object.values(groups).forEach(g =>
+    g.sort((a, b) => (a.langs[activeLang] || a.hw).localeCompare(b.langs[activeLang] || b.hw))
+  );
+
   content.innerHTML = Object.keys(groups).sort().map(l =>
     `<div class="letter-group" id="letter-${l}">
-      <div class="letter-heading">${l}</div>
+      <div class="letter-heading" style="border-color:${LANG_COLORS[activeLang]};">${l}</div>
       ${groups[l].map(entryHTML).join('')}
     </div>`
   ).join('');
