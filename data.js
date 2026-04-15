@@ -176,9 +176,7 @@ the verb complex. The post-verbal element (<strong>NONDUM₂</strong>) is suffix
 a post-verbal particle and can be omitted in casual registers, particularly in Lakon and Olrat.
 Together the two components convey the meaning <em>'not yet'</em> or <em>'not … properly'</em>
 depending on the adverb present.</p>
-<p><strong>Hover over any form</strong> to see its dictionary definition; <strong>click</strong> to
-open the full entry. Use the language toggles to show or hide individual varieties. Click the bar to
-collapse the example.</p>
+
 <negation-example></negation-example>`
   },
 ];
