@@ -166,6 +166,87 @@
 }
 .grammar-ref:hover { background: #2a4a6a; color: white; border-color: #2a4a6a; }
 
+/* ── Contextual example block ── */
+.entry-example-block {
+  margin-top: 0.9rem;
+}
+.entry-example-label {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-light);
+  margin-bottom: 0.4rem;
+}
+.entry-example-wrap {
+  background: #faf6ef;
+  border-left: 3px solid var(--gold);
+  border-radius: 0 5px 5px 0;
+  padding: 0.7rem 1.1rem 0.75rem;
+  display: inline-block;
+  min-width: 240px;
+  max-width: 100%;
+  overflow-x: auto;
+}
+.entry-ex-table {
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+.entry-ex-table .ex-lang-abbr {
+  font-family: 'Crimson Pro', serif;
+  font-variant: small-caps;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--ink-light);
+  padding: 2px 16px 2px 0;
+  vertical-align: baseline;
+  border: none;
+}
+.entry-ex-table .ex-form-cell {
+  padding: 2px 18px 2px 0;
+  vertical-align: baseline;
+  border: none;
+}
+.entry-ex-table .ex-form-cell.ex-empty {
+  font-family: 'EB Garamond', serif;
+  font-size: 1.15rem;
+  color: #ccc;
+}
+.entry-ex-table .ex-form-cell a.lexlink:hover {
+  color: #b84c10 !important;
+  border-bottom-color: #b84c10 !important;
+  background: #fff5e8;
+}
+.entry-ex-table .ex-sep-row td {
+  border-top: 1px solid var(--border);
+  padding: 0; height: 0; border-bottom: none;
+}
+.entry-ex-table .ex-gloss-abbr {
+  padding: 5px 16px 3px 0;
+  border: none;
+  vertical-align: baseline;
+}
+.entry-ex-table .ex-gloss-cell {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-light);
+  padding: 5px 18px 3px 0;
+  vertical-align: baseline;
+  border: none;
+  white-space: nowrap;
+}
+.entry-ex-transl {
+  font-family: 'Crimson Pro', serif;
+  font-style: italic;
+  font-size: 1rem;
+  color: var(--ink-mid);
+  margin-top: 5px;
+}
+
 /* Tooltip */
 #lex-tooltip { position: fixed; z-index: 9999; pointer-events: none; opacity: 0; transition: opacity 0.1s ease; max-width: 300px; }
 #lex-tooltip.visible { opacity: 1; }
@@ -196,7 +277,7 @@
     <li><a href="texts.html">Texts</a></li>
     <li><a href="dictionary.html" class="active">Dictionary</a></li>
   </ul>
-  <div class="topnav-right">Comparative Lexicon · 5 Languages</div>
+  <div class="topnav-right">Comparative Lexicon</div>
 </nav>
 
 <div class="dict-layout">
@@ -316,10 +397,73 @@ function buildAlpha(entries) {
   });
 }
 
+// Build contextual example for one entry 
+function buildEntryExample(entryId) {
+  const ex      = NEGATION_EXAMPLE;
+  const cols    = ex.cols;
+  const ownCol  = cols.findIndex(c => c.dictId === entryId); // may be -1 if not found
+  const LANGS5  = ['Nume','Dorig','Koro','Olrat','Lakon'];
+
+  // Build table rows 
+  const langRows = ex.rows.map(row => {
+    const color = LANG_COLORS[row.lang] || '#888';
+    const abbr  = LANG_ABBR[row.lang]  || row.lang;
+    const cells = cols.map((col, i) => {
+      const f = row.forms[i] ?? '';
+      if (f === '') return `<td class="ex-form-cell ex-empty">—</td>`;
+
+      const isOwn = (i === ownCol);
+      if (isOwn) {
+        // Bold, coloured, no link
+        return `<td class="ex-form-cell ex-own">
+          <strong style="font-family:'EB Garamond',serif;font-size:1.15rem;
+                         color:${color};font-weight:700;
+                         border-bottom:2px solid ${color};padding:0 2px;">${f}</strong>
+        </td>`;
+      } else {
+        // Link to the other entry
+        return `<td class="ex-form-cell">
+          <a class="lexlink" href="#${col.dictId}" data-dict-id="${col.dictId}"
+             style="font-family:'EB Garamond',serif;font-size:1.15rem;color:var(--ink);
+                    text-decoration:none;border-bottom:1.5px dotted var(--gold);
+                    border-radius:2px;padding:0 2px;
+                    transition:color 0.15s,border-color 0.15s,background 0.15s;">${f}</a>
+        </td>`;
+      }
+    }).join('');
+
+    return `<tr>
+      <td class="ex-lang-abbr" style="color:${color};">${abbr}</td>
+      ${cells}
+    </tr>`;
+  }).join('');
+
+  // Separator + gloss row
+  const sepCells  = '<td></td>' + cols.map(() => '<td></td>').join('');
+  const glossCells = cols.map(col => `<td class="ex-gloss-cell">${col.gl}</td>`).join('');
+
+  return `<div class="entry-example-block">
+    <div class="entry-example-label">Example</div>
+    <div class="entry-example-wrap">
+      <table class="entry-ex-table">
+        ${langRows}
+        <tr class="ex-sep-row">${sepCells}</tr>
+        <tr>
+          <td class="ex-gloss-abbr"></td>
+          ${glossCells}
+        </tr>
+      </table>
+      <div class="entry-ex-transl">${ex.translation}</div>
+      <a class="grammar-ref" style="margin-top:6px;" href="grammar.html#s1">
+        📐 See in Comparative Grammar →
+      </a>
+    </div>
+  </div>`;
+}
+
 // ── Entry HTML ────────────────────────────────────────────────
 function entryHTML(e) {
   const hl = (e.id === TARGET || e.hw === TARGET) ? ' highlighted' : '';
-  // Headword = form in the selected language
   const displayHw = e.langs[activeLang] || e.hw;
   const hwColor   = LANG_COLORS[activeLang] || 'var(--ink)';
 
@@ -327,13 +471,15 @@ function entryHTML(e) {
     `<th><span class="lang-dot" style="background:${LANG_DOTS[ln]}"></span>${ln}</th>`
   ).join('');
   const langVals = ['Nume','Dorig','Koro','Olrat','Lakon'].map(ln => {
-    const form = e.langs[ln] || '—';
+    const form    = e.langs[ln] || '—';
     const isActive = ln === activeLang;
     return form === '—'
       ? `<td style="color:#ccc">—</td>`
       : `<td style="${isActive ? 'font-weight:600;' : ''}">
-           <a class="lexlink" href="grammar.html#s1" data-dict-id="${e.id}"
-              style="font-family:'EB Garamond',serif;font-size:1.1rem;color:${isActive ? hwColor : 'var(--ink)'};
+           <a class="lexlink" data-dict-id="${e.id}"
+              href="#${e.id}"
+              style="font-family:'EB Garamond',serif;font-size:1.1rem;
+                     color:${isActive ? hwColor : 'var(--ink)'};
                      text-decoration:none;border-bottom:1.5px dotted var(--gold);
                      border-radius:2px;padding:0 2px;
                      transition:color 0.15s,border-color 0.15s,background 0.15s;">${form}</a>
@@ -352,7 +498,7 @@ function entryHTML(e) {
       <tbody><tr>${langVals}</tr></tbody>
     </table>
     <div class="entry-notes">${e.notes}</div>
-    <a class="grammar-ref" href="grammar.html#s1">📐 See in Comparative Grammar →</a>
+    ${buildEntryExample(e.id)}
   </div>`;
 }
 
