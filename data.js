@@ -92,6 +92,11 @@ const DICTIONARY = [
     glossRich: "speech, language, word",
     notes: "Noun denoting spoken language or speech in general. All five languages show distinct forms, reflecting the high rate of lexical differentiation across the Gaua dialect chain.",
     langs: { Nume:"luwluw", Dorig:"lŋa", Koro:"βalβalaw", Olrat:"ususraː", Lakon:"ɛlŋa" },
+    etym: {
+      label: "POc *[qa]liŋa- 'voice'",
+      tlopo:  "https://tlopo.clld.org/parameters/5-3-4-14-138-POc-qalia-a#6/-5.859/152.761",
+      etymograph: "https://evosem.huma-num.fr/etymograph.html?etym=Oceanic/qali%C5%8Ba-&node1=voice",
+    },
   },
   {
     id: "poss",
@@ -173,7 +178,6 @@ discontinuous pattern. </p>
 occupies the position immediately before the verb complex. The post-verbal element (<strong>NONDUM₂</strong>) is suffixed to the final verb or
 a post-verbal particle and can be omitted in casual registers, particularly in Lakon and Olrat.
 Together the two components convey the meaning <em>'not yet'</em>.</p>
-
 <negation-example></negation-example>`
   },
 ];
