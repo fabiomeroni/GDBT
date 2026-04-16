@@ -39,44 +39,21 @@
   border-bottom: 1px solid var(--border);
 }
 
-/* Language-as-headword selector */
 .lang-selector-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-  flex-wrap: wrap;
+  display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; flex-wrap: wrap;
 }
 .lang-selector-label {
-  font-family: 'Crimson Pro', serif;
-  font-size: 0.78rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ink-light);
-  white-space: nowrap;
-  flex-shrink: 0;
+  font-family: 'Crimson Pro', serif; font-size: 0.78rem; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--ink-light); white-space: nowrap; flex-shrink: 0;
 }
 .lang-sel-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-family: 'Crimson Pro', serif;
-  font-variant: small-caps;
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 0.07em;
-  padding: 3px 11px 4px;
-  border-radius: 3px;
-  border: 1.5px solid transparent;
-  cursor: pointer;
-  color: white;
-  transition: opacity 0.15s, box-shadow 0.15s;
-  opacity: 0.45;
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: 'Crimson Pro', serif; font-variant: small-caps;
+  font-size: 0.85rem; font-weight: 600; letter-spacing: 0.07em;
+  padding: 3px 11px 4px; border-radius: 3px; border: 1.5px solid transparent;
+  cursor: pointer; color: white; transition: opacity 0.15s, box-shadow 0.15s; opacity: 0.45;
 }
-.lang-sel-btn.active {
-  opacity: 1;
-  box-shadow: 0 0 0 2px white, 0 0 0 3.5px currentColor;
-}
+.lang-sel-btn.active { opacity: 1; box-shadow: 0 0 0 2px white, 0 0 0 3.5px currentColor; }
 .lang-sel-btn:hover { opacity: 0.85; }
 
 .dict-searchbox input {
@@ -132,6 +109,63 @@
   font-family: 'Crimson Pro', serif; font-size: 0.75rem; letter-spacing: 0.08em;
   text-transform: uppercase; color: white; background: var(--gold); border-radius: 2px; padding: 1px 7px 2px;
 }
+
+/* ── Etymology tag ── */
+.etym-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.82rem;
+  color: #4a3060;
+  background: #f0eaf8;
+  border: 1px solid #c8b0e0;
+  border-radius: 3px;
+  padding: 1px 8px 2px;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+.etym-tag:hover { background: #4a3060; color: white; border-color: #4a3060; }
+.etym-tag .etym-prefix {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.65;
+  margin-right: 1px;
+}
+.etym-tag .etym-form {
+  font-family: 'EB Garamond', serif;
+  font-size: 1rem;
+  font-style: italic;
+}
+
+/* Etymograph icon link */
+.etymograph-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 3px;
+  border: 1px solid #c8b0e0;
+  background: #f0eaf8;
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s;
+  vertical-align: middle;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.etymograph-link:hover { background: #4a3060; border-color: #4a3060; }
+.etymograph-link img {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+  opacity: 0.6;
+  transition: opacity 0.15s, filter 0.15s;
+}
+.etymograph-link:hover img { opacity: 1; filter: brightness(10); }
+
 .entry-gloss { font-family: 'Crimson Pro', serif; font-size: 1.08rem; color: var(--ink-mid); line-height: 1.7; margin-bottom: 0.5rem; }
 .entry-gloss em { font-style: italic; }
 .entry-notes {
@@ -167,84 +201,37 @@
 .grammar-ref:hover { background: #2a4a6a; color: white; border-color: #2a4a6a; }
 
 /* ── Contextual example block ── */
-.entry-example-block {
-  margin-top: 0.9rem;
-}
+.entry-example-block { margin-top: 0.9rem; }
 .entry-example-label {
-  font-family: 'Crimson Pro', serif;
-  font-size: 0.72rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ink-light);
-  margin-bottom: 0.4rem;
+  font-family: 'Crimson Pro', serif; font-size: 0.72rem; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-light); margin-bottom: 0.4rem;
 }
 .entry-example-wrap {
-  background: #faf6ef;
-  border-left: 3px solid var(--gold);
-  border-radius: 0 5px 5px 0;
-  padding: 0.7rem 1.1rem 0.75rem;
-  display: inline-block;
-  min-width: 240px;
-  max-width: 100%;
-  overflow-x: auto;
+  background: #faf6ef; border-left: 3px solid var(--gold); border-radius: 0 5px 5px 0;
+  padding: 0.7rem 1.1rem 0.75rem; display: block;
+  max-width: 100%; overflow-x: auto;
 }
-.entry-ex-table {
-  border-collapse: collapse;
-  font-size: 0.95rem;
-  white-space: nowrap;
-}
+.entry-ex-table { border-collapse: collapse; font-size: 0.95rem; white-space: nowrap; }
 .entry-ex-table .ex-lang-abbr {
-  font-family: 'Crimson Pro', serif;
-  font-variant: small-caps;
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  color: var(--ink-light);
-  padding: 2px 16px 2px 0;
-  vertical-align: baseline;
-  border: none;
+  font-family: 'Crimson Pro', serif; font-variant: small-caps; font-size: 0.85rem;
+  font-weight: 600; letter-spacing: 0.06em; color: var(--ink-light);
+  padding: 2px 16px 2px 0; vertical-align: baseline; border: none;
 }
-.entry-ex-table .ex-form-cell {
-  padding: 2px 18px 2px 0;
-  vertical-align: baseline;
-  border: none;
-}
-.entry-ex-table .ex-form-cell.ex-empty {
-  font-family: 'EB Garamond', serif;
-  font-size: 1.15rem;
-  color: #ccc;
-}
+.entry-ex-table .ex-form-cell { padding: 2px 18px 2px 0; vertical-align: baseline; border: none; }
+.entry-ex-table .ex-form-cell.ex-empty { font-family: 'EB Garamond', serif; font-size: 1.15rem; color: #ccc; }
 .entry-ex-table .ex-form-cell a.lexlink:hover {
-  color: #b84c10 !important;
-  border-bottom-color: #b84c10 !important;
-  background: #fff5e8;
+  color: #b84c10 !important; border-bottom-color: #b84c10 !important; background: #fff5e8;
 }
-.entry-ex-table .ex-sep-row td {
-  border-top: 1px solid var(--border);
-  padding: 0; height: 0; border-bottom: none;
-}
-.entry-ex-table .ex-gloss-abbr {
-  padding: 5px 16px 3px 0;
-  border: none;
-  vertical-align: baseline;
-}
+.entry-ex-table .ex-sep-row td { border-top: 1px solid var(--border); padding: 0; height: 0; border-bottom: none; }
+.entry-ex-table .ex-gloss-abbr { padding: 5px 16px 3px 0; border: none; vertical-align: baseline; }
 .entry-ex-table .ex-gloss-cell {
-  font-family: 'Source Code Pro', monospace;
-  font-size: 0.66rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--ink-light);
-  padding: 5px 18px 3px 0;
-  vertical-align: baseline;
-  border: none;
-  white-space: nowrap;
+  font-family: 'Source Code Pro', monospace; font-size: 0.66rem; letter-spacing: 0.04em;
+  text-transform: uppercase; color: var(--ink-light);
+  padding: 5px 18px 3px 0; vertical-align: baseline; border: none; white-space: nowrap;
 }
 .entry-ex-transl {
-  font-family: 'Crimson Pro', serif;
-  font-style: italic;
-  font-size: 1rem;
-  color: var(--ink-mid);
-  margin-top: 5px;
+  font-family: 'Crimson Pro', serif; font-style: italic; font-size: 1rem;
+  color: var(--ink-mid); margin-top: 5px;
 }
 
 /* Tooltip */
@@ -330,12 +317,10 @@ DICTIONARY.forEach(e => { DICT_MAP[e.id] = e; });
 
 const TARGET = location.hash.slice(1) || new URLSearchParams(location.search).get('word') || '';
 
-// ── Active headword language ──────────────────────────────────
-let activeLang   = 'Koro';   // default
+let activeLang   = 'Koro';
 let activeDomain = 'All';
 let searchQ      = '';
 
-// Wire language selector buttons
 document.querySelectorAll('.lang-sel-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     activeLang = btn.dataset.lang;
@@ -346,9 +331,7 @@ document.querySelectorAll('.lang-sel-btn').forEach(btn => {
   });
 });
 
-// ── Domain filter (sidebar) ───────────────────────────────────
 const allDomains = ['All', ...new Set(DICTIONARY.map(e => e.domain))].sort();
-
 const domSide = document.getElementById('domain-filter-side');
 allDomains.forEach(d => {
   const b = document.createElement('button');
@@ -362,16 +345,13 @@ allDomains.forEach(d => {
   domSide.appendChild(b);
 });
 
-// Search
 const searchInput = document.getElementById('search-input');
 searchInput.addEventListener('input', e => { searchQ = e.target.value.toLowerCase(); render(); });
 if (TARGET) { searchInput.value = TARGET; searchQ = TARGET.toLowerCase(); }
 
-// ── Filtered entries ──────────────────────────────────────────
 function filtered() {
   return DICTIONARY.filter(e => {
     const q = searchQ;
-    // search against the active-language form as headword, plus gloss
     const activeForm = (e.langs[activeLang] || '').toLowerCase();
     const matchQ = !q
       || activeForm.includes(q)
@@ -381,12 +361,9 @@ function filtered() {
   });
 }
 
-// ── Alpha index — keyed to active-language headword ───────────
 const alphaDiv = document.getElementById('alpha-index');
 function buildAlpha(entries) {
-  const letters = new Set(
-    entries.map(e => (e.langs[activeLang] || e.hw)[0].toUpperCase())
-  );
+  const letters = new Set(entries.map(e => (e.langs[activeLang] || e.hw)[0].toUpperCase()));
   alphaDiv.innerHTML = '';
   'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(l => {
     const a = document.createElement('a');
@@ -397,61 +374,58 @@ function buildAlpha(entries) {
   });
 }
 
-// Build contextual example for one entry 
-function buildEntryExample(entryId) {
-  const ex      = NEGATION_EXAMPLE;
-  const cols    = ex.cols;
-  const ownCol  = cols.findIndex(c => c.dictId === entryId); // may be -1 if not found
-  const LANGS5  = ['Nume','Dorig','Koro','Olrat','Lakon'];
+// ── Etymology HTML ────────────────────────────────────────────
+function etymHTML(etym) {
+  if (!etym) return '';
+  return `<a class="etym-tag" href="${etym.tlopo}" target="_blank" title="Proto-Oceanic etymology — The Lexicon of Proto Oceanic">
+    <span class="etym-prefix">POc</span>
+    <span class="etym-form">${etym.label.replace(/^POc\s*/,'')}</span>
+  </a>
+  <a class="etymograph-link" href="${etym.etymograph}" target="_blank" title="View in Etymograph — semantic evolution network">
+    <img src="etymograph_icon.png" alt="Etymograph network">
+  </a>`;
+}
 
-  // Build table rows 
+// ── Contextual example ────────────────────────────────────────
+function buildEntryExample(entryId) {
+  const ex     = NEGATION_EXAMPLE;
+  const cols   = ex.cols;
+  const ownCol = cols.findIndex(c => c.dictId === entryId);
+
   const langRows = ex.rows.map(row => {
     const color = LANG_COLORS[row.lang] || '#888';
     const abbr  = LANG_ABBR[row.lang]  || row.lang;
     const cells = cols.map((col, i) => {
       const f = row.forms[i] ?? '';
       if (f === '') return `<td class="ex-form-cell ex-empty">—</td>`;
-
-      const isOwn = (i === ownCol);
-      if (isOwn) {
-        // Bold, coloured, no link
+      if (i === ownCol) {
         return `<td class="ex-form-cell ex-own">
           <strong style="font-family:'EB Garamond',serif;font-size:1.15rem;
                          color:${color};font-weight:700;
                          border-bottom:2px solid ${color};padding:0 2px;">${f}</strong>
         </td>`;
-      } else {
-        // Link to the other entry
-        return `<td class="ex-form-cell">
-          <a class="lexlink" href="#${col.dictId}" data-dict-id="${col.dictId}"
-             style="font-family:'EB Garamond',serif;font-size:1.15rem;color:var(--ink);
-                    text-decoration:none;border-bottom:1.5px dotted var(--gold);
-                    border-radius:2px;padding:0 2px;
-                    transition:color 0.15s,border-color 0.15s,background 0.15s;">${f}</a>
-        </td>`;
       }
+      return `<td class="ex-form-cell">
+        <a class="lexlink" href="#${col.dictId}" data-dict-id="${col.dictId}"
+           style="font-family:'EB Garamond',serif;font-size:1.15rem;color:var(--ink);
+                  text-decoration:none;border-bottom:1.5px dotted var(--gold);
+                  border-radius:2px;padding:0 2px;
+                  transition:color 0.15s,border-color 0.15s,background 0.15s;">${f}</a>
+      </td>`;
     }).join('');
-
-    return `<tr>
-      <td class="ex-lang-abbr" style="color:${color};">${abbr}</td>
-      ${cells}
-    </tr>`;
+    return `<tr><td class="ex-lang-abbr" style="color:${color};">${abbr}</td>${cells}</tr>`;
   }).join('');
 
-  // Separator + gloss row
   const sepCells  = '<td></td>' + cols.map(() => '<td></td>').join('');
   const glossCells = cols.map(col => `<td class="ex-gloss-cell">${col.gl}</td>`).join('');
 
   return `<div class="entry-example-block">
-    <div class="entry-example-label"></div>
+    <div class="entry-example-label">Example</div>
     <div class="entry-example-wrap">
       <table class="entry-ex-table">
         ${langRows}
         <tr class="ex-sep-row">${sepCells}</tr>
-        <tr>
-          <td class="ex-gloss-abbr"></td>
-          ${glossCells}
-        </tr>
+        <tr><td class="ex-gloss-abbr"></td>${glossCells}</tr>
       </table>
       <div class="entry-ex-transl">${ex.translation}</div>
       <a class="grammar-ref" style="margin-top:6px;" href="grammar.html#s1">
@@ -463,7 +437,7 @@ function buildEntryExample(entryId) {
 
 // ── Entry HTML ────────────────────────────────────────────────
 function entryHTML(e) {
-  const hl = (e.id === TARGET || e.hw === TARGET) ? ' highlighted' : '';
+  const hl        = (e.id === TARGET || e.hw === TARGET) ? ' highlighted' : '';
   const displayHw = e.langs[activeLang] || e.hw;
   const hwColor   = LANG_COLORS[activeLang] || 'var(--ink)';
 
@@ -471,13 +445,12 @@ function entryHTML(e) {
     `<th><span class="lang-dot" style="background:${LANG_DOTS[ln]}"></span>${ln}</th>`
   ).join('');
   const langVals = ['Nume','Dorig','Koro','Olrat','Lakon'].map(ln => {
-    const form    = e.langs[ln] || '—';
+    const form     = e.langs[ln] || '—';
     const isActive = ln === activeLang;
     return form === '—'
       ? `<td style="color:#ccc">—</td>`
       : `<td style="${isActive ? 'font-weight:600;' : ''}">
-           <a class="lexlink" data-dict-id="${e.id}"
-              href="#${e.id}"
+           <a class="lexlink" data-dict-id="${e.id}" href="#${e.id}"
               style="font-family:'EB Garamond',serif;font-size:1.1rem;
                      color:${isActive ? hwColor : 'var(--ink)'};
                      text-decoration:none;border-bottom:1.5px dotted var(--gold);
@@ -486,12 +459,20 @@ function entryHTML(e) {
          </td>`;
   }).join('');
 
+  // Etymology row — only rendered when e.etym exists
+  const etymRow = e.etym
+    ? `<div class="entry-header" style="margin-top:0.25rem;margin-bottom:0.55rem;">
+         ${etymHTML(e.etym)}
+       </div>`
+    : '';
+
   return `<div class="entry${hl}" id="${e.id}">
     <div class="entry-header">
       <span class="headword" style="color:${hwColor};">${displayHw}</span>
       <span class="pos-tag">${e.pos}</span>
       <span class="domain-tag">${e.domain}</span>
     </div>
+    ${etymRow}
     <div class="entry-gloss">${e.glossRich}</div>
     <table class="lang-table">
       <thead><tr>${langCols}</tr></thead>
@@ -516,7 +497,6 @@ function render() {
   }
   buildAlpha(entries);
 
-  // Group by first letter of the active-language form
   const groups = {};
   entries.forEach(e => {
     const form = e.langs[activeLang] || e.hw;
@@ -524,8 +504,6 @@ function render() {
     if (!groups[l]) groups[l] = [];
     groups[l].push(e);
   });
-
-  // Sort entries within each group by active-language form
   Object.values(groups).forEach(g =>
     g.sort((a, b) => (a.langs[activeLang] || a.hw).localeCompare(b.langs[activeLang] || b.hw))
   );
@@ -538,22 +516,20 @@ function render() {
   ).join('');
 
   const hl = content.querySelector('.highlighted');
-  if (hl) setTimeout(() => hl.scrollIntoView({ behavior: 'smooth', block: 'center' }), 120);
+  if (hl) setTimeout(() => hl.scrollIntoView({ behavior:'smooth', block:'center' }), 120);
 }
 render();
 
-// ── Alpha active on scroll ────────────────────────────────────
 document.querySelector('.dict-main').addEventListener('scroll', () => {
   let active = null;
   document.querySelectorAll('.letter-group').forEach(g => {
-    if (g.getBoundingClientRect().top < 160) active = g.id.replace('letter-', '');
+    if (g.getBoundingClientRect().top < 160) active = g.id.replace('letter-','');
   });
   alphaDiv.querySelectorAll('a:not(.inactive)').forEach(a =>
     a.classList.toggle('active', a.textContent === active)
   );
 });
 
-// ── Tooltip ───────────────────────────────────────────────────
 const tooltip = document.getElementById('lex-tooltip');
 const ttHw    = document.getElementById('tt-hw');
 const ttPos   = document.getElementById('tt-pos');
