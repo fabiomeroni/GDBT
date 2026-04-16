@@ -166,16 +166,13 @@ const GRAMMAR = [
   {
     id: "s1", num: "1", title: "Negation",
     subsections: [],
-    body: `<p>Verbal negation across the five Gaua languages involves a split construction in which a
-pre-verbal negator and a post-verbal bound morpheme together express sentential negation — a
-discontinuous pattern typologically parallel to the Jespersen cycle (<em>ne…pas</em> in French,
-etc.). The construction is highly stable across the dialect chain, though the specific forms of each
-component vary considerably from language to language, as the example below demonstrates.</p>
-<p>The pre-verbal negator (glossed <strong>NONDUM₁</strong>) occupies the position immediately before
-the verb complex. The post-verbal element (<strong>NONDUM₂</strong>) is suffixed to the final verb or
+    body: `<p>Verbal negation across the five Gaua languages can involve a split construction in which a
+pre-verbal negator and a post-verbal bound morpheme together express sentential negation, in a
+discontinuous pattern. </p>
+<p>An example of this is nondumitive ("not yet" negation"). The pre-verbal negator (glossed <strong>NONDUM₁</strong>) 
+occupies the position immediately before the verb complex. The post-verbal element (<strong>NONDUM₂</strong>) is suffixed to the final verb or
 a post-verbal particle and can be omitted in casual registers, particularly in Lakon and Olrat.
-Together the two components convey the meaning <em>'not yet'</em> or <em>'not … properly'</em>
-depending on the adverb present.</p>
+Together the two components convey the meaning <em>'not yet'</em>.</p>
 
 <negation-example></negation-example>`
   },
