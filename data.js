@@ -1,7 +1,3 @@
-// ============================================================
-//  Digital Boasian Trilogy — Gaua Languages  ·  data.js
-// ============================================================
-
 const LANG_COLORS = {
   Nume:  "#2e5c8a",
   Dorig: "#c07820",
@@ -18,14 +14,12 @@ const LANG_ABBR = {
   Lakon: "Lkn",
 };
 
-// ── Dictionary ────────────────────────────────────────────────
-// Exactly 8 entries — one per morpheme column in the negation example.
-// langs{} gives the surface form in each language.
-// gloss = plain text for tooltip; glossRich = HTML for entry page.
+// Dictionary
+
 const DICTIONARY = [
   {
     id: "3pl",
-    hw: "nɪr",          // Koro form as headword
+    hw: "nɪr",          
     pos: "pro.",
     domain: "Grammar",
     gloss: "3PL — third person plural subject",
@@ -35,7 +29,7 @@ const DICTIONARY = [
   },
   {
     id: "nondum1",
-    hw: "tɪ",           // Koro/Olrat shared form
+    hw: "tɪ",           
     pos: "part.",
     domain: "Grammar",
     gloss: "NONDUM₁ — pre-verbal negator ('not yet')",
@@ -45,7 +39,7 @@ const DICTIONARY = [
   },
   {
     id: "know",
-    hw: "rɔŋ",          // shared Koro/Olrat/Lakon form
+    hw: "rɔŋ",          
     pos: "v.tr.",
     domain: "Cognition",
     gloss: "know, be familiar with",
@@ -55,7 +49,7 @@ const DICTIONARY = [
   },
   {
     id: "properly",
-    hw: "taβul",        // Dorig/Koro form
+    hw: "taβul",        
     pos: "adv.",
     domain: "Manner",
     gloss: "properly, well, thoroughly",
@@ -65,7 +59,7 @@ const DICTIONARY = [
   },
   {
     id: "nondum2",
-    hw: "wʊsmɛlɛ",      // Koro/Olrat form
+    hw: "wʊsmɛlɛ",      
     pos: "part.",
     domain: "Grammar",
     gloss: "NONDUM₂ — post-verbal negator (bound, discontinuous)",
@@ -75,7 +69,7 @@ const DICTIONARY = [
   },
   {
     id: "art",
-    hw: "ɔ",            // Koro form
+    hw: "ɔ",            
     pos: "det.",
     domain: "Grammar",
     gloss: "ART — article (nominal determiner)",
@@ -85,7 +79,7 @@ const DICTIONARY = [
   },
   {
     id: "speech",
-    hw: "βalβalaw",     // Koro form
+    hw: "βalβalaw",     
     pos: "n.",
     domain: "Language",
     gloss: "speech, language, word",
@@ -100,7 +94,7 @@ const DICTIONARY = [
   },
   {
     id: "poss",
-    hw: "namɪɣɪn",      // Koro form
+    hw: "namɪɣɪn",      
     pos: "poss.",
     domain: "Grammar",
     gloss: "POSS:1INCL.PL — 1st person inclusive plural possessive",
@@ -110,7 +104,7 @@ const DICTIONARY = [
   },
 ];
 
-// ── Texts ─────────────────────────────────────────────────────
+// Texts 
 const TEXTS = [
   { lang:"Nume",  title:"The origin of fire",           url:"https://pangloss.cnrs.fr/corpus/Nume?lang=en",  genre:"Myth",                year:"2000", rec:"A. François" },
   { lang:"Nume",  title:"How the sea became salt",       url:"https://pangloss.cnrs.fr/corpus/Nume?lang=en",  genre:"Myth",                year:"2001", rec:"A. François" },
@@ -134,15 +128,13 @@ const TEXTS = [
   { lang:"Lakon", title:"Healing plants of Gaua",        url:"https://pangloss.cnrs.fr/corpus/Lakon?lang=en", genre:"Ethnobotanical",      year:"2007", rec:"A. François" },
 ];
 
-// ── Slug helper ───────────────────────────────────────────────
+// Slug 
 function textSlug(lang, title) {
   return ('text-' + lang + '-' + title)
     .toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'');
 }
 
-// ── Negation example ─────────────────────────────────────────
-// dictId on each column links each form to its dictionary entry.
-// Rows list every language with its surface forms.
+// Negation example 
 const NEGATION_EXAMPLE = {
   textLang: "Koro",
   textTitle: "Preparing a garden",
@@ -166,7 +158,7 @@ const NEGATION_EXAMPLE = {
   translation: "'They don't know our language very well yet.'",
 };
 
-// ── Grammar sections (one only) ───────────────────────────────
+// Grammar 
 const GRAMMAR = [
   {
     id: "s1", num: "1", title: "Negation",
