@@ -6,7 +6,7 @@
 <title>Archived Texts — DBT Gaua Languages</title>
 <link rel="stylesheet" href="style.css">
 <style>
-/* ── Texts page ── */
+/* TO BE IMPLEMENTED, CURRENTLY NOT SHOWING */
 .texts-layout {
   display: grid;
   grid-template-columns: 220px 1fr;
@@ -270,10 +270,9 @@
 </div>
 
 <footer>
-  LACITO &nbsp;/&nbsp; Pangloss Collection &nbsp;·&nbsp; CNRS &nbsp;·&nbsp;
-  Documentation: Alexandre François &nbsp;·&nbsp;
+  Documentation: Alexandre François &amp; Fabio Meroni &nbsp;·&nbsp;
   Gaua Island, Banks Islands, Vanuatu &nbsp;·&nbsp;
-  <a href="https://pangloss.cnrs.fr" target="_blank">pangloss.cnrs.fr</a>
+  <a href="https://heliceo.huma-num.fr/" target="_blank">HéLiCéO</a> 
 </footer>
 
 <script src="data.js"></script>
@@ -285,7 +284,7 @@ const GENRES = [...new Set(TEXTS.map(t => t.genre))].sort();
 let selectedLangs   = new Set(LANGS);
 let selectedGenres  = new Set(GENRES);
 
-// ── Build filter checkboxes ─────────────────────────────────
+// Build filter checkboxes 
 function makeCheckbox(container, label, checked, color, onChange) {
   const wrap = document.createElement('label');
   wrap.className = 'filter-check';
@@ -325,7 +324,7 @@ document.getElementById('clear-btn').addEventListener('click', () => {
   render();
 });
 
-// ── Render ──────────────────────────────────────────────────
+// Render 
 function render() {
   const content  = document.getElementById('texts-content');
   const statsBar = document.getElementById('stats-bar');
