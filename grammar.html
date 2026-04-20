@@ -61,7 +61,7 @@
 }
 .gram-section a.lexlink:hover { color: #b84c10; border-color: #b84c10; }
 
-/* ── Abbreviations table ── */
+/* Glossing conventions table */
 .gram-table {
   border-collapse: collapse; margin: 0.8rem 0 1.8rem; background: white;
   border: 1px solid var(--border); border-radius: 4px; overflow: hidden;
@@ -74,9 +74,7 @@
 .gram-table tr:last-child td { border-bottom: none; }
 .gram-table tr:hover td { background: #faf5ee; }
 
-/* ═══════════════════════════════════════════════════════════
-   INTERACTIVE NEGATION WIDGET
-═══════════════════════════════════════════════════════════ */
+/* negation */
 .neg-widget {
   margin: 1.2rem 0 2rem;
   border: 1px solid var(--border);
@@ -122,7 +120,7 @@
 .neg-cmp-table .form-cell {
   padding: 3px 22px 3px 0; vertical-align: baseline; border: none;
 }
-/* Forms are now <a> lexlinks */
+/* Forms as <a> links */
 .neg-cmp-table .form-cell a.lexlink {
   font-family: 'EB Garamond', serif; font-size: 1.2rem; color: var(--ink);
   text-decoration: none; border-bottom: 1.5px dotted var(--gold);
@@ -133,7 +131,6 @@
 .neg-cmp-table .form-cell a.lexlink:hover {
   color: #b84c10; border-bottom-color: #b84c10; background: #fff5e8;
 }
-/* Empty cell (—) — no link */
 .neg-cmp-table .form-cell.empty {
   font-family: 'EB Garamond', serif; font-size: 1.2rem; color: #ccc;
 }
@@ -144,7 +141,7 @@
   letter-spacing: 0.04em; color: var(--ink-light); text-transform: uppercase;
   padding: 6px 22px 4px 0; vertical-align: baseline; border: none; white-space: nowrap;
 }
-/* Highlight gloss cell when its column is hovered */
+/* Hover */
 .neg-cmp-table .gloss-cell.col-hover { color: var(--gold); }
 
 .neg-footer { padding: 0.4rem 1.2rem 1rem; display: flex; flex-direction: column; gap: 7px; }
@@ -156,7 +153,7 @@
 .neg-pangloss-link { font-family: 'Crimson Pro', serif; font-size: 0.75rem; color: white; background: #2a4a6a; border-radius: 2px; padding: 1px 8px 2px; text-decoration: none; }
 .neg-pangloss-link:hover { background: #1c3a55; }
 
-/* ── Floating tooltip ── */
+/* Floating tooltip */
 #lex-tooltip { position: fixed; z-index: 9999; pointer-events: none; opacity: 0; transition: opacity 0.1s ease; max-width: 320px; }
 #lex-tooltip.visible { opacity: 1; }
 #lex-tooltip .tt-inner {
@@ -257,22 +254,20 @@
 </div>
 
 <footer>
-  LACITO &nbsp;/&nbsp; Pangloss Collection &nbsp;·&nbsp; CNRS &nbsp;·&nbsp;
   Documentation: Alexandre François & Fabio Meroni &nbsp;·&nbsp;
-  Gaua Island, Banks Islands, Vanuatu &nbsp;·&nbsp;
-  <a href="https://pangloss.cnrs.fr" target="_blank">pangloss.cnrs.fr</a>
+  Gaua Island, Banks Islands, Vanuatu
 </footer>
 
 <script src="data.js"></script>
 <script>
-// ── Dict lookup ───────────────────────────────────────────────
+// Dict lookup 
 const DICT_MAP = {};
 DICTIONARY.forEach(e => { DICT_MAP[e.id] = e; });
 
 const TEXT_MAP = {};
 TEXTS.forEach(t => { TEXT_MAP[t.lang + '||' + t.title] = t; });
 
-// ── TOC ───────────────────────────────────────────────────────
+// TOC
 const toc = document.getElementById('toc');
 GRAMMAR.forEach(sec => {
   const li = document.createElement('li');
@@ -284,7 +279,7 @@ const abLi = document.createElement('li');
 abLi.innerHTML = '<a href="#abbrev">Abbreviations</a>';
 toc.appendChild(abLi);
 
-// ── Build interactive negation widget ─────────────────────────
+// Build interactive negation widget
 function buildNegationWidget() {
   const ex       = NEGATION_EXAMPLE;
   const visible  = new Set(ex.rows.map(r => r.lang));
@@ -382,7 +377,7 @@ function buildNegationWidget() {
       const color = LANG_COLORS[row.lang] || '#888';
       const tr    = document.createElement('tr');
 
-      // Lang abbr
+      // Language abbr
       const abbrTd = document.createElement('td');
       abbrTd.className = 'lang-abbr';
       abbrTd.style.color = color;
@@ -452,7 +447,7 @@ function buildNegationWidget() {
   return widget;
 }
 
-// ── Render grammar sections ───────────────────────────────────
+// Render grammar sections
 const gramBody = document.getElementById('grammar-body');
 GRAMMAR.forEach(sec => {
   const section = document.createElement('section');
@@ -464,7 +459,7 @@ GRAMMAR.forEach(sec => {
   gramBody.appendChild(section);
 });
 
-// ── Floating tooltip ──────────────────────────────────────────
+// Floating tooltip
 const tooltip  = document.getElementById('lex-tooltip');
 const ttHw     = document.getElementById('tt-hw');
 const ttPos    = document.getElementById('tt-pos');
@@ -513,7 +508,7 @@ document.addEventListener('mousemove', e => {
   if (a) positionTooltip(a);
 });
 
-// ── TOC active on scroll ──────────────────────────────────────
+// TOC active on scroll
 const tocLinks = document.querySelectorAll('.toc-list a');
 document.querySelectorAll('.gram-section').forEach(s => {
   new IntersectionObserver(entries => {
