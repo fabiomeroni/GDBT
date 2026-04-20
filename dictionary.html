@@ -110,7 +110,7 @@
   text-transform: uppercase; color: white; background: var(--gold); border-radius: 2px; padding: 1px 7px 2px;
 }
 
-/* ── Etymology tag ── */
+/* Etymology tags */
 .etym-tag {
   display: inline-flex;
   align-items: center;
@@ -140,7 +140,7 @@
   font-style: italic;
 }
 
-/* Etymograph icon link */
+/* Etymograph */
 .etymograph-link {
   display: inline-flex;
   align-items: center;
@@ -173,7 +173,7 @@
   font-style: italic; line-height: 1.65; margin-bottom: 0.8rem; max-width: 66ch;
 }
 
-/* Cross-language forms table */
+/* Cross-language table */
 .lang-table {
   border-collapse: collapse; margin: 0.2rem 0 0.3rem; font-size: 0.9rem;
   border: 1px solid var(--border-lt); border-radius: 3px; overflow: hidden; background: white;
@@ -190,7 +190,7 @@
 .lang-table th:last-child, .lang-table td:last-child { border-right: none; }
 .lang-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
 
-/* "See in grammar" badge */
+/* "See in grammar" */
 .grammar-ref {
   display: inline-flex; align-items: center; gap: 5px;
   font-family: 'Crimson Pro', serif; font-size: 0.82rem;
@@ -200,7 +200,7 @@
 }
 .grammar-ref:hover { background: #2a4a6a; color: white; border-color: #2a4a6a; }
 
-/* ── Contextual example block ── */
+/* Examples */
 .entry-example-block { margin-top: 0.9rem; }
 .entry-example-label {
   font-family: 'Crimson Pro', serif; font-size: 0.72rem; letter-spacing: 0.12em;
@@ -303,10 +303,8 @@
 </div>
 
 <footer>
-  LACITO &nbsp;/&nbsp; Pangloss Collection &nbsp;·&nbsp; CNRS &nbsp;·&nbsp;
-  Documentation: Alexandre François &nbsp;·&nbsp;
-  Gaua Island, Banks Islands, Vanuatu &nbsp;·&nbsp;
-  <a href="https://pangloss.cnrs.fr" target="_blank">pangloss.cnrs.fr</a>
+  Documentation: Alexandre François & Fabio Meroni &nbsp;·&nbsp;
+  Gaua Island, Banks Islands, Vanuatu 
 </footer>
 
 <script src="data.js"></script>
@@ -374,7 +372,7 @@ function buildAlpha(entries) {
   });
 }
 
-// ── Etymology HTML ────────────────────────────────────────────
+// Etymology HTML 
 function etymHTML(etym) {
   if (!etym) return '';
   return `<a class="etym-tag" href="${etym.tlopo}" target="_blank" title="Proto-Oceanic etymology — The Lexicon of Proto Oceanic">
@@ -386,7 +384,7 @@ function etymHTML(etym) {
   </a>`;
 }
 
-// ── Contextual example ────────────────────────────────────────
+// Example
 function buildEntryExample(entryId) {
   const ex     = NEGATION_EXAMPLE;
   const cols   = ex.cols;
@@ -435,7 +433,7 @@ function buildEntryExample(entryId) {
   </div>`;
 }
 
-// ── Entry HTML ────────────────────────────────────────────────
+// Entry HTML 
 function entryHTML(e) {
   const hl        = (e.id === TARGET || e.hw === TARGET) ? ' highlighted' : '';
   const displayHw = e.langs[activeLang] || e.hw;
@@ -459,7 +457,7 @@ function entryHTML(e) {
          </td>`;
   }).join('');
 
-  // Etymology row — only rendered when e.etym exists
+  // Etymology 
   const etymRow = e.etym
     ? `<div class="entry-header" style="margin-top:0.25rem;margin-bottom:0.55rem;">
          ${etymHTML(e.etym)}
@@ -483,7 +481,7 @@ function entryHTML(e) {
   </div>`;
 }
 
-// ── Render ────────────────────────────────────────────────────
+// Render 
 function render() {
   const entries = filtered();
   const content = document.getElementById('dict-content');
