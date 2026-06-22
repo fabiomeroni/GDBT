@@ -89,7 +89,7 @@ const DICTIONARY = [
     etym: {
       label: "POc *[qa]liŋa- 'voice'",
       tlopo:  "https://tlopo.clld.org/parameters/5-3-4-14-138-POc-qalia-a#6/-5.859/152.761",
-      etymograph: "https://evosem.huma-num.fr/etymograph.html?etym=Oceanic/qali%C5%8Ba-&node1=voice",
+      etymograph: "https://evosem.huma-num.fr/etymograph.html?etym=Oceanic/[qa]li%C5%8Ba-&node1=voice",
     },
   },
   {
