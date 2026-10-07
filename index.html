@@ -6,7 +6,8 @@
 <title>Digital Boasian Trilogy — Gaua Languages</title>
 <link rel="stylesheet" href="style.css">
 <style>
-/* ── Homepage-specific ── */
+
+# Homepage 
 .hero {
   display: grid;
   grid-template-columns: 1fr 440px;
@@ -44,7 +45,7 @@
 .tri-node { cursor: pointer; transition: opacity 0.2s; }
 .tri-node:hover { opacity: 0.88; }
 
-/* ── Cards strip ── */
+# Cards
 .cards-strip {
   display: grid;
   grid-template-columns: repeat(3,1fr);
@@ -93,7 +94,8 @@
 }
 .btn-link:hover { color: #b84c10; border-color: #b84c10; }
 
-/* ── Lang strip ── */
+# Languages (strip at the bottom)
+  
 .lang-strip {
   background: var(--nav-bg);
   display: flex;
@@ -122,7 +124,7 @@
   margin-bottom: 6px;
 }
 
-/* ── Map section ── */
+# Map part
 .map-section {
   background: #1c0f06;
   border-top: 2px solid #3a2010;
@@ -184,7 +186,7 @@
   <div class="topnav-right">Gaua Island · Banks Islands · Vanuatu</div>
 </nav>
 
-<!-- Hero -->
+# Description
 <section class="hero">
   <div class="hero-text">
     <h1>Digital Boasian<br>Trilogy</h1>
@@ -202,7 +204,7 @@
     Gaua Island (Banks Islands, Vanuatu), distributed from east to west.</p>
   </div>
 
-  <!-- SVG Triangle -->
+  # Triangle
   <div class="hero-triangle">
     <svg viewBox="0 0 400 360" width="400" xmlns="http://www.w3.org/2000/svg"
          role="img" aria-label="The Boasian Trilogy triangle linking Grammar, Dictionary, and Texts">
@@ -216,7 +218,7 @@
         </filter>
       </defs>
 
-      <!-- Edges -->
+      
       <line x1="200" y1="68" x2="68" y2="290" stroke="#c9a458" stroke-width="1.5" opacity="0.5"
             marker-end="url(#arr)" marker-start="url(#arr)"/>
       <line x1="200" y1="68" x2="332" y2="290" stroke="#c9a458" stroke-width="1.5" opacity="0.5"
@@ -224,7 +226,7 @@
       <line x1="82"  y1="302" x2="318" y2="302" stroke="#c9a458" stroke-width="1.5" opacity="0.5"
             marker-end="url(#arr)" marker-start="url(#arr)"/>
 
-      <!-- Grammar node (top) — text centred on circle cy=58 -->
+      
       <a href="grammar.html" class="tri-node">
         <circle cx="200" cy="58" r="56" fill="#1c0f06" filter="url(#glow)"/>
         <circle cx="200" cy="58" r="56" fill="none" stroke="#8a5f18" stroke-width="1.5"/>
@@ -232,7 +234,7 @@
               font-family="'EB Garamond',serif" font-size="19" font-weight="500" fill="#f0dfc0">Grammar</text>
       </a>
 
-      <!-- Dictionary node (bottom-left) — text centred on circle cy=302 -->
+      
       <a href="dictionary.html" class="tri-node">
         <circle cx="60" cy="302" r="56" fill="#1a0828" filter="url(#glow)"/>
         <circle cx="60" cy="302" r="56" fill="none" stroke="#8a5f18" stroke-width="1.5"/>
@@ -240,7 +242,7 @@
               font-family="'EB Garamond',serif" font-size="15" font-weight="500" fill="#f0dfc0">Dictionary</text>
       </a>
 
-      <!-- Texts node (bottom-right) — text centred on circle cy=302 -->
+      
       <a href="texts.html" class="tri-node">
         <circle cx="340" cy="302" r="56" fill="#3a0808" filter="url(#glow)"/>
         <circle cx="340" cy="302" r="56" fill="none" stroke="#8a5f18" stroke-width="1.5"/>
@@ -248,7 +250,7 @@
               font-family="'EB Garamond',serif" font-size="19" font-weight="500" fill="#f0dfc0">Texts</text>
       </a>
 
-      <!-- Centre label -->
+      
       <text x="200" y="192" text-anchor="middle" dominant-baseline="central"
             font-family="'EB Garamond',serif" font-size="11" fill="#c9a458" font-style="italic" opacity="0.6">
         Digital Boasian Trilogy
@@ -259,7 +261,7 @@
 
 <hr class="divider">
 
-<!-- Cards strip -->
+# Cards strip
 <section class="cards-strip" style="margin-top:2.5rem;">
   <div class="dbt-card" style="border-top:3px solid #1c0f06;">
     <h3>Comparative Grammar</h3>
@@ -281,7 +283,7 @@
   </div>
 </section>
 
-<!-- Language strip -->
+# Languages strip
 <div class="lang-strip">
   <div class="lang-cell">
     <span class="ldot" style="background:#2e5c8a;"></span>
@@ -305,7 +307,7 @@
   </div>
 </div>
 
-<!-- Map section -->
+# Map part
 <section class="map-section">
   <div class="map-inner">
     <div class="map-text">
