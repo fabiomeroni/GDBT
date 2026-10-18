@@ -6,181 +6,246 @@
 <title>Comparative Grammar — DBT Gaua Languages</title>
 <link rel="stylesheet" href="style.css">
 <style>
-.grammar-layout {
+
+/* ── Layout ── */
+.grammar-shell {
   display: grid;
-  grid-template-columns: 220px 1fr;
-  min-height: calc(100vh - 52px - 80px);
+  grid-template-columns: 210px 1fr;
+  min-height: calc(100vh - 52px);
 }
-.toc-sidebar {
+
+/* ── Sidebar ── */
+.grammar-sidebar {
   background: #faf6ef;
   border-right: 1px solid var(--border);
-  padding: 1.6rem 1rem 2rem;
-  position: sticky; top: 52px;
+  padding: 1.4rem 0 3rem;
+  position: sticky;
+  top: 52px;
   height: calc(100vh - 52px);
   overflow-y: auto;
 }
-.toc-sidebar h2 {
+.sidebar-section-label {
   font-family: 'Crimson Pro', serif;
-  font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase;
-  color: var(--ink-light); margin-bottom: 1rem;
-  padding-bottom: 0.5rem; border-bottom: 1px solid var(--border);
+  font-size: 0.67rem; letter-spacing: 0.13em; text-transform: uppercase;
+  color: var(--ink-light); padding: 0 1rem 0.4rem; display: block;
 }
-.toc-list { list-style: none; }
-.toc-list > li { margin-bottom: 0.5rem; }
-.toc-list > li > a {
-  font-family: 'Crimson Pro', serif; font-size: 0.95rem; font-weight: 600;
-  color: var(--ink-mid); text-decoration: none; display: block;
-  padding: 2px 6px; border-radius: 3px;
-  transition: background 0.15s, color 0.15s;
+.toc-list { list-style: none; padding: 0; margin: 0; }
+.toc-list a {
+  display: block; font-family: 'Crimson Pro', serif; font-size: 1rem;
+  color: var(--ink-mid); text-decoration: none;
+  padding: 3px 1rem 3px 1.1rem;
+  border-left: 3px solid transparent;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
 }
-.toc-list > li > a:hover, .toc-list > li > a.active { background: #ede4d4; color: var(--ink); }
+.toc-list a:hover  { background: #ede4d4; color: var(--ink); }
+.toc-list a.active { background: #e8d8b8; color: var(--ink); border-left-color: var(--gold); font-weight: 500; }
 
-.gram-main { padding: 2.5rem 3.5rem 5rem; max-width: 860px; }
-.chap-header { border-bottom: 2px solid var(--border); padding-bottom: 1.2rem; margin-bottom: 2rem; }
-.chap-header h1 { font-family: 'EB Garamond', serif; font-size: 2rem; font-weight: 500; color: var(--ink); }
-.chap-header .author { font-family: 'Crimson Pro', serif; font-size: 0.92rem; color: var(--ink-light); margin-top: 0.4rem; }
-.chap-header .author a { color: var(--gold); text-decoration: none; }
-
-.gram-section { margin-bottom: 3.5rem; scroll-margin-top: 68px; }
-.gram-section h2 {
-  font-family: 'EB Garamond', serif; font-size: 1.55rem; font-weight: 500; color: var(--ink);
-  border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; margin-bottom: 1rem;
-  display: flex; align-items: baseline; gap: 0.5rem;
+/* Language toggle pills in sidebar */
+.sidebar-lang-head {
+  margin-top: 1.6rem;
+  padding: 0 1rem 0.4rem;
 }
-.totop { font-family: 'Crimson Pro', serif; font-size: 0.75rem; color: var(--ink-light); text-decoration: none; margin-left: auto; border: none !important; }
-.totop:hover { color: var(--gold); }
-.gram-section p {
-  font-family: 'Crimson Pro', serif; font-size: 1.07rem; line-height: 1.82;
-  color: var(--ink-mid); margin-bottom: 1rem; max-width: 72ch;
-}
-.gram-section p strong { color: var(--ink); font-weight: 600; }
-.gram-section p em { font-style: italic; }
-.gram-section a.lexlink {
-  color: var(--gold); text-decoration: none; border-bottom: 1px dotted var(--gold-lt);
-  transition: color 0.15s, border-color 0.15s;
-}
-.gram-section a.lexlink:hover { color: #b84c10; border-color: #b84c10; }
-
-/* Glossing conventions table */
-.gram-table {
-  border-collapse: collapse; margin: 0.8rem 0 1.8rem; background: white;
-  border: 1px solid var(--border); border-radius: 4px; overflow: hidden;
-  box-shadow: 0 1px 4px rgba(0,0,0,.05);
-}
-.gram-table caption { font-family: 'Crimson Pro', serif; font-size: 0.85rem; color: var(--ink-light); text-align: left; padding: 0 0 6px; caption-side: top; font-style: italic; }
-.gram-table th { background: #2a1810; color: #e0cdb5; font-family: 'Crimson Pro', serif; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.06em; padding: 8px 16px; text-align: left; }
-.gram-table td { padding: 7px 16px; font-family: 'Source Code Pro', monospace; font-size: 0.88rem; color: var(--ink); border-bottom: 1px solid var(--border-lt); }
-.gram-table td:first-child { font-family: 'Crimson Pro', serif; font-size: 0.92rem; color: var(--ink-mid); font-style: italic; }
-.gram-table tr:last-child td { border-bottom: none; }
-.gram-table tr:hover td { background: #faf5ee; }
-
-/* negation */
-.neg-widget {
-  margin: 1.2rem 0 2rem;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  overflow: hidden;
-  background: var(--bg-card);
-  box-shadow: 0 1px 6px rgba(80,40,0,.07);
-}
-.neg-widget-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0.65rem 1.1rem; background: #f4ede0;
-  border-bottom: 1px solid var(--border);
-  cursor: pointer; user-select: none; gap: 1rem;
-}
-.neg-widget-header:hover { background: #ede4d0; }
-.neg-ex-num { font-family: 'Crimson Pro', serif; font-size: 0.9rem; color: var(--ink-light); flex-shrink: 0; }
-.neg-lang-filters { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
-.lang-toggle {
-  display: inline-flex; align-items: center; gap: 5px;
+.lang-pills-wrap { padding: 0 0.85rem 0.5rem; display: flex; flex-wrap: wrap; gap: 4px; }
+.lang-pill {
   font-family: 'Crimson Pro', serif; font-variant: small-caps;
-  font-size: 0.82rem; font-weight: 600; letter-spacing: 0.07em;
-  padding: 2px 9px 3px; border-radius: 3px; border: 1.5px solid transparent;
-  cursor: pointer; transition: opacity 0.15s, filter 0.15s; color: white;
+  font-size: 0.78rem; font-weight: 600; letter-spacing: 0.05em;
+  padding: 2px 8px 2px; border-radius: 3px;
+  border: 1.5px solid transparent; cursor: pointer; color: white;
+  transition: opacity 0.15s, box-shadow 0.15s; line-height: 1.4;
 }
-.lang-toggle.off { opacity: 0.3; filter: grayscale(0.8); }
-.lang-toggle input { display: none; }
-.neg-toggle-btn { font-size: 0.78rem; color: var(--ink-light); flex-shrink: 0; font-family: 'Crimson Pro', serif; }
-.neg-widget.collapsed .neg-toggle-btn::before { content: "▸ expand"; }
-.neg-widget:not(.collapsed) .neg-toggle-btn::before { content: "▾ collapse"; }
+.lang-pill.active { opacity: 1; box-shadow: 0 0 0 2px #faf6ef, 0 0 0 3.5px currentColor; }
+.lang-pill:not(.active) { opacity: 0.35; }
+.lang-pill:hover { opacity: 0.8; }
 
-.neg-widget-body { overflow: hidden; transition: max-height 0.3s ease; max-height: 900px; }
-.neg-widget.collapsed .neg-widget-body { max-height: 0; }
+/* ── Main content ── */
+.grammar-main { padding: 2.5rem 4rem 6rem; max-width: 860px; }
 
-.neg-table-wrap { padding: 1rem 1.2rem 0.4rem; overflow-x: auto; }
+/* Author toolbar */
+.author-bar {
+  display: none; /* shown via JS when logged in */
+  align-items: center; gap: 0.75rem; flex-wrap: wrap;
+  background: #1c0f06; border-radius: 6px;
+  padding: 0.55rem 1rem; margin-bottom: 2rem;
+  font-family: 'Crimson Pro', serif; font-size: 0.85rem; color: #c9a458;
+}
+.author-bar.visible { display: flex; }
+.author-bar-label { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.6; }
+.author-btn {
+  font-family: 'Crimson Pro', serif; font-size: 0.82rem;
+  color: #f0dfc0; background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(201,164,88,0.35); border-radius: 3px;
+  padding: 3px 12px 4px; cursor: pointer; white-space: nowrap;
+  transition: background 0.12s, border-color 0.12s;
+}
+.author-btn:hover { background: rgba(255,255,255,0.14); border-color: rgba(201,164,88,0.7); }
+.author-btn.danger { border-color: rgba(180,60,40,0.5); color: #f0c0b0; }
+.author-btn.danger:hover { background: rgba(180,60,40,0.2); }
+.upload-status { font-size: 0.75rem; opacity: 0.55; }
+.upload-status span { opacity: 1; }
 
-/* Comparative table */
-.neg-cmp-table { border-collapse: collapse; font-size: 0.97rem; white-space: nowrap; }
-.neg-cmp-table .lang-abbr {
-  font-family: 'Crimson Pro', serif; font-variant: small-caps;
-  font-size: 0.88rem; font-weight: 600; letter-spacing: 0.06em; color: var(--ink-light);
-  padding: 3px 18px 3px 0; vertical-align: baseline; border: none;
+/* Section wrapper */
+.grammar-section { margin-bottom: 3.5rem; scroll-margin-top: 1.5rem; }
+.section-loading {
+  font-family: 'Crimson Pro', serif; font-style: italic;
+  color: var(--ink-light); font-size: 1rem; padding: 1rem 0;
 }
-.neg-cmp-table .form-cell {
-  padding: 3px 22px 3px 0; vertical-align: baseline; border: none;
-}
-/* Forms as <a> links */
-.neg-cmp-table .form-cell a.lexlink {
-  font-family: 'EB Garamond', serif; font-size: 1.2rem; color: var(--ink);
-  text-decoration: none; border-bottom: 1.5px dotted var(--gold);
-  border-radius: 2px; padding: 0 2px; white-space: nowrap;
-  transition: color 0.15s, border-color 0.15s, background 0.15s;
-  cursor: pointer;
-}
-.neg-cmp-table .form-cell a.lexlink:hover {
-  color: #b84c10; border-bottom-color: #b84c10; background: #fff5e8;
-}
-.neg-cmp-table .form-cell.empty {
-  font-family: 'EB Garamond', serif; font-size: 1.2rem; color: #ccc;
-}
-.neg-cmp-table .sep-row td { border-top: 1px solid var(--border); padding: 0; height: 0; border-bottom: none; }
-.neg-cmp-table .gloss-abbr { padding: 6px 18px 4px 0; border: none; vertical-align: baseline; }
-.neg-cmp-table .gloss-cell {
-  font-family: 'Source Code Pro', monospace; font-size: 0.68rem;
-  letter-spacing: 0.04em; color: var(--ink-light); text-transform: uppercase;
-  padding: 6px 22px 4px 0; vertical-align: baseline; border: none; white-space: nowrap;
-}
-/* Hover */
-.neg-cmp-table .gloss-cell.col-hover { color: var(--gold); }
+.section-error { color: #922810; font-style: normal; font-size: 0.9rem; }
 
-.neg-footer { padding: 0.4rem 1.2rem 1rem; display: flex; flex-direction: column; gap: 7px; }
-.neg-transl { font-family: 'Crimson Pro', serif; font-style: italic; font-size: 1.05rem; color: var(--ink-mid); }
-.neg-source-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; border-top: 1px solid var(--border-lt); padding-top: 7px; }
-.neg-source-label { font-family: 'Source Code Pro', monospace; font-size: 0.67rem; color: #b8a080; letter-spacing: 0.04em; text-transform: uppercase; }
-.neg-source-link { font-family: 'Crimson Pro', serif; font-size: 0.82rem; color: var(--gold); text-decoration: none; border-bottom: 1px solid var(--gold-lt); }
-.neg-source-link:hover { color: #b84c10; }
-.neg-pangloss-link { font-family: 'Crimson Pro', serif; font-size: 0.75rem; color: white; background: #2a4a6a; border-radius: 2px; padding: 1px 8px 2px; text-decoration: none; }
-.neg-pangloss-link:hover { background: #1c3a55; }
-
-/* Floating tooltip */
-#lex-tooltip { position: fixed; z-index: 9999; pointer-events: none; opacity: 0; transition: opacity 0.1s ease; max-width: 320px; }
-#lex-tooltip.visible { opacity: 1; }
-#lex-tooltip .tt-inner {
-  background: #1c0f06; color: #f0dfc0; border-radius: 5px;
-  padding: 9px 14px 10px;
-  box-shadow: 0 4px 18px rgba(0,0,0,.35), 0 0 0 1px rgba(201,164,88,.25);
-  font-family: 'Crimson Pro', serif; font-size: 0.9rem; line-height: 1.5;
+/* Edit controls per section */
+.section-edit-bar {
+  display: none;
+  justify-content: flex-end; gap: 0.5rem;
+  margin-bottom: 0.6rem;
 }
-#lex-tooltip .tt-hw  { font-family: 'EB Garamond', serif; font-size: 1.15rem; font-weight: 500; color: #fdeec8; margin-right: 6px; }
-#lex-tooltip .tt-pos { font-style: italic; font-size: 0.78rem; color: #c9a458; }
-#lex-tooltip .tt-gloss { color: #e8d0a8; margin-top: 3px; font-size: 0.88rem; }
-#lex-tooltip .tt-langs { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px; }
-#lex-tooltip .tt-lang-form { font-family: 'Source Code Pro', monospace; font-size: 0.72rem; background: rgba(255,255,255,.08); border-radius: 2px; padding: 1px 6px; }
-#lex-tooltip .tt-lang-form b { color: #c9a458; font-weight: 500; }
+.section-edit-bar.visible { display: flex; }
+.sec-btn {
+  font-family: 'Crimson Pro', serif; font-size: 0.78rem;
+  color: var(--ink-mid); background: #f0e8d8;
+  border: 1px solid var(--border); border-radius: 3px;
+  padding: 2px 10px 3px; cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+.sec-btn:hover { background: #e8d8b8; border-color: var(--gold); }
+.sec-btn.primary { color: white; background: var(--gold); border-color: var(--gold); }
+.sec-btn.primary:hover { background: #7a5010; }
 
-.breadcrumb { font-family: 'Crimson Pro', serif; font-size: 0.82rem; color: var(--ink-light); margin-bottom: 1.5rem; }
-.breadcrumb a { color: var(--gold); text-decoration: none; }
+/* Markdown editor */
+.md-editor-wrap {
+  display: none;
+  flex-direction: column; gap: 0.6rem;
+}
+.md-editor-wrap.visible { display: flex; }
+.md-editor-wrap textarea {
+  font-family: 'Source Code Pro', monospace; font-size: 0.85rem;
+  line-height: 1.65; color: var(--ink);
+  background: #fffef8; border: 1.5px solid var(--border);
+  border-radius: 4px; padding: 1rem; resize: vertical;
+  min-height: 340px; outline: none;
+  transition: border-color 0.15s;
+}
+.md-editor-wrap textarea:focus { border-color: var(--gold); }
+
+/* Shortcode reference panel */
+.shortcode-ref {
+  background: #f5f0e8; border: 1px solid var(--border);
+  border-radius: 4px; padding: 0.7rem 1rem; font-size: 0.8rem;
+  font-family: 'Crimson Pro', serif; color: var(--ink-light);
+}
+.shortcode-ref code {
+  font-family: 'Source Code Pro', monospace; font-size: 0.78rem;
+  background: #e8dfc8; border-radius: 2px; padding: 0 4px;
+  color: var(--ink);
+}
+.shortcode-ref ul { margin: 0.3rem 0 0 1rem; padding: 0; }
+.shortcode-ref li { margin-bottom: 0.2rem; }
+
+/* ── Server-rendered grammar content styles ── */
+
+/* These target HTML produced by Flask/Python-Markdown */
+.grammar-section h2 {
+  font-family: 'EB Garamond', serif; font-size: 1.75rem; font-weight: 500;
+  color: var(--ink); border-bottom: 2px solid var(--gold);
+  padding-bottom: 0.3rem; margin: 0 0 1.2rem;
+}
+.grammar-section h3 {
+  font-family: 'EB Garamond', serif; font-size: 1.25rem; font-weight: 500;
+  color: var(--ink); margin: 1.8rem 0 0.6rem;
+}
+.grammar-section p {
+  font-family: 'Crimson Pro', serif; font-size: 1.08rem;
+  line-height: 1.78; color: var(--ink-mid); margin-bottom: 0.9rem;
+}
+.grammar-section strong { font-weight: 600; color: var(--ink); }
+.grammar-section em     { font-style: italic; }
+.grammar-section table {
+  border-collapse: collapse; margin: 1rem 0;
+  font-family: 'Crimson Pro', serif; font-size: 0.98rem;
+}
+.grammar-section table th {
+  font-variant: small-caps; letter-spacing: 0.05em;
+  background: #f0e8d8; border: 1px solid var(--border);
+  padding: 4px 14px 5px; text-align: left;
+}
+.grammar-section table td {
+  border: 1px solid var(--border-lt); padding: 4px 14px 5px;
+}
+
+/* Entry chip ({{entry:…}} output) */
+.entry-chip {
+  display: inline-flex; align-items: baseline; gap: 4px;
+  font-family: 'EB Garamond', serif; font-size: 1.02rem;
+  text-decoration: none; color: var(--ink);
+  border-bottom: 1.5px dotted var(--gold);
+  border-radius: 2px; padding: 0 2px;
+  transition: color 0.12s, background 0.12s;
+}
+.entry-chip:hover { color: #b84c10; background: #fff5e8; border-bottom-color: #b84c10; }
+.chip-forms { font-size: 1rem; }
+.chip-form  { font-family: 'EB Garamond', serif; }
+.chip-gloss { font-family: 'Crimson Pro', serif; font-size: 0.88rem; font-style: italic; color: var(--ink-light); }
+
+/* Example block ({{example:…}} output) */
+.example-block { margin: 1.4rem 0; }
+.example-wrap  {
+  background: #faf6ef; border-left: 3px solid var(--gold);
+  border-radius: 0 4px 4px 0; padding: 0.75rem 1.2rem 0.9rem;
+  overflow-x: auto; display: inline-block; min-width: 240px; max-width: 100%;
+}
+.ex-table    { border-collapse: collapse; white-space: nowrap; }
+.ex-abbr     { font-family: 'Crimson Pro', serif; font-variant: small-caps; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.05em; padding: 2px 14px 2px 0; vertical-align: baseline; border: none; }
+.ex-cell     { padding: 2px 16px 2px 0; vertical-align: baseline; border: none; }
+.ex-cell.ex-dash { font-family: 'EB Garamond', serif; font-size: 1.1rem; color: #ccc; }
+.ex-cell a.lexlink { font-family: 'EB Garamond', serif; font-size: 1.1rem; color: var(--ink); text-decoration: none; border-bottom: 1.5px dotted var(--gold); padding: 0 2px; border-radius: 2px; transition: color 0.12s, background 0.12s; }
+.ex-cell a.lexlink:hover { color: #b84c10; background: #fff5e8; border-bottom-color: #b84c10; }
+.ex-sep td   { border-top: 1px solid var(--border); padding: 0; height: 0; border-bottom: none; }
+.ex-gloss-empty { border: none; padding: 5px 14px 3px 0; vertical-align: baseline; }
+.ex-gloss    { font-family: 'Source Code Pro', monospace; font-size: 0.63rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-light); padding: 5px 16px 3px 0; vertical-align: baseline; border: none; }
+.ex-transl   { font-family: 'Crimson Pro', serif; font-style: italic; font-size: 1rem; color: var(--ink-mid); margin-top: 6px; }
+.corpus-ref  { display: inline-flex; align-items: center; gap: 5px; font-family: 'Crimson Pro', serif; font-size: 0.8rem; color: #2a4a6a; border: 1px solid #a0bcd0; border-radius: 3px; padding: 2px 10px 3px; text-decoration: none; margin-top: 7px; transition: background 0.12s, color 0.12s; }
+.corpus-ref:hover { background: #2a4a6a; color: white; }
+
+/* Hidden language rows */
+tr[data-lang].lang-hidden { display: none; }
+
+/* Shortcode errors */
+.shortcode-error { font-family: 'Source Code Pro', monospace; font-size: 0.8rem; color: #922810; background: #fef0ee; border: 1px solid #f0c0b8; border-radius: 3px; padding: 2px 8px; display: inline-block; }
+
+/* ── Login modal ── */
+.modal-backdrop {
+  display: none; position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.55); align-items: center; justify-content: center;
+}
+.modal-backdrop.visible { display: flex; }
+.modal-box {
+  background: #f7f2ea; border-radius: 6px; padding: 2rem 2.5rem;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.35); min-width: 300px;
+  font-family: 'Crimson Pro', serif;
+}
+.modal-box h3 { font-family: 'EB Garamond', serif; font-size: 1.4rem; margin: 0 0 1rem; }
+.modal-box input[type=password] {
+  width: 100%; padding: 6px 10px; font-size: 1rem;
+  border: 1px solid var(--border); border-radius: 3px;
+  font-family: 'Crimson Pro', serif; outline: none; box-sizing: border-box;
+  transition: border-color 0.15s; margin-bottom: 0.8rem;
+}
+.modal-box input:focus { border-color: var(--gold); }
+.modal-row { display: flex; gap: 0.6rem; justify-content: flex-end; }
+.modal-err { color: #922810; font-size: 0.88rem; margin-bottom: 0.5rem; min-height: 1.2em; }
+
 </style>
 </head>
-<body id="top">
+<body>
 
-<!-- Tooltip -->
-<div id="lex-tooltip" role="tooltip" aria-hidden="true">
-  <div class="tt-inner">
-    <div><span class="tt-hw" id="tt-hw"></span><span class="tt-pos" id="tt-pos"></span></div>
-    <div class="tt-gloss" id="tt-gloss"></div>
-    <div class="tt-langs" id="tt-langs"></div>
+<!-- ── Login modal ── -->
+<div class="modal-backdrop" id="login-modal">
+  <div class="modal-box">
+    <h3>Author login</h3>
+    <input type="password" id="login-pw" placeholder="Password" autocomplete="current-password">
+    <div class="modal-err" id="login-err"></div>
+    <div class="modal-row">
+      <button class="sec-btn" id="login-cancel">Cancel</button>
+      <button class="sec-btn primary" id="login-submit">Log in</button>
+    </div>
   </div>
 </div>
 
@@ -192,333 +257,339 @@
     <li><a href="texts.html">Texts</a></li>
     <li><a href="dictionary.html">Dictionary</a></li>
   </ul>
-  <div class="topnav-right">Gaua · Banks Islands · Vanuatu</div>
+  <div class="topnav-right">Comparative Grammar · 5 Languages</div>
 </nav>
 
-<div class="grammar-layout">
-  <aside class="toc-sidebar">
-    <h2>Contents</h2>
-    <ul class="toc-list" id="toc"></ul>
-    <hr style="border:none;border-top:1px solid var(--border);margin:1.2rem 0;">
-    <div style="font-family:'Crimson Pro',serif;font-size:0.78rem;color:var(--ink-light);line-height:1.65;">
-      <strong style="color:var(--ink-mid);display:block;margin-bottom:4px;">Interactive example</strong>
-      Toggle languages with the coloured pills. Hover any form for its dictionary preview. Click the header to collapse.
+<div class="grammar-shell">
+
+  <!-- ── Sidebar ── -->
+  <aside class="grammar-sidebar">
+    <span class="sidebar-section-label">Contents</span>
+    <ul class="toc-list" id="toc-list">
+      <li><a href="#s1">§1 Negation</a></li>
+    </ul>
+
+    <div class="sidebar-lang-head">
+      <span class="sidebar-section-label">Show languages</span>
     </div>
-    <hr style="border:none;border-top:1px solid var(--border);margin:1.2rem 0;">
-    <div style="font-family:'Crimson Pro',serif;font-size:0.78rem;color:var(--ink-light);">
-      <strong style="color:var(--ink-mid);display:block;margin-bottom:5px;">Languages</strong>
-      <span class="chip" style="background:#2e5c8a;margin:2px 2px 2px 0;">Num</span>
-      <span class="chip" style="background:#c07820;margin:2px 2px 2px 0;">Drg</span>
-      <span class="chip" style="background:#922810;margin:2px 2px 2px 0;">Kro</span>
-      <span class="chip" style="background:#267040;margin:2px 2px 2px 0;">Olr</span>
-      <span class="chip" style="background:#5c2878;margin:2px 2px 2px 0;">Lkn</span>
-    </div>
+    <div class="lang-pills-wrap" id="lang-pills"></div>
   </aside>
 
-  <main class="gram-main">
-    <div class="breadcrumb"><a href="index.html">DBT Gaua</a> &rsaquo; Comparative Grammar</div>
-    <div class="chap-header">
-      <h1>Comparative Grammar of the Gaua Languages</h1>
-      <div class="author">
-        <p><strong>Hover over any form</strong> to see its dictionary definition; <strong>click</strong> to
-        open the full entry. Use the language toggles to show or hide individual varieties. Click the bar to
-        collapse the example.</p>
-      </div>
+  <!-- ── Main ── -->
+  <main class="grammar-main">
+
+    <!-- Author toolbar (hidden until logged in) -->
+    <div class="author-bar" id="author-bar">
+      <span class="author-bar-label">Author mode</span>
+
+      <label class="author-btn" style="cursor:pointer;" title="Upload dictionary XML">
+        📖 Dict XML
+        <input type="file" accept=".xml" id="upload-dict-input" style="display:none;">
+      </label>
+
+      <label class="author-btn" style="cursor:pointer;" title="Upload corpus XML">
+        🎧 Corpus XML
+        <input type="file" accept=".xml" id="upload-corpus-input" style="display:none;">
+      </label>
+
+      <span class="upload-status" id="upload-status"></span>
+      <span style="flex:1;"></span>
+      <button class="author-btn danger" id="logout-btn">Log out</button>
     </div>
 
-    <div id="grammar-body"></div>
+    <!-- Sections loaded dynamically -->
+    <div id="sections-container"></div>
 
-    <!-- Abbreviations -->
-    <section class="gram-section" id="abbrev">
-      <h2>Abbreviations <a href="#top" class="totop">↑ top</a></h2>
-      <table class="gram-table">
-        <thead><tr><th>Abbreviation</th><th>Meaning</th></tr></thead>
-        <tbody>
-          <tr><td>1INCL.PL</td><td>1st person inclusive plural</td></tr>
-          <tr><td>3PL</td><td>3rd person plural</td></tr>
-          <tr><td>ART</td><td>article (nominal determiner)</td></tr>
-          <tr><td>NONDUM₁</td><td>pre-verbal negator</td></tr>
-          <tr><td>NONDUM₂</td><td>post-verbal negator (bound)</td></tr>
-          <tr><td>POSS</td><td>possessive marker</td></tr>
-          <tr><td>n.</td><td>noun</td></tr>
-          <tr><td>v.tr.</td><td>transitive verb</td></tr>
-          <tr><td>adv.</td><td>adverb</td></tr>
-          <tr><td>part.</td><td>particle</td></tr>
-          <tr><td>pro.</td><td>pronoun</td></tr>
-          <tr><td>poss.</td><td>possessive clitic</td></tr>
-          <tr><td>det.</td><td>determiner</td></tr>
-        </tbody>
-      </table>
-    </section>
+    <!-- Login link for non-logged-in state -->
+    <div id="login-prompt" style="margin-top:3rem; font-family:'Crimson Pro',serif; font-size:0.85rem; color:var(--ink-light); display:none;">
+      <a href="#" id="login-link" style="color:var(--gold);">Author login</a>
+    </div>
+
   </main>
 </div>
 
-<footer>
-  Documentation: Alexandre François &amp; Fabio Meroni &nbsp;·&nbsp;
-  Gaua Island, Banks Islands, Vanuatu &nbsp;·&nbsp;
-  <a href="https://heliceo.huma-num.fr/" target="_blank">HéLiCéO</a>
-</footer>
-
-<script src="data.js"></script>
 <script>
-// Dict lookup 
-const DICT_MAP = {};
-DICTIONARY.forEach(e => { DICT_MAP[e.id] = e; });
+'use strict';
 
-const TEXT_MAP = {};
-TEXTS.forEach(t => { TEXT_MAP[t.lang + '||' + t.title] = t; });
+// ── Language constants ─────────────────────────────────────────
+const LANGS5   = ['Nume','Dorig','Koro','Olrat','Lakon'];
+const COLORS5  = { Nume:'#2e5c8a', Dorig:'#c07820', Koro:'#922810', Olrat:'#267040', Lakon:'#5c2878' };
 
-// TOC
-const toc = document.getElementById('toc');
-GRAMMAR.forEach(sec => {
-  const li = document.createElement('li');
-  const a  = document.createElement('a');
-  a.href = '#' + sec.id; a.textContent = sec.num + '. ' + sec.title;
-  li.appendChild(a); toc.appendChild(li);
-});
-const abLi = document.createElement('li');
-abLi.innerHTML = '<a href="#abbrev">Abbreviations</a>';
-toc.appendChild(abLi);
+// ── State ──────────────────────────────────────────────────────
+let isLoggedIn  = false;
+let activeLangs = new Set(LANGS5);   // all shown by default
 
-// Build interactive negation widget
-function buildNegationWidget() {
-  const ex       = NEGATION_EXAMPLE;
-  const visible  = new Set(ex.rows.map(r => r.lang));
-  const textRec  = TEXT_MAP[ex.textLang + '||' + ex.textTitle];
-  const textsHref = 'texts.html#' + textSlug(ex.textLang, ex.textTitle);
-  const pangHref  = textRec ? textRec.url : 'https://pangloss.cnrs.fr';
-  const langColor = LANG_COLORS[ex.textLang] || '#888';
-
-  // Widget shell
-  const widget = document.createElement('div');
-  widget.className = 'neg-widget';
-
-  // Header
-  const header = document.createElement('div');
-  header.className = 'neg-widget-header';
-
-  const numSpan = document.createElement('span');
-  numSpan.className = 'neg-ex-num'; numSpan.textContent = '(1)';
-
-  const filtersDiv = document.createElement('div');
-  filtersDiv.className = 'neg-lang-filters';
-
-  ex.rows.forEach(row => {
-    const color = LANG_COLORS[row.lang] || '#888';
-    const pill  = document.createElement('label');
-    pill.className = 'lang-toggle';
-    pill.style.background  = color;
-    pill.style.borderColor = color;
-    pill.title = row.lang;
-    const cb = document.createElement('input');
-    cb.type = 'checkbox'; cb.checked = true;
-    cb.addEventListener('change', () => {
-      visible[cb.checked ? 'add' : 'delete'](row.lang);
-      pill.classList.toggle('off', !cb.checked);
-      renderTable();
+// ══════════════════════════════════════════════════════════════
+//  LANGUAGE TOGGLE PILLS
+// ══════════════════════════════════════════════════════════════
+function buildLangPills() {
+  const wrap = document.getElementById('lang-pills');
+  LANGS5.forEach(lang => {
+    const btn = document.createElement('button');
+    btn.className   = 'lang-pill active';
+    btn.textContent = lang;
+    btn.style.background = COLORS5[lang];
+    btn.dataset.lang = lang;
+    btn.addEventListener('click', () => {
+      if (activeLangs.has(lang)) {
+        if (activeLangs.size === 1) return; // keep at least one
+        activeLangs.delete(lang);
+        btn.classList.remove('active');
+      } else {
+        activeLangs.add(lang);
+        btn.classList.add('active');
+      }
+      applyLangFilter();
     });
-    pill.appendChild(cb);
-    pill.appendChild(document.createTextNode(row.abbr));
-    filtersDiv.appendChild(pill);
+    wrap.appendChild(btn);
   });
+}
 
-  const chevron = document.createElement('span');
-  chevron.className = 'neg-toggle-btn';
-
-  header.appendChild(numSpan);
-  header.appendChild(filtersDiv);
-  header.appendChild(chevron);
-  header.addEventListener('click', e => {
-    if (e.target.closest('.lang-toggle')) return;
-    widget.classList.toggle('collapsed');
+function applyLangFilter() {
+  document.querySelectorAll('tr[data-lang]').forEach(row => {
+    row.classList.toggle('lang-hidden', !activeLangs.has(row.dataset.lang));
   });
+}
 
-  // Body
-  const body = document.createElement('div');
-  body.className = 'neg-widget-body';
+// ══════════════════════════════════════════════════════════════
+//  SECTION LOADING
+// ══════════════════════════════════════════════════════════════
+async function loadSection(id) {
+  const container = document.getElementById('sections-container');
 
-  const tableWrap = document.createElement('div');
-  tableWrap.className = 'neg-table-wrap';
-  const table = document.createElement('table');
-  table.className = 'neg-cmp-table';
-  tableWrap.appendChild(table);
-
-  // Footer
-  const footer = document.createElement('div');
-  footer.className = 'neg-footer';
-  footer.innerHTML = `
-    <div class="neg-transl">${ex.translation}</div>
-    <div class="neg-source-row">
-      <span class="neg-source-label">Source</span>
-      <a class="neg-source-link" href="${textsHref}">
-        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;
-          background:${langColor};margin-right:5px;vertical-align:middle;"></span>${ex.textTitle}
-        <span style="opacity:.55">(${ex.textLang})</span>
-      </a>
-      <a class="neg-pangloss-link" href="${pangHref}" target="_blank">Pangloss ↗</a>
+  // Create section wrapper
+  const wrap = document.createElement('div');
+  wrap.className = 'grammar-section';
+  wrap.id = id;
+  wrap.innerHTML = `
+    <div class="section-edit-bar" id="editbar-${id}">
+      <button class="sec-btn" onclick="enterEditMode('${id}')">✏️ Edit section</button>
+    </div>
+    <div class="section-content" id="content-${id}">
+      <p class="section-loading">Loading §…</p>
+    </div>
+    <div class="md-editor-wrap" id="editor-${id}">
+      <textarea id="textarea-${id}" spellcheck="false"></textarea>
+      <div class="shortcode-ref">
+        <strong>Shortcodes:</strong>
+        <ul>
+          <li><code>{{example: negation_example_01}}</code> — inserts interlinear table from corpus XML</li>
+          <li><code>{{entry: speech}}</code> — inserts inline word chip from dictionary XML</li>
+        </ul>
+        Markdown supported: <code>**bold**</code>, <code>*italic*</code>, <code>## heading</code>, tables, etc.
+      </div>
+      <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+        <button class="sec-btn" onclick="cancelEdit('${id}')">Cancel</button>
+        <button class="sec-btn primary" onclick="saveSection('${id}')">Save & render</button>
+      </div>
     </div>`;
+  container.appendChild(wrap);
 
-  body.appendChild(tableWrap);
-  body.appendChild(footer);
-  widget.appendChild(header);
-  widget.appendChild(body);
+  // Fetch rendered HTML from Flask
+  try {
+    const resp = await fetch(`/api/grammar/${id}`);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    document.getElementById(`content-${id}`).innerHTML = data.html;
+    applyLangFilter();
+  } catch (e) {
+    document.getElementById(`content-${id}`).innerHTML =
+      `<p class="section-error">Could not load section ${id}: ${e.message}</p>`;
+  }
+}
 
-  // Gloss cells cache (so we can highlight on hover)
-  let glossCells = [];
+// ══════════════════════════════════════════════════════════════
+//  EDIT MODE
+// ══════════════════════════════════════════════════════════════
+async function enterEditMode(id) {
+  try {
+    const resp = await fetch(`/api/grammar/${id}/source`);
+    if (resp.status === 401) { showLogin(); return; }
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    document.getElementById(`textarea-${id}`).value = data.source;
+    document.getElementById(`content-${id}`).style.display = 'none';
+    document.getElementById(`editor-${id}`).classList.add('visible');
+  } catch (e) {
+    alert('Could not load source: ' + e.message);
+  }
+}
 
-  function renderTable() {
-    table.innerHTML = '';
-    glossCells = [];
-    const cols    = ex.cols;
-    const nCols   = cols.length;
-    const sepCols = '<td></td>' + cols.map(() => '<td></td>').join('');
+async function saveSection(id) {
+  const source = document.getElementById(`textarea-${id}`).value;
+  try {
+    const resp = await fetch(`/api/grammar/${id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ source })
+    });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    document.getElementById(`content-${id}`).innerHTML = data.html;
+    applyLangFilter();
+    cancelEdit(id);
+  } catch (e) {
+    alert('Save failed: ' + e.message);
+  }
+}
 
-    ex.rows.forEach(row => {
-      if (!visible.has(row.lang)) return;
-      const color = LANG_COLORS[row.lang] || '#888';
-      const tr    = document.createElement('tr');
+function cancelEdit(id) {
+  document.getElementById(`content-${id}`).style.display = '';
+  document.getElementById(`editor-${id}`).classList.remove('visible');
+}
 
-      // Language abbr
-      const abbrTd = document.createElement('td');
-      abbrTd.className = 'lang-abbr';
-      abbrTd.style.color = color;
-      abbrTd.textContent = row.abbr;
-      tr.appendChild(abbrTd);
+// ══════════════════════════════════════════════════════════════
+//  AUTH
+// ══════════════════════════════════════════════════════════════
+function updateAuthUI() {
+  const bar    = document.getElementById('author-bar');
+  const prompt = document.getElementById('login-prompt');
+  const bars   = document.querySelectorAll('.section-edit-bar');
 
-      // Form cells
-      cols.forEach((col, i) => {
-        const f   = row.forms[i] ?? '';
-        const td  = document.createElement('td');
-        td.className = 'form-cell';
-        td.dataset.col = i;
+  if (isLoggedIn) {
+    bar.classList.add('visible');
+    prompt.style.display = 'none';
+    bars.forEach(b => b.classList.add('visible'));
+    refreshUploadStatus();
+  } else {
+    bar.classList.remove('visible');
+    prompt.style.display = 'block';
+    bars.forEach(b => b.classList.remove('visible'));
+  }
+}
 
-        if (f === '') {
-          td.classList.add('empty');
-          td.textContent = '—';
-        } else {
-          const a  = document.createElement('a');
-          a.className = 'lexlink';
-          a.href      = 'dictionary.html#' + col.dictId;
-          a.dataset.dictId = col.dictId;
-          a.dataset.col    = i;
-          a.textContent    = f;
-          td.appendChild(a);
+async function refreshUploadStatus() {
+  try {
+    const data = await fetch('/api/upload/status').then(r => r.json());
+    const el = document.getElementById('upload-status');
+    el.innerHTML =
+      `<span title="Dictionary XML">${data.dictionary ? '📖✓' : '📖✗'}</span> ` +
+      `<span title="Corpus XML">${data.corpus ? '🎧✓' : '🎧✗'}</span>`;
+  } catch(e) {}
+}
+
+function showLogin() {
+  document.getElementById('login-modal').classList.add('visible');
+  document.getElementById('login-pw').focus();
+  document.getElementById('login-err').textContent = '';
+}
+function hideLogin() {
+  document.getElementById('login-modal').classList.remove('visible');
+  document.getElementById('login-pw').value = '';
+}
+
+async function doLogin() {
+  const pw = document.getElementById('login-pw').value;
+  try {
+    const resp = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pw })
+    });
+    const data = await resp.json();
+    if (data.ok) {
+      isLoggedIn = true;
+      hideLogin();
+      updateAuthUI();
+    } else {
+      document.getElementById('login-err').textContent = 'Wrong password.';
+    }
+  } catch(e) {
+    document.getElementById('login-err').textContent = 'Network error.';
+  }
+}
+
+async function doLogout() {
+  await fetch('/api/auth/logout', { method: 'POST' });
+  isLoggedIn = false;
+  updateAuthUI();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  XML UPLOAD
+// ══════════════════════════════════════════════════════════════
+async function uploadXML(file, endpoint, sectionToReload) {
+  const form = new FormData();
+  form.append('file', file);
+  try {
+    const resp = await fetch(endpoint, { method: 'POST', body: form });
+    const data = await resp.json();
+    if (data.ok) {
+      await refreshUploadStatus();
+      // Reload all sections so shortcodes resolve against new XML
+      if (sectionToReload) {
+        const el = document.getElementById(`content-${sectionToReload}`);
+        if (el) {
+          el.innerHTML = '<p class="section-loading">Reloading…</p>';
+          const r2 = await fetch(`/api/grammar/${sectionToReload}`);
+          const d2 = await r2.json();
+          el.innerHTML = d2.html;
+          applyLangFilter();
         }
-        tr.appendChild(td);
-      });
+      }
+    } else {
+      alert('Upload error: ' + (data.error || 'Unknown error'));
+    }
+  } catch(e) {
+    alert('Upload failed: ' + e.message);
+  }
+}
 
-      table.appendChild(tr);
+// ══════════════════════════════════════════════════════════════
+//  SCROLLSPY (TOC sidebar)
+// ══════════════════════════════════════════════════════════════
+function bindScrollspy() {
+  const links = document.querySelectorAll('.toc-list a');
+  window.addEventListener('scroll', () => {
+    let active = null;
+    document.querySelectorAll('.grammar-section').forEach(sec => {
+      if (sec.getBoundingClientRect().top < 120) active = sec.id;
     });
-
-    // Separator
-    const sep = document.createElement('tr');
-    sep.className = 'sep-row';
-    sep.innerHTML = sepCols;
-    table.appendChild(sep);
-
-    // Gloss row
-    const glossTr = document.createElement('tr');
-    const emptyTd = document.createElement('td');
-    emptyTd.className = 'gloss-abbr';
-    glossTr.appendChild(emptyTd);
-    cols.forEach((col, i) => {
-      const td = document.createElement('td');
-      td.className = 'gloss-cell';
-      td.dataset.col = i;
-      td.textContent = col.gl;
-      glossTr.appendChild(td);
-      glossCells.push(td);
+    links.forEach(a => {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + active);
     });
-    table.appendChild(glossTr);
+  }, { passive: true });
+}
+
+// ══════════════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════════════
+async function init() {
+  buildLangPills();
+
+  // Check auth
+  try {
+    const status = await fetch('/api/auth/status').then(r => r.json());
+    isLoggedIn = status.logged_in;
+  } catch(e) { /* Flask not running — view-only mode */ }
+
+  // Load grammar sections
+  const sectResp = await fetch('/api/grammar').then(r => r.json()).catch(() => ({ sections: [{ id: 's1' }] }));
+  for (const sec of sectResp.sections) {
+    await loadSection(sec.id);
   }
 
-  // Column highlight on link hover
-  table.addEventListener('mouseover', e => {
-    const a = e.target.closest('a.lexlink');
-    if (!a) return;
-    const col = a.dataset.col;
-    glossCells.forEach(td => td.classList.toggle('col-hover', td.dataset.col === col));
-  });
-  table.addEventListener('mouseout', e => {
-    if (e.target.closest('a.lexlink'))
-      glossCells.forEach(td => td.classList.remove('col-hover'));
-  });
+  updateAuthUI();
+  bindScrollspy();
 
-  renderTable();
-  return widget;
+  // Login modal bindings
+  document.getElementById('login-submit').addEventListener('click', doLogin);
+  document.getElementById('login-cancel').addEventListener('click', hideLogin);
+  document.getElementById('login-pw').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+  document.getElementById('login-modal').addEventListener('click', e => { if (e.target === e.currentTarget) hideLogin(); });
+  document.getElementById('login-link').addEventListener('click', e => { e.preventDefault(); showLogin(); });
+  document.getElementById('logout-btn').addEventListener('click', doLogout);
+
+  // Upload bindings
+  document.getElementById('upload-dict-input').addEventListener('change', e => {
+    const f = e.target.files[0]; if (f) uploadXML(f, '/api/upload/dictionary', 's1');
+  });
+  document.getElementById('upload-corpus-input').addEventListener('change', e => {
+    const f = e.target.files[0]; if (f) uploadXML(f, '/api/upload/corpus', 's1');
+  });
 }
 
-// Render grammar sections
-const gramBody = document.getElementById('grammar-body');
-GRAMMAR.forEach(sec => {
-  const section = document.createElement('section');
-  section.className = 'gram-section';
-  section.id = sec.id;
-  section.innerHTML = `<h2>${sec.num}. ${sec.title} <a href="#top" class="totop">↑ top</a></h2>${sec.body}`;
-  const placeholder = section.querySelector('negation-example');
-  if (placeholder) placeholder.replaceWith(buildNegationWidget());
-  gramBody.appendChild(section);
-});
-
-// Floating tooltip
-const tooltip  = document.getElementById('lex-tooltip');
-const ttHw     = document.getElementById('tt-hw');
-const ttPos    = document.getElementById('tt-pos');
-const ttGloss  = document.getElementById('tt-gloss');
-const ttLangs  = document.getElementById('tt-langs');
-let hideTimer  = null;
-
-function positionTooltip(el) {
-  const rect = el.getBoundingClientRect();
-  const tw   = 320;
-  const ttH  = tooltip.offsetHeight || 90;
-  const gap  = 10;
-  let left   = rect.left + rect.width / 2 - 24;
-  if (left + tw > window.innerWidth - 8) left = window.innerWidth - tw - 8;
-  if (left < 8) left = 8;
-  tooltip.style.left = left + 'px';
-  tooltip.style.top  = (rect.top - ttH - gap < 8)
-    ? (rect.bottom + gap) + 'px'
-    : (rect.top - ttH - gap) + 'px';
-}
-
-document.addEventListener('mouseover', e => {
-  const a = e.target.closest('a.lexlink');
-  if (!a) return;
-  const id    = a.dataset.dictId || (a.getAttribute('href') || '').split('#')[1];
-  const entry = id && DICT_MAP[id];
-  if (!entry) return;
-  clearTimeout(hideTimer);
-  ttHw.textContent    = entry.hw;
-  ttPos.textContent   = '  ' + entry.pos;
-  ttGloss.textContent = entry.gloss;
-  // Show per-language forms
-  ttLangs.innerHTML = Object.entries(entry.langs).map(([lang, form]) =>
-    `<span class="tt-lang-form"><b>${LANG_ABBR[lang] || lang}</b> ${form}</span>`
-  ).join('');
-  tooltip.classList.add('visible');
-  positionTooltip(a);
-});
-document.addEventListener('mouseout', e => {
-  if (e.target.closest('a.lexlink'))
-    hideTimer = setTimeout(() => tooltip.classList.remove('visible'), 80);
-});
-document.addEventListener('mousemove', e => {
-  if (!tooltip.classList.contains('visible')) return;
-  const a = e.target.closest('a.lexlink');
-  if (a) positionTooltip(a);
-});
-
-// TOC active on scroll
-const tocLinks = document.querySelectorAll('.toc-list a');
-document.querySelectorAll('.gram-section').forEach(s => {
-  new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      if (e.isIntersecting)
-        tocLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id));
-    });
-  }, { rootMargin: '-20% 0px -70% 0px' }).observe(s);
-});
+init();
 </script>
 </body>
 </html>
