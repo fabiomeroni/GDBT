@@ -16,7 +16,7 @@ app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-change-in-production')
 
 UPLOAD_FOLDER  = 'uploads'
 GRAMMAR_FOLDER = 'grammar_content'
-AUTHOR_PASSWORD = os.environ.get('AUTHOR_PASSWORD', 'gaua2024')
+AUTHOR_PASSWORD = os.environ.get('AUTHOR_PASSWORD', 'letsgotogaua')
 
 os.makedirs(UPLOAD_FOLDER,  exist_ok=True)
 os.makedirs(GRAMMAR_FOLDER, exist_ok=True)
