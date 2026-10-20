@@ -269,7 +269,10 @@
       Documentation by <strong>Alexandre François</strong> (LACITO, CNRS / ANU).</p>
     </div>
 
-    <div class="stats-bar" id="stats-bar"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.4rem;">
+      <div class="stats-bar" id="stats-bar" style="margin-bottom:0;"></div>
+      <button class="edit-tab" id="corpus-edit-tab" title="Upload new corpus XML">✏ Edit</button>
+    </div>
     <div id="texts-content"></div>
   </main>
 </div>
@@ -417,12 +420,12 @@ document.addEventListener('DOMContentLoaded', () => {
   checkAuth();
 
   // Edit tab → open upload modal
-  document.querySelectorAll('.edit-tab').forEach(btn => {
+  const corpusEditTab = document.getElementById('corpus-edit-tab');
+  if (corpusEditTab) corpusEditTab.addEventListener('click', () => {
     btn.addEventListener('click', () => {
       document.getElementById('upload-msg').textContent = '';
       document.getElementById('upload-msg').className = 'dbt-modal-msg';
       document.getElementById('upload-modal').classList.add('visible');
-    });
   });
 
   // Upload modal
