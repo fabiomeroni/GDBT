@@ -288,7 +288,10 @@ body { overflow: hidden; }
   </aside>
 
   <main class="dict-main" id="dict-main">
-    <div class="result-bar"  id="result-bar">Loading dictionary…</div>
+    <div style="display:flex;align-items:center;justify-content:flex-end;padding:0.25rem 3.5rem 0;background:#f0e8d8;border-bottom:1px solid var(--border);">
+      <button class="edit-tab" id="dict-edit-tab" title="Upload new dictionary XML">✏ Edit</button>
+    </div>
+    <div class="result-bar" id="result-bar">Loading dictionary…</div>
     <div class="dict-content" id="dict-content">
       <p class="dict-status">Loading <code>dbt_dictionary.xml</code>…</p>
     </div>
@@ -767,13 +770,13 @@ document.addEventListener('DOMContentLoaded', () => {
   bindLoginModal();
   checkAuth();
 
-  // Edit tab in result bar → open upload modal
-  document.querySelectorAll('.edit-tab').forEach(btn => {
+  // Edit tab → open upload modal
+  const dictEditTab = document.getElementById('dict-edit-tab');
+  if (dictEditTab) dictEditTab.addEventListener('click', () => {
     btn.addEventListener('click', () => {
       document.getElementById('upload-msg').textContent = '';
       document.getElementById('upload-msg').className = 'dbt-modal-msg';
       document.getElementById('upload-modal').classList.add('visible');
-    });
   });
 
   // Upload modal
