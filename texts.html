@@ -415,49 +415,48 @@ render();
 <script>
 function onAuthChange(loggedIn) { /* edit tab visibility handled by updateAuthUI */ }
 
-document.addEventListener('DOMContentLoaded', () => {
-  bindLoginModal();
-  checkAuth();
+// Scripts at bottom of body — DOM already ready, no DOMContentLoaded needed
+bindLoginModal();
+checkAuth();
 
-  // Edit tab → open upload modal
-  const corpusEditTab = document.getElementById('corpus-edit-tab');
-  if (corpusEditTab) corpusEditTab.addEventListener('click', () => {
-    btn.addEventListener('click', () => {
-      document.getElementById('upload-msg').textContent = '';
-      document.getElementById('upload-msg').className = 'dbt-modal-msg';
-      document.getElementById('upload-modal').classList.add('visible');
+// Edit tab → open upload modal
+const corpusEditTab = document.getElementById('corpus-edit-tab');
+if (corpusEditTab) {
+  corpusEditTab.addEventListener('click', () => {
+    document.getElementById('upload-msg').textContent = '';
+    document.getElementById('upload-msg').className = 'dbt-modal-msg';
+    document.getElementById('upload-modal').classList.add('visible');
   });
+}
 
-  // Upload modal
-  document.getElementById('upload-cancel').addEventListener('click', () => {
+// Upload modal buttons
+document.getElementById('upload-cancel').addEventListener('click', () => {
+  document.getElementById('upload-modal').classList.remove('visible');
+});
+document.getElementById('upload-modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget)
     document.getElementById('upload-modal').classList.remove('visible');
-  });
-  document.getElementById('upload-modal').addEventListener('click', e => {
-    if (e.target === e.currentTarget)
-      document.getElementById('upload-modal').classList.remove('visible');
-  });
-  document.getElementById('upload-submit').addEventListener('click', async () => {
-    const f = document.getElementById('corpus-file').files[0];
-    const msg = document.getElementById('upload-msg');
-    if (!f) { msg.textContent = 'Please choose a file.'; msg.className='dbt-modal-msg error'; return; }
-    const form = new FormData(); form.append('file', f);
-    try {
-      const r = await fetch('/api/upload/corpus', { method:'POST', body:form });
-      const d = await r.json();
-      if (d.ok) {
-        msg.textContent = 'Upload successful — reloading…';
-        msg.className = 'dbt-modal-msg success';
-        setTimeout(() => location.reload(), 900);
-      } else {
-        msg.textContent = d.error || 'Upload failed.';
-        msg.className = 'dbt-modal-msg error';
-      }
-    } catch(e) {
-      msg.textContent = 'Network error.';
+});
+document.getElementById('upload-submit').addEventListener('click', async () => {
+  const file = document.getElementById('corpus-file').files[0];
+  const msg  = document.getElementById('upload-msg');
+  if (!file) { msg.textContent = 'Please choose a file.'; msg.className='dbt-modal-msg error'; return; }
+  const form = new FormData(); form.append('file', file);
+  try {
+    const r = await fetch('/api/upload/corpus', { method:'POST', body:form });
+    const d = await r.json();
+    if (d.ok) {
+      msg.textContent = 'Upload successful — reloading…';
+      msg.className = 'dbt-modal-msg success';
+      setTimeout(() => location.reload(), 900);
+    } else {
+      msg.textContent = d.error || 'Upload failed.';
       msg.className = 'dbt-modal-msg error';
     }
-  });
+  } catch(e) {
+    msg.textContent = 'Network error.';
+    msg.className = 'dbt-modal-msg error';
+  }
 });
 </script>
 </body>
-</html>
