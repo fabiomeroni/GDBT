@@ -222,6 +222,10 @@
     <li><a href="texts.html" class="active">Texts</a></li>
     <li><a href="dictionary.html">Dictionary</a></li>
   </ul>
+  <div class="topnav-auth">
+    <button class="auth-btn login-btn" title="Author login">🔒 Author</button>
+    <button class="auth-btn logout-btn" style="display:none;">Logout</button>
+  </div>
   <div class="topnav-right">LACITO · Pangloss Collection</div>
 </nav>
 
@@ -377,6 +381,80 @@ function render() {
 }
 
 render();
+</script>
+<!-- ── Login modal ── -->
+<div class="dbt-modal-backdrop" id="login-modal">
+  <div class="dbt-modal">
+    <h3>Author login</h3>
+    <input type="password" id="login-pw" placeholder="Password" autocomplete="current-password">
+    <div class="dbt-modal-msg" id="login-msg"></div>
+    <div class="dbt-modal-row">
+      <button class="modal-btn" id="login-cancel">Cancel</button>
+      <button class="modal-btn primary" id="login-submit">Log in</button>
+    </div>
+  </div>
+</div>
+<!-- ── Upload corpus modal ── -->
+<div class="dbt-modal-backdrop" id="upload-modal">
+  <div class="dbt-modal">
+    <h3>Upload Corpus XML</h3>
+    <p class="modal-desc">Select a corpus XML file to replace the current one.
+    The page will reload automatically after a successful upload.</p>
+    <input type="file" id="corpus-file" accept=".xml">
+    <div class="dbt-modal-msg" id="upload-msg"></div>
+    <div class="dbt-modal-row">
+      <button class="modal-btn" id="upload-cancel">Cancel</button>
+      <button class="modal-btn primary" id="upload-submit">Upload</button>
+    </div>
+  </div>
+</div>
+<script src="auth.js"></script>
+<script>
+function onAuthChange(loggedIn) { /* edit tab visibility handled by updateAuthUI */ }
+
+document.addEventListener('DOMContentLoaded', () => {
+  bindLoginModal();
+  checkAuth();
+
+  // Edit tab → open upload modal
+  document.querySelectorAll('.edit-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('upload-msg').textContent = '';
+      document.getElementById('upload-msg').className = 'dbt-modal-msg';
+      document.getElementById('upload-modal').classList.add('visible');
+    });
+  });
+
+  // Upload modal
+  document.getElementById('upload-cancel').addEventListener('click', () => {
+    document.getElementById('upload-modal').classList.remove('visible');
+  });
+  document.getElementById('upload-modal').addEventListener('click', e => {
+    if (e.target === e.currentTarget)
+      document.getElementById('upload-modal').classList.remove('visible');
+  });
+  document.getElementById('upload-submit').addEventListener('click', async () => {
+    const f = document.getElementById('corpus-file').files[0];
+    const msg = document.getElementById('upload-msg');
+    if (!f) { msg.textContent = 'Please choose a file.'; msg.className='dbt-modal-msg error'; return; }
+    const form = new FormData(); form.append('file', f);
+    try {
+      const r = await fetch('/api/upload/corpus', { method:'POST', body:form });
+      const d = await r.json();
+      if (d.ok) {
+        msg.textContent = 'Upload successful — reloading…';
+        msg.className = 'dbt-modal-msg success';
+        setTimeout(() => location.reload(), 900);
+      } else {
+        msg.textContent = d.error || 'Upload failed.';
+        msg.className = 'dbt-modal-msg error';
+      }
+    } catch(e) {
+      msg.textContent = 'Network error.';
+      msg.className = 'dbt-modal-msg error';
+    }
+  });
+});
 </script>
 </body>
 </html>
