@@ -178,6 +178,10 @@
     <li><a href="texts.html">Texts</a></li>
     <li><a href="dictionary.html">Dictionary</a></li>
   </ul>
+  <div class="topnav-auth">
+    <button class="auth-btn login-btn" title="Author login">🔒 Author</button>
+    <button class="auth-btn logout-btn" style="display:none;">Logout</button>
+  </div>
   <div class="topnav-right">Gaua Island · Banks Islands · Vanuatu</div>
 </nav>
 
@@ -326,5 +330,24 @@
   Gaua Island, Banks Islands, Vanuatu &nbsp;·&nbsp;
   <a href="https://heliceo.huma-num.fr/" target="_blank">HéLiCéO</a>
 </footer>
+<!-- ── Login modal ── -->
+<div class="dbt-modal-backdrop" id="login-modal">
+  <div class="dbt-modal">
+    <h3>Author login</h3>
+    <input type="password" id="login-pw" placeholder="Password" autocomplete="current-password">
+    <div class="dbt-modal-msg" id="login-msg"></div>
+    <div class="dbt-modal-row">
+      <button class="modal-btn" id="login-cancel">Cancel</button>
+      <button class="modal-btn primary" id="login-submit">Log in</button>
+    </div>
+  </div>
+</div>
+<script src="auth.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    bindLoginModal();
+    checkAuth();
+  });
+</script>
 </body>
 </html>
