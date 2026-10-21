@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About Gaua — DBT Gaua Languages</title>
+<link rel="stylesheet" href="style.css">
+<style>
+
+/* ── Layout ── */
+.gaua-shell {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  min-height: calc(100vh - 52px);
+}
+
+/* ── Sidebar ── */
+.gaua-sidebar {
+  background: #faf6ef;
+  border-right: 1px solid var(--border);
+  padding: 1.4rem 0 3rem;
+  position: sticky; top: 52px;
+  height: calc(100vh - 52px);
+  overflow-y: auto;
+}
+.sidebar-label {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.67rem; letter-spacing: 0.13em; text-transform: uppercase;
+  color: var(--ink-light); padding: 0 1rem 0.5rem; display: block;
+}
+.gaua-toc { list-style: none; padding: 0; margin: 0; }
+.gaua-toc a {
+  display: block; font-family: 'Crimson Pro', serif; font-size: 1rem;
+  color: var(--ink-mid); text-decoration: none;
+  padding: 3px 1rem 3px 1.1rem;
+  border-left: 3px solid transparent;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+  line-height: 1.5;
+}
+.gaua-toc a:hover  { background: #ede4d4; color: var(--ink); }
+.gaua-toc a.active { background: #e8d8b8; color: var(--ink); border-left-color: var(--gold); font-weight: 500; }
+.gaua-toc .sub a {
+  font-size: 0.88rem; padding-left: 1.9rem; color: var(--ink-light);
+}
+.gaua-toc .sub a:hover { color: var(--ink); }
+.gaua-toc .sub a.active { color: var(--ink); border-left-color: var(--gold-lt); background: #f0e8d8; }
+
+/* Map thumbnail in sidebar */
+.sidebar-map {
+  margin: 1.5rem 0.85rem 0;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,.12);
+}
+.sidebar-map img { display: block; width: 100%; height: auto; }
+
+/* ── Main content ── */
+.gaua-main {
+  padding: 2.5rem 4.5rem 6rem;
+  max-width: 820px;
+}
+
+/* Page title */
+.page-title {
+  font-family: 'EB Garamond', serif;
+  font-size: 2.6rem; font-weight: 500;
+  color: var(--ink); line-height: 1.1;
+  margin-bottom: 0.3rem;
+}
+.page-subtitle {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.82rem; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-light); margin-bottom: 2.5rem;
+}
+
+/* Section headings */
+.gaua-main h2 {
+  font-family: 'EB Garamond', serif;
+  font-size: 1.75rem; font-weight: 500;
+  color: var(--ink);
+  border-bottom: 2px solid var(--gold);
+  padding-bottom: 0.3rem;
+  margin: 2.8rem 0 1rem;
+  scroll-margin-top: 1.5rem;
+}
+.gaua-main h2:first-of-type { margin-top: 0; }
+
+.gaua-main h3 {
+  font-family: 'EB Garamond', serif;
+  font-size: 1.25rem; font-weight: 500;
+  color: var(--ink);
+  margin: 2rem 0 0.6rem;
+  scroll-margin-top: 1.5rem;
+}
+
+.gaua-main p {
+  font-family: 'Crimson Pro', serif;
+  font-size: 1.08rem; line-height: 1.82;
+  color: var(--ink-mid); margin-bottom: 0.9rem;
+}
+.gaua-main strong { font-weight: 600; color: var(--ink); }
+.gaua-main em     { font-style: italic; }
+
+/* ── Language cards ── */
+.lang-section {
+  border-left: 4px solid;
+  border-radius: 0 6px 6px 0;
+  padding: 1.4rem 1.8rem 1.6rem;
+  margin: 2rem 0 2.5rem;
+  background: #fdfbf7;
+  scroll-margin-top: 1.5rem;
+}
+.lang-section h3 {
+  font-family: 'EB Garamond', serif;
+  font-size: 1.6rem; font-weight: 500;
+  margin: 0 0 0.2rem;
+  border: none;
+}
+.lang-section .lang-meta {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-light); margin-bottom: 1rem;
+  display: flex; flex-wrap: wrap; gap: 0 1.2rem;
+}
+.lang-section .lang-meta span { white-space: nowrap; }
+.lang-section p {
+  font-family: 'Crimson Pro', serif;
+  font-size: 1.05rem; line-height: 1.8;
+  color: var(--ink-mid); margin-bottom: 0.8rem;
+}
+.lang-links {
+  display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem;
+}
+.lang-link {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.82rem; font-weight: 600; letter-spacing: 0.05em;
+  color: white; border-radius: 3px;
+  padding: 3px 14px 4px; text-decoration: none;
+  transition: opacity 0.15s;
+}
+.lang-link:hover { opacity: 0.82; }
+
+/* Speaker count badge */
+.speaker-badge {
+  display: inline-block;
+  font-family: 'Source Code Pro', monospace;
+  font-size: 0.72rem; letter-spacing: 0.04em;
+  background: var(--border);
+  border-radius: 3px; padding: 1px 7px;
+  color: var(--ink-light);
+  vertical-align: middle;
+  margin-left: 0.4rem;
+}
+
+/* Infobox */
+.infobox {
+  float: right; clear: right;
+  margin: 0 0 1.5rem 2rem;
+  background: #faf6ef;
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--gold);
+  border-radius: 0 0 4px 4px;
+  padding: 0.9rem 1.1rem;
+  width: 240px;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+.infobox table { width: 100%; border-collapse: collapse; }
+.infobox td { padding: 2px 0; vertical-align: top; }
+.infobox td:first-child { color: var(--ink-light); width: 45%; padding-right: 0.5rem; }
+.infobox td:last-child   { color: var(--ink); font-weight: 500; }
+.infobox caption {
+  font-family: 'EB Garamond', serif; font-size: 1rem; font-weight: 500;
+  color: var(--ink); text-align: left; margin-bottom: 0.5rem; caption-side: top;
+}
+
+/* More button (back-link style) */
+.back-link {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: 'Crimson Pro', serif; font-size: 0.88rem;
+  color: var(--gold); text-decoration: none;
+  border-bottom: 1px solid var(--border-lt);
+  padding-bottom: 1px; margin-bottom: 2rem; display: inline-block;
+  transition: color 0.12s, border-color 0.12s;
+}
+.back-link:hover { color: #b84c10; border-color: #b84c10; }
+
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a class="topnav-brand" href="index.html">◬ DBT Gaua</a>
+  <ul>
+    <li><a href="index.html">Home</a></li>
+    <li><a href="grammar.html">Grammar</a></li>
+    <li><a href="texts.html">Texts</a></li>
+    <li><a href="dictionary.html">Dictionary</a></li>
+  </ul>
+  <div class="topnav-right">Gaua Island · Banks Islands · Vanuatu</div>
+</nav>
+
+<div class="gaua-shell">
+
+  <!-- ── Sidebar ── -->
+  <aside class="gaua-sidebar">
+    <span class="sidebar-label">On this page</span>
+    <ul class="gaua-toc" id="gaua-toc">
+      <li><a href="#geography">Geography</a></li>
+      <li><a href="#history">History &amp; Society</a></li>
+      <li><a href="#languages">Languages</a></li>
+      <li class="sub"><a href="#nume">Nume</a></li>
+      <li class="sub"><a href="#dorig">Dorig</a></li>
+      <li class="sub"><a href="#koro">Koro</a></li>
+      <li class="sub"><a href="#olrat">Olrat</a></li>
+      <li class="sub"><a href="#lakon">Lakon</a></li>
+      <li><a href="#research">Research</a></li>
+    </ul>
+    <div class="sidebar-map">
+      <img src="gaua_map.png" alt="Map of Gaua Island">
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <main class="gaua-main">
+
+    <a class="back-link" href="index.html">← Back to homepage</a>
+
+    <h1 class="page-title">The Island of Gaua</h1>
+    <div class="page-subtitle">Santa Maria · Banks Islands · Republic of Vanuatu</div>
+
+    <!-- ══════════════════════ GEOGRAPHY ══════════════════════ -->
+    <h2 id="geography">Geography</h2>
+
+    <div class="infobox">
+      <table>
+        <caption>Gaua at a glance</caption>
+        <tr><td>Location</td><td>Banks Islands, Vanuatu</td></tr>
+        <tr><td>Coordinates</td><td>14°16′S 167°30′E</td></tr>
+        <tr><td>Area</td><td>328 km²</td></tr>
+        <tr><td>Highest point</td><td>Mt Garet (797 m)</td></tr>
+        <tr><td>Lake</td><td>Lake Letas (largest in Vanuatu)</td></tr>
+        <tr><td>Population</td><td>~2,500</td></tr>
+        <tr><td>Languages</td><td>6 (5 documented here)</td></tr>
+      </table>
+    </div>
+
+    <p>Gaua — historically charted by European navigators as <strong>Santa Maria</strong> — is
+    a volcanic island in the northern Banks Islands group of Vanuatu, situated in the
+    south-western Pacific Ocean approximately 250 km north of the main island of Espiritu Santo.
+    With an area of roughly 328 km², it is the largest island in the Banks group.</p>
+
+    <p>The island's dominant geographical feature is <strong>Mt Garet</strong>, an active
+    stratovolcano rising to 797 metres above sea level. Within its caldera lies
+    <strong>Lake Letas</strong>, a large freshwater crater lake and the largest natural lake
+    in Vanuatu. The lake drains westward through the <em>Jordan River</em>, the island's
+    principal watercourse. Periodic volcanic activity — including ash falls and lake
+    overflows — has historically forced temporary evacuations of villages on the western
+    and southern coasts.</p>
+
+    <p>The coastline alternates between black sand beaches of volcanic origin, coral reefs,
+    and steep coastal cliffs. The interior is largely covered in dense tropical rainforest
+    intersected by river valleys, with most settlements concentrated along the coast.
+    The climate is tropical, with a warm wet season from November to April and a cooler
+    dry season from May to October, modulated by the prevailing south-east trade winds.</p>
+
+    <!-- ══════════════════════ HISTORY ══════════════════════ -->
+    <h2 id="history">History &amp; Society</h2>
+
+    <p>Gaua has been inhabited for at least three thousand years, as part of the broader
+    settlement of Island Melanesia by Austronesian-speaking peoples whose descendants
+    today speak the languages documented in this project. Archaeological evidence from
+    across the Banks Islands points to a continuous human presence spanning multiple
+    millennia, with successive waves of migration, trade, and cultural exchange shaping
+    the island's linguistic and cultural diversity.</p>
+
+    <p>First contact with European navigators occurred in the late sixteenth century when
+    the Spanish explorer <strong>Pedro Fernandes de Queirós</strong> visited the Banks
+    Islands in 1606, giving the island its colonial name Santa Maria. Sustained European
+    contact, however, came only in the nineteenth century with the expansion of missionary
+    activity and the labour trade (<em>blackbirding</em>) that drew many islanders to
+    work on sugar plantations in Queensland and Fiji. The joint British–French
+    <em>Condominium of the New Hebrides</em> governed the archipelago from 1906 until
+    independence in 1980, when the Republic of Vanuatu was proclaimed.</p>
+
+    <p>Traditional social organisation on Gaua is centred on the <em>nakamal</em> — the
+    men's house and communal meeting ground — and structured around a graded society
+    system in which social rank is acquired through the ritual slaughter of pigs and the
+    performance of prescribed ceremonies. Oral tradition is rich and varied, encompassing
+    mythological cycles, historical narratives, spells, songs, and procedural knowledge
+    about agriculture, navigation, and healing. These traditions, transmitted across
+    generations in the five indigenous languages, form the primary source material for
+    the corpus component of this Digital Boasian Trilogy.</p>
+
+    <p>The contemporary population of approximately 2,500 people practices subsistence
+    agriculture (taro, yam, manioc, banana) alongside fishing and small-scale cash
+    cropping of copra and kava. Christianity — predominantly Anglican and Catholic —
+    is widely observed, often alongside traditional practices. Bislama, the national
+    creole of Vanuatu, serves as the inter-community lingua franca, while English and
+    French function as official languages of education and government.</p>
+
+    <!-- ══════════════════════ LANGUAGES ══════════════════════ -->
+    <h2 id="languages">Languages of Gaua</h2>
+
+    <p>Gaua is home to six distinct Oceanic languages, all belonging to the
+    <strong>North Vanuatu</strong> linkage of the Oceanic branch of the Austronesian
+    family. Five of these — Nume, Dorig, Koro, Olrat, and Lakon — are distributed
+    in a dialect chain running from east to west around the island's coastline.
+    A sixth language, <strong>Mwerlap</strong>, is spoken in the south-eastern corner
+    of the island and belongs to a different sub-grouping; it is not documented in
+    this project.</p>
+
+    <p>Despite their common Oceanic ancestry and geographical proximity, the six
+    languages of Gaua show a remarkable degree of lexical and phonological
+    differentiation — a pattern characteristic of the Banks Islands as a whole and
+    attributable to millennia of relatively independent development in small,
+    geographically bounded communities. The rate of cognacy between adjacent languages
+    is typically 50–65%, dropping further across the full east–west span of the chain.
+    This makes Gaua an unusually rich laboratory for the study of linguistic diversification,
+    contact, and change within a compact geographical area.</p>
+
+    <!-- ── NUME ── -->
+    <div class="lang-section" id="nume" style="border-color:#2e5c8a;">
+      <h3 style="color:#2e5c8a;">Nume <span class="speaker-badge">~700 speakers</span></h3>
+      <div class="lang-meta">
+        <span>Eastern Gaua</span>
+        <span>Villages: Nume, Losalava</span>
+        <span>Status: Vulnerable</span>
+      </div>
+      <p>Nume is spoken in the north-eastern part of Gaua, centred on the village of
+      <strong>Losalava</strong> and surrounding communities. With approximately 700
+      speakers it is one of the two most populous Gaua languages, alongside Lakon.
+      It occupies the eastern end of the dialect chain and consequently shows the greatest
+      structural and lexical distance from Lakon at the western extreme.</p>
+      <p>Phonologically, Nume is notable for preserving a number of Proto-Oceanic
+      consonant distinctions that have been merged or lost in the central and western
+      languages of the chain. Its vowel system is relatively conservative, and it retains
+      productive reduplication as a morphological process for aspect and number marking.
+      The verbal complex shows a rich system of subject and object agreement through
+      pre-verbal and post-verbal clitics.</p>
+      <p>The oral tradition of the Nume-speaking community is particularly rich in
+      mythological narratives centred on the culture-hero <em>Qat</em>, a figure found
+      across the Banks Islands whose exploits account for the origin of many natural and
+      cultural phenomena.</p>
+      <div class="lang-links">
+        <a class="lang-link" href="grammar.html" style="background:#2e5c8a;">Grammar →</a>
+        <a class="lang-link" href="dictionary.html?lang=Nume" style="background:#2e5c8a;">Dictionary →</a>
+        <a class="lang-link" href="texts.html" style="background:#2e5c8a;">Texts →</a>
+      </div>
+    </div>
+
+    <!-- ── DORIG ── -->
+    <div class="lang-section" id="dorig" style="border-color:#c07820;">
+      <h3 style="color:#c07820;">Dorig <span class="speaker-badge">~400 speakers</span></h3>
+      <div class="lang-meta">
+        <span>North-eastern Gaua</span>
+        <span>Villages: Dorig, Vetuboso</span>
+        <span>Status: Vulnerable</span>
+      </div>
+      <p>Dorig is spoken along the northern coast of Gaua, in the villages of
+      <strong>Dorig</strong> and <strong>Vetuboso</strong> and their surrounding hamlets.
+      With approximately 400 speakers, it occupies an intermediate position in the
+      dialect chain, showing closer lexical affinity to Nume on its east and Koro
+      on its west while maintaining a number of distinctive features of its own.</p>
+      <p>One of the most striking characteristics of Dorig is its phonological system,
+      which includes a relatively large consonant inventory and a set of prenasalised
+      stops that pattern differently from the corresponding forms in adjacent languages.
+      Dorig also preserves certain morphological categories — including a distinct
+      inclusive/exclusive opposition in possessive marking — that are less transparently
+      maintained elsewhere in the chain.</p>
+      <p>The Dorig community has maintained a strong tradition of inter-island navigation
+      and trade with neighbouring islands, and this is reflected in a vocabulary that
+      contains a number of loanwords and semantic extensions related to maritime activity.</p>
+      <div class="lang-links">
+        <a class="lang-link" href="grammar.html" style="background:#c07820;">Grammar →</a>
+        <a class="lang-link" href="dictionary.html?lang=Dorig" style="background:#c07820;">Dictionary →</a>
+        <a class="lang-link" href="texts.html" style="background:#c07820;">Texts →</a>
+      </div>
+    </div>
+
+    <!-- ── KORO ── -->
+    <div class="lang-section" id="koro" style="border-color:#922810;">
+      <h3 style="color:#922810;">Koro <span class="speaker-badge">~550 speakers</span></h3>
+      <div class="lang-meta">
+        <span>Central Gaua</span>
+        <span>Villages: Qéré, Lépvér</span>
+        <span>Status: Vulnerable</span>
+      </div>
+      <p>Koro occupies the central position both geographically and linguistically
+      within the Gaua dialect chain, spoken in and around the villages of
+      <strong>Qéré</strong> and <strong>Lépvér</strong> on the western coast of the
+      island. With approximately 550 speakers it is the most populous of the three
+      central languages (Dorig, Koro, Olrat).</p>
+      <p>Koro serves as the default headword language for the comparative dictionary
+      in this project, reflecting its central position within the chain and its role
+      as a pivot point for cross-linguistic comparison. Its phonological system has
+      undergone significant innovation relative to Proto-Oceanic, including the merger
+      of certain consonant distinctions and the development of new phonemic contrasts
+      through borrowing and internal change.</p>
+      <p>The Koro-speaking community is known for its elaborate kava ceremony traditions
+      and a rich corpus of garden magic spells (<em>tévét</em>) that are transmitted
+      orally within specialist lineages. Several of these texts have been archived in
+      the Pangloss Collection and form part of the corpus documented here.</p>
+      <div class="lang-links">
+        <a class="lang-link" href="grammar.html" style="background:#922810;">Grammar →</a>
+        <a class="lang-link" href="dictionary.html?lang=Koro" style="background:#922810;">Dictionary →</a>
+        <a class="lang-link" href="texts.html" style="background:#922810;">Texts →</a>
+      </div>
+    </div>
+
+    <!-- ── OLRAT ── -->
+    <div class="lang-section" id="olrat" style="border-color:#267040;">
+      <h3 style="color:#267040;">Olrat <span class="speaker-badge">~3 fluent speakers</span></h3>
+      <div class="lang-meta">
+        <span>West-central Gaua · Jōlav enclave</span>
+        <span>Status: <strong style="color:#922810;">Critically Endangered</strong></span>
+      </div>
+      <p>Olrat is spoken — or rather, was spoken — in a small enclave near the village
+      of <strong>Jōlav</strong> on the western coast of Gaua. At the time of the most
+      recent documentation, only approximately three fully fluent speakers remained,
+      all elderly. Olrat is consequently one of the most critically endangered languages
+      of the Pacific, and its documentation is among the most urgent priorities of
+      this project.</p>
+      <p>Despite its extreme endangerment, Olrat preserves a number of linguistically
+      significant features that distinguish it from its neighbours Koro and Lakon.
+      Its lexicon shows a high degree of differentiation, with a substantial proportion
+      of vocabulary that cannot be straightforwardly cognated with forms in adjacent
+      languages, suggesting either an independent trajectory of change or the
+      preservation of archaic material lost elsewhere. Its phonological system includes
+      a labiovelar series and a set of vowel length contrasts not found in most
+      other Gaua languages.</p>
+      <p>The endangerment of Olrat is primarily attributable to the gradual shift of
+      the Jōlav community toward Lakon, the prestige language of the western coast,
+      over several generations. Efforts to document Olrat have been undertaken by
+      Alexandre François, who has recorded a small but invaluable corpus of texts
+      with the remaining fluent speakers.</p>
+      <div class="lang-links">
+        <a class="lang-link" href="grammar.html" style="background:#267040;">Grammar →</a>
+        <a class="lang-link" href="dictionary.html?lang=Olrat" style="background:#267040;">Dictionary →</a>
+        <a class="lang-link" href="texts.html" style="background:#267040;">Texts →</a>
+      </div>
+    </div>
+
+    <!-- ── LAKON ── -->
+    <div class="lang-section" id="lakon" style="border-color:#5c2878;">
+      <h3 style="color:#5c2878;">Lakon <span class="speaker-badge">~800 speakers</span></h3>
+      <div class="lang-meta">
+        <span>Western Gaua</span>
+        <span>Villages: Lakon, Pak, Vurè</span>
+        <span>Status: Vulnerable</span>
+      </div>
+      <p>Lakon is spoken along the western and south-western coast of Gaua, in the
+      villages of <strong>Lakon</strong>, <strong>Pak</strong>, <strong>Vurè</strong>
+      and their satellite hamlets. With approximately 800 speakers it is the most
+      populous language on the island and enjoys a degree of social prestige as the
+      language of the western coast's largest communities.</p>
+      <p>At the western extreme of the dialect chain, Lakon shows the greatest
+      divergence from Nume in phonology, morphology, and lexicon. Its vowel system
+      has undergone significant restructuring relative to Proto-Oceanic, and its
+      consonant inventory differs substantially from those of the eastern languages.
+      The verbal morphology of Lakon shows a number of innovative features, including
+      a restructured tense–aspect–mood system and a set of directional morphemes that
+      grammaticalise distinctions of motion relative to the speaker and to the sea.</p>
+      <p>The Lakon community has been particularly active in cultural preservation
+      efforts, and the language benefits from a relatively young speaker population
+      compared to Olrat. Several Lakon speakers have collaborated extensively with
+      the documentation team, providing narratives, songs, ritual texts, and
+      elicitation sessions that form the backbone of the western component of
+      this corpus.</p>
+      <div class="lang-links">
+        <a class="lang-link" href="grammar.html" style="background:#5c2878;">Grammar →</a>
+        <a class="lang-link" href="dictionary.html?lang=Lakon" style="background:#5c2878;">Dictionary →</a>
+        <a class="lang-link" href="texts.html" style="background:#5c2878;">Texts →</a>
+      </div>
+    </div>
+
+    <!-- ══════════════════════ RESEARCH ══════════════════════ -->
+    <h2 id="research">Research &amp; Documentation</h2>
+
+    <p>The documentation of the Gaua languages is the result of sustained fieldwork
+    conducted by <strong>Alexandre François</strong> (CNRS–LaCiTO / HéLiCéO) over
+    multiple field trips between 2000 and the present, in collaboration with
+    <strong>Fabio Meroni</strong> (CNRS–Lattice). The project sits within the
+    broader framework of the <em>HéLiCéO</em> programme (Héritage Linguistique et
+    Culturel d'Océanie), which documents endangered Oceanic languages of northern
+    Vanuatu and the Solomon Islands.</p>
+
+    <p>Audio recordings, video materials, and annotated transcriptions are archived
+    in the <strong>Pangloss Collection</strong> (LACITO–CNRS), where they are freely
+    accessible under open-access licences. The Digital Boasian Trilogy presented here
+    constitutes the analytical and presentational layer built over this archival
+    foundation, connecting grammatical description, lexical documentation, and textual
+    evidence in a single interactive resource.</p>
+
+    <p>This project is supported by <strong>Huma-Num</strong> (CNRS) and hosted on
+    its research infrastructure. The comparative dictionary follows the LEXICA format
+    developed by <strong>Benjamin Galliot</strong>, used for the published online
+    dictionaries of Mwotlap, Teanu, Lo-Toga, and Araki available at
+    <a href="https://marama.huma-num.fr" target="_blank" rel="noopener">marama.huma-num.fr</a>.</p>
+
+  </main>
+</div>
+
+<footer>
+  Documentation: Alexandre François &amp; Fabio Meroni &nbsp;·&nbsp;
+  Gaua Island, Banks Islands, Vanuatu &nbsp;·&nbsp;
+  <a href="https://heliceo.huma-num.fr/" target="_blank">HéLiCéO</a>
+</footer>
+
+<script>
+// ── Scrollspy ──────────────────────────────────────────────────
+const tocLinks = document.querySelectorAll('.gaua-toc a');
+window.addEventListener('scroll', () => {
+  const headings = document.querySelectorAll(
+    '.gaua-main h2[id], .lang-section[id]'
+  );
+  let activeId = null;
+  headings.forEach(h => {
+    if (h.getBoundingClientRect().top < 130) activeId = h.id;
+  });
+  tocLinks.forEach(a =>
+    a.classList.toggle('active', a.getAttribute('href') === '#' + activeId)
+  );
+}, { passive: true });
+
+// ── Smooth scroll for TOC links ────────────────────────────────
+tocLinks.forEach(a => {
+  a.addEventListener('click', e => {
+    const id = a.getAttribute('href').slice(1);
+    const el = document.getElementById(id);
+    if (el) {
+      e.preventDefault();
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+});
+
+// ── Scroll to hash on load (e.g. gaua.html#lakon) ─────────────
+window.addEventListener('load', () => {
+  const hash = window.location.hash.slice(1);
+  if (hash) {
+    const el = document.getElementById(hash);
+    if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
+  }
+});
+</script>
+</body>
+</html>
