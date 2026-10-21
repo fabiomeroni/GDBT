@@ -16,7 +16,7 @@ app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-change-in-production')
 
 UPLOAD_FOLDER  = 'uploads'
 GRAMMAR_FOLDER = 'grammar_content'
-AUTHOR_PASSWORD = os.environ.get('AUTHOR_PASSWORD', 'letsgotogaua')
+AUTHOR_PASSWORD = os.environ.get('AUTHOR_PASSWORD', 'gaua2026')
 
 os.makedirs(UPLOAD_FOLDER,  exist_ok=True)
 os.makedirs(GRAMMAR_FOLDER, exist_ok=True)
@@ -172,7 +172,7 @@ def build_entry_chip(entry_id):
 #  Pass 2: resolve {{example:…}} and {{entry:…}} shortcodes
 # ══════════════════════════════════════════════════════════════
 
-_MD = md_lib.Markdown(extensions=['extra', 'tables', 'attr_list'])
+_MD = md_lib.Markdown(extensions=['extra', 'tables', 'attr_list', 'toc'])
 
 def render_grammar(md_text):
     _MD.reset()
@@ -335,4 +335,4 @@ def static_files(filename):
 if __name__ == '__main__':
     print("DBT Gaua — starting on http://localhost:5000")
     print(f"Author password: {AUTHOR_PASSWORD}")
-    app.run(debug=True, port=5000, host='0.0.0.0')
+    app.run(debug=True, port=5000)
