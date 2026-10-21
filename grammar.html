@@ -38,6 +38,50 @@
 }
 .toc-list a:hover  { background: #ede4d4; color: var(--ink); }
 .toc-list a.active { background: #e8d8b8; color: var(--ink); border-left-color: var(--gold); font-weight: 500; }
+.toc-list .toc-h3 a {
+  font-size: 0.9rem; padding-left: 1.9rem;
+  color: var(--ink-light); border-left-color: transparent;
+}
+.toc-list .toc-h3 a:hover { color: var(--ink); }
+.toc-list .toc-h3 a.active { color: var(--ink); border-left-color: var(--gold-lt); background: #f0e8d8; }
+
+/* ── TOC intro block ── */
+.toc-intro {
+  background: #faf6ef;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--gold);
+  border-radius: 0 6px 6px 0;
+  padding: 1.4rem 1.8rem 1.6rem;
+  margin-bottom: 3rem;
+  max-width: 560px;
+}
+.toc-intro h2 {
+  font-family: 'EB Garamond', serif;
+  font-size: 1.1rem; font-weight: 500;
+  color: var(--ink-light);
+  letter-spacing: 0.06em; text-transform: uppercase;
+  font-size: 0.75rem; margin-bottom: 0.9rem;
+  border-bottom: none !important;
+}
+.toc-intro ol {
+  list-style: none; padding: 0; margin: 0;
+  counter-reset: toc-counter;
+}
+.toc-intro ol li {
+  font-family: 'Crimson Pro', serif; font-size: 1.05rem;
+  line-height: 1.5; margin-bottom: 0.25rem;
+}
+.toc-intro ol li a {
+  color: var(--ink-mid); text-decoration: none;
+  border-bottom: 1px solid var(--border-lt);
+  transition: color 0.12s, border-color 0.12s;
+}
+.toc-intro ol li a:hover { color: var(--gold); border-bottom-color: var(--gold); }
+.toc-intro ol li.intro-h3 {
+  font-size: 0.95rem; padding-left: 1.2rem; color: var(--ink-light);
+  margin-bottom: 0.15rem;
+}
+.toc-intro ol li.intro-h3 a { color: var(--ink-light); }
 
 .sidebar-lang-head { margin-top: 1.6rem; padding: 0 1rem 0.4rem; }
 .lang-pills-wrap { padding: 0 0.85rem 0.5rem; display: flex; flex-wrap: wrap; gap: 4px; }
@@ -152,7 +196,7 @@ tr[data-lang].lang-hidden { display: none; }
   <aside class="grammar-sidebar">
     <span class="sidebar-section-label">Contents</span>
     <ul class="toc-list" id="toc-list">
-      <li><a href="#s1">§1 Negation</a></li>
+      <!-- populated dynamically after sections load -->
     </ul>
     <div class="sidebar-lang-head">
       <span class="sidebar-section-label">Show languages</span>
@@ -162,6 +206,12 @@ tr[data-lang].lang-hidden { display: none; }
 
   <!-- ── Main ── -->
   <main class="grammar-main">
+    <!-- TOC overview — shown before grammar sections, built dynamically -->
+    <div class="toc-intro" id="toc-intro" style="display:none;">
+      <h2>Contents</h2>
+      <ol id="toc-intro-list"></ol>
+    </div>
+
     <div id="sections-container"></div>
   </main>
 
@@ -207,6 +257,59 @@ function applyLangFilter() {
   document.querySelectorAll('tr[data-lang]').forEach(row => {
     row.classList.toggle('lang-hidden', !activeLangs.has(row.dataset.lang));
   });
+}
+
+// ── TOC builder ────────────────────────────────────────────────
+// Called after all sections have loaded. Scans every h2/h3 that has
+// an id (added by Python-Markdown's toc extension) and builds:
+//   • the sidebar .toc-list  (compact, scrollspy-linked)
+//   • the .toc-intro block   (shown at top of main content)
+function buildTOC() {
+  const sideList  = document.getElementById('toc-list');
+  const introList = document.getElementById('toc-intro-list');
+  const intro     = document.getElementById('toc-intro');
+  sideList.innerHTML  = '';
+  introList.innerHTML = '';
+
+  const headings = document.querySelectorAll(
+    '#sections-container h2[id], #sections-container h3[id]'
+  );
+
+  if (!headings.length) return;
+
+  headings.forEach(h => {
+    const level  = h.tagName.toLowerCase(); // 'h2' or 'h3'
+    const anchor = h.id;
+    const text   = h.textContent.trim();
+
+    // ── Sidebar entry ──
+    const li = document.createElement('li');
+    li.className = level === 'h3' ? 'toc-h3' : '';
+    const a = document.createElement('a');
+    a.href = '#' + anchor;
+    a.textContent = text;
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      document.getElementById(anchor)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    li.appendChild(a);
+    sideList.appendChild(li);
+
+    // ── Intro block entry ──
+    const li2 = document.createElement('li');
+    li2.className = level === 'h3' ? 'intro-h3' : '';
+    const a2 = document.createElement('a');
+    a2.href = '#' + anchor;
+    a2.textContent = text;
+    a2.addEventListener('click', e => {
+      e.preventDefault();
+      document.getElementById(anchor)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    li2.appendChild(a2);
+    introList.appendChild(li2);
+  });
+
+  intro.style.display = '';
 }
 
 // ── Section loading ────────────────────────────────────────────
@@ -275,6 +378,7 @@ async function saveSection(id) {
       document.getElementById('content-' + id).innerHTML = data.html;
       applyLangFilter();
       cancelEdit(id);
+      buildTOC(); // headings may have changed
     }
   } catch(e) { alert('Save failed: ' + e.message); }
 }
@@ -284,17 +388,19 @@ function cancelEdit(id) {
   document.getElementById('editor-' + id).classList.remove('visible');
 }
 
-// ── Scrollspy ──────────────────────────────────────────────────
+// ── Scrollspy — tracks headings, not just sections ─────────────
 function bindScrollspy() {
-  const links = document.querySelectorAll('.toc-list a');
   window.addEventListener('scroll', () => {
-    let active = null;
-    document.querySelectorAll('.grammar-section').forEach(sec => {
-      if (sec.getBoundingClientRect().top < 120) active = sec.id;
-    });
-    links.forEach(a =>
-      a.classList.toggle('active', a.getAttribute('href') === '#' + active)
+    const headings = document.querySelectorAll(
+      '#sections-container h2[id], #sections-container h3[id]'
     );
+    let activeId = null;
+    headings.forEach(h => {
+      if (h.getBoundingClientRect().top < 130) activeId = h.id;
+    });
+    document.querySelectorAll('.toc-list a').forEach(a => {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + activeId);
+    });
   }, {passive: true});
 }
 
@@ -310,6 +416,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   for (const sec of secResp.sections) await loadSection(sec.id);
 
+  buildTOC();
   bindScrollspy();
 });
 </script>
