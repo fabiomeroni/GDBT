@@ -49,6 +49,9 @@ def get_dict_xml():
 def get_corpus_xml():
     return _load_xml('corpus.xml', 'dbt_corpus.xml')
 
+def get_fieldnotes_xml():
+    return _load_xml('fieldnotes.xml', 'AlexFrancois_Questionnaire_Gaua-languages.xml')
+
 # ══════════════════════════════════════════════════════════════
 #  SHORTCODE RESOLVERS
 # ══════════════════════════════════════════════════════════════
@@ -249,6 +252,52 @@ def upload_dictionary():
 def upload_corpus():
     return _handle_upload('corpus.xml')
 
+@app.route('/api/upload/fieldnotes', methods=['POST'])
+def upload_fieldnotes():
+    return _handle_upload('fieldnotes.xml')
+
+
+# ── Fieldnotes routes ─────────────────────────────────────────
+
+_FN_CODES = ['num', 'drg', 'kro', 'olr', 'lkn']
+
+@app.route('/api/fieldnotes/groups')
+def fieldnotes_groups():
+    xml = get_fieldnotes_xml()
+    if xml is None:
+        return jsonify({'groups': [], 'error': 'No fieldnotes XML found'})
+    groups = []
+    for i, tg in enumerate(xml.findall('.//tiGroup')):
+        ti = (tg.findtext('ti') or '').strip()
+        if ti:
+            groups.append({'index': i, 'title': ti})
+    return jsonify({'groups': groups})
+
+@app.route('/api/fieldnotes/group/<int:index>')
+def fieldnotes_group(index):
+    xml = get_fieldnotes_xml()
+    if xml is None:
+        return jsonify({'error': 'No fieldnotes XML found'}), 404
+    tgs = xml.findall('.//tiGroup')
+    if index < 0 or index >= len(tgs):
+        return jsonify({'error': 'Group not found'}), 404
+    tg  = tgs[index]
+    ti  = (tg.findtext('ti') or '').strip()
+    items = []
+    for rfg in tg.findall('rfGroup'):
+        rf  = (rfg.findtext('rf') or '').strip()
+        grp = rfg.find('bslGroup') or rfg.find('frGroup')
+        if grp is None:
+            continue
+        prompt = (grp.findtext('bsl') or grp.findtext('fr') or '').strip()
+        forms  = {}
+        for code in _FN_CODES:
+            nodes = grp.findall(code)
+            vals  = [n.text.strip() for n in nodes if n.text and n.text.strip()]
+            forms[code] = ' / '.join(vals)
+        if prompt or any(forms.values()):
+            items.append({'rf': rf, 'prompt': prompt, 'forms': forms})
+    return jsonify({'title': ti, 'index': index, 'items': items})
 
 @app.route('/api/upload/status')
 def upload_status():
