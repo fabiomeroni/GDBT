@@ -3,216 +3,251 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Archived Texts — DBT Gaua Languages</title>
+<title>Texts — DBT Gaua Languages</title>
 <link rel="stylesheet" href="style.css">
 <style>
-/* ── Texts page ── */
-.texts-layout {
-  display: grid;
-  grid-template-columns: 220px 1fr;
-  min-height: calc(100vh - 52px - 80px);
-}
 
-/* Filter sidebar */
-.filter-sidebar {
-  background: #faf6ef;
-  border-right: 1px solid var(--border);
-  padding: 1.6rem 1rem 2rem;
-  position: sticky;
-  top: 52px;
-  height: calc(100vh - 52px);
-  overflow-y: auto;
+/* ── Tab switcher ── */
+.texts-tabs {
+  display: flex; align-items: stretch;
+  background: var(--nav-bg);
+  border-bottom: 2px solid #3a2010;
+  padding: 0 2rem;
+  gap: 0;
 }
-.filter-sidebar h2 {
-  font-family: 'Crimson Pro', serif;
-  font-size: 0.7rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-light);
-  margin-bottom: 0.8rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border);
+.tab-btn {
+  font-family: 'Crimson Pro', serif; font-size: 1rem; font-weight: 500;
+  color: rgba(240,223,192,0.5);
+  background: none; border: none; border-bottom: 3px solid transparent;
+  padding: 0.85rem 1.6rem 0.7rem; cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  margin-bottom: -2px; white-space: nowrap;
 }
-.filter-check {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: 'Crimson Pro', serif;
-  font-size: 0.95rem;
-  color: var(--ink-mid);
-  margin-bottom: 5px;
-  cursor: pointer;
-  padding: 3px 6px;
-  border-radius: 3px;
-  transition: background 0.12s;
-}
-.filter-check:hover { background: #ede4d4; }
-.filter-check input[type=checkbox] { accent-color: var(--gold); width: 14px; height: 14px; }
-.lang-dot {
-  display: inline-block;
-  width: 9px; height: 9px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
+.tab-btn:hover { color: #c9a458; }
+.tab-btn.active { color: #f0dfc0; border-bottom-color: var(--gold); }
 
-/* Main */
-.texts-main { padding: 2rem 3.5rem 4rem; max-width: 900px; }
+/* Tab panels */
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
 
-/* Page header */
+/* ── Recordings panel ── */
+.texts-main {
+  padding: 2rem 4rem 5rem;
+  max-width: 1100px; margin: 0 auto;
+}
 .texts-hdr {
-  border-bottom: 2px solid var(--border);
-  padding-bottom: 1rem;
-  margin-bottom: 2rem;
+  display: flex; align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.2rem; flex-wrap: wrap; gap: 0.5rem;
 }
-.texts-hdr h1 {
-  font-family: 'EB Garamond', serif;
-  font-size: 2rem;
-  font-weight: 500;
-  color: var(--ink);
+.texts-hdr h2 {
+  font-family: 'EB Garamond', serif; font-size: 1.6rem; font-weight: 500;
+  color: var(--ink); margin: 0;
 }
-.texts-hdr p {
-  font-family: 'Crimson Pro', serif;
-  font-size: 1rem;
+.filter-row {
+  display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.filter-row label {
+  font-family: 'Crimson Pro', serif; font-size: 0.82rem;
+  letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--ink-light);
-  margin-top: 0.4rem;
-  max-width: 64ch;
-  line-height: 1.7;
 }
-.texts-hdr a { color: var(--gold); text-decoration: none; }
-.texts-hdr a:hover { text-decoration: underline; }
+.filter-row select {
+  font-family: 'Crimson Pro', serif; font-size: 0.95rem;
+  padding: 3px 8px; border: 1px solid var(--border);
+  border-radius: 3px; background: white; color: var(--ink); outline: none;
+  cursor: pointer;
+}
+.filter-row select:focus { border-color: var(--gold); }
 
-/* Stats */
 .stats-bar {
-  display: flex;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
+  font-family: 'Crimson Pro', serif; font-size: 0.82rem;
+  color: var(--ink-light); margin-bottom: 1.2rem;
 }
-.stat-pill {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 0.5rem 1.2rem;
-  font-family: 'Crimson Pro', serif;
-  font-size: 0.88rem;
-  color: var(--ink-mid);
-}
-.stat-pill strong { color: var(--ink); font-size: 1.1rem; }
-
-/* Language group */
-.lang-group { margin-bottom: 2.5rem; scroll-margin-top: 68px; }
-.lang-group-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 0.8rem;
-  padding-bottom: 0.4rem;
-  border-bottom: 1.5px solid var(--border);
-}
-.lang-group-header .lname {
-  font-family: 'EB Garamond', serif;
-  font-size: 1.5rem;
-  font-weight: 500;
-  color: var(--ink);
-}
-.lang-group-header .lcount {
-  font-family: 'Crimson Pro', serif;
-  font-size: 0.82rem;
-  color: var(--ink-light);
-}
-
-/* Text card — each card gets id=textSlug(lang,title) for deep-linking */
-.text-card {
+.texts-grid {
   display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: start;
-  gap: 0.8rem;
-  padding: 0.75rem 0.5rem;
-  border-bottom: 1px solid var(--border-lt);
-  transition: background 0.12s;
-  scroll-margin-top: 80px;
-  border-radius: 3px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
 }
-.text-card:hover { background: #faf5ee; }
-/* Highlight when arrived via anchor (grammar source link) */
-.text-card:target {
-  background: #fffaec;
-  border-left: 3px solid var(--gold);
-  padding-left: 0.7rem;
-  animation: pulse-highlight 1.8s ease forwards;
+.text-card {
+  background: white; border: 1px solid var(--border);
+  border-radius: 5px; padding: 1rem 1.2rem 1.1rem;
+  border-left: 4px solid;
+  transition: box-shadow 0.15s, transform 0.12s;
 }
-@keyframes pulse-highlight {
-  0%   { box-shadow: 0 0 0 0 rgba(201,164,88,.5); }
-  40%  { box-shadow: 0 0 0 8px rgba(201,164,88,0); }
-  100% { box-shadow: none; }
+.text-card:hover { box-shadow: 0 4px 14px rgba(80,40,0,.09); transform: translateY(-1px); }
+.text-card .tc-lang {
+  font-family: 'Crimson Pro', serif; font-variant: small-caps;
+  font-size: 0.72rem; letter-spacing: 0.1em; font-weight: 700;
+  margin-bottom: 0.3rem; display: block;
 }
-.text-card-inner { display: flex; flex-direction: column; gap: 3px; }
-.text-title {
-  font-family: 'EB Garamond', serif;
-  font-size: 1.1rem;
-  font-weight: 500;
-  color: var(--ink);
+.text-card .tc-title {
+  font-family: 'EB Garamond', serif; font-size: 1.12rem; font-weight: 500;
+  color: var(--ink); margin-bottom: 0.4rem; display: block;
 }
-.text-title a {
-  color: var(--ink);
-  text-decoration: none;
-  border-bottom: 1px solid transparent;
-  transition: border-color 0.15s, color 0.15s;
+.text-card .tc-meta {
+  font-family: 'Crimson Pro', serif; font-size: 0.8rem;
+  color: var(--ink-light); margin-bottom: 0.7rem; display: flex; gap: 0.8rem;
 }
-.text-title a:hover { color: var(--gold); border-bottom-color: var(--gold-lt); }
-.text-meta {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
-  font-family: 'Crimson Pro', serif;
-  font-size: 0.82rem;
-  color: var(--ink-light);
+.text-card .tc-link {
+  font-family: 'Crimson Pro', serif; font-size: 0.82rem;
+  font-weight: 600; letter-spacing: 0.05em; text-decoration: none;
+  color: var(--gold); border-bottom: 1px solid var(--border-lt);
+  transition: color 0.12s, border-color 0.12s;
 }
-.genre-pill {
-  background: #f0e8d8;
-  border-radius: 2px;
-  padding: 1px 8px 2px;
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #5a3a18;
-}
-.pangloss-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-family: 'Crimson Pro', serif;
-  font-size: 0.82rem;
-  color: var(--gold);
-  text-decoration: none;
-  border: 1px solid var(--gold-lt);
-  border-radius: 3px;
-  padding: 3px 10px 4px;
-  white-space: nowrap;
-  transition: background 0.15s, color 0.15s;
-}
-.pangloss-link:hover { background: var(--gold); color: white; border-color: var(--gold); }
-
+.text-card .tc-link:hover { color: #b84c10; border-color: #b84c10; }
 .no-results {
-  font-family: 'Crimson Pro', serif;
-  font-size: 1rem;
-  font-style: italic;
-  color: var(--ink-light);
-  padding: 2rem 0;
+  font-family: 'Crimson Pro', serif; font-style: italic;
+  color: var(--ink-light); font-size: 1rem; padding: 1rem 0;
 }
 
-.breadcrumb {
-  font-family: 'Crimson Pro', serif;
-  font-size: 0.82rem;
-  color: var(--ink-light);
-  margin-bottom: 1.5rem;
+/* ── Fieldnotes panel ── */
+.fn-shell {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  height: calc(100vh - 52px - 46px); /* minus nav and tabs */
 }
-.breadcrumb a { color: var(--gold); text-decoration: none; }
+
+.fn-sidebar {
+  background: #faf6ef; border-right: 1px solid var(--border);
+  overflow-y: auto; padding: 0.8rem 0 2rem;
+}
+.fn-sidebar-head {
+  padding: 0.5rem 1rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  justify-content: space-between; flex-wrap: wrap; gap: 0.4rem;
+}
+.fn-sidebar-label {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.67rem; letter-spacing: 0.13em; text-transform: uppercase;
+  color: var(--ink-light);
+}
+.fn-group-list { list-style: none; padding: 0; margin: 0; }
+.fn-group-item a {
+  display: block; font-family: 'Crimson Pro', serif; font-size: 0.95rem;
+  color: var(--ink-mid); text-decoration: none;
+  padding: 5px 1rem 5px 1.1rem;
+  border-left: 3px solid transparent;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+  line-height: 1.4;
+}
+.fn-group-item a:hover  { background: #ede4d4; color: var(--ink); }
+.fn-group-item a.active {
+  background: #e8d8b8; color: var(--ink);
+  border-left-color: var(--gold); font-weight: 500;
+}
+.fn-group-item .fn-ref {
+  font-family: 'Source Code Pro', monospace; font-size: 0.72rem;
+  color: var(--ink-light); display: block; margin-bottom: 1px;
+}
+
+.fn-main {
+  overflow-y: auto; padding: 1.5rem 2.5rem 3rem;
+  background: var(--bg);
+}
+.fn-title {
+  font-family: 'EB Garamond', serif; font-size: 1.6rem; font-weight: 500;
+  color: var(--ink); margin-bottom: 0.3rem;
+}
+.fn-title-sub {
+  font-family: 'Crimson Pro', serif; font-size: 0.78rem;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-light); margin-bottom: 1.2rem; display: block;
+}
+.fn-loading {
+  font-family: 'Crimson Pro', serif; font-style: italic;
+  color: var(--ink-light); padding: 2rem 0;
+}
+
+/* Comparative table */
+.fn-table-wrap { overflow-x: auto; }
+.fn-table {
+  border-collapse: collapse; width: 100%;
+  font-family: 'Crimson Pro', serif;
+}
+.fn-table thead th {
+  font-variant: small-caps; font-size: 0.78rem; font-weight: 700;
+  letter-spacing: 0.08em; text-align: left;
+  padding: 5px 12px 6px 0; border-bottom: 2px solid var(--border);
+  white-space: nowrap; position: sticky; top: 0; background: var(--bg);
+  z-index: 2;
+}
+.fn-table thead th.th-ref    { color: var(--ink-light); width: 90px; }
+.fn-table thead th.th-prompt { color: var(--ink-light); min-width: 160px; }
+.fn-table tbody tr { border-bottom: 1px solid var(--border-lt); }
+.fn-table tbody tr:hover { background: #faf6ef; }
+.fn-table td {
+  padding: 5px 14px 5px 0; vertical-align: top;
+  font-size: 1rem; line-height: 1.55;
+}
+.fn-table td.td-ref {
+  font-family: 'Source Code Pro', monospace; font-size: 0.68rem;
+  color: var(--ink-light); white-space: nowrap;
+  padding-top: 7px;
+}
+.fn-table td.td-prompt {
+  font-style: italic; color: var(--ink-light); font-size: 0.93rem;
+  max-width: 200px;
+}
+.fn-table td.td-lang { font-family: 'EB Garamond', serif; font-size: 1.08rem; }
+.fn-table td.td-empty { color: #ccc; font-size: 0.85rem; }
+
+/* Edit bar above table */
+.fn-edit-bar {
+  display: flex; align-items: center;
+  justify-content: flex-end; margin-bottom: 0.6rem;
+}
+.rec-edit-bar {
+  display: flex; align-items: center;
+  justify-content: flex-end; margin-bottom: 0.5rem;
+}
+
 </style>
 </head>
-<body id="top">
+<body>
+
+<!-- ── Login modal ── -->
+<div class="dbt-modal-backdrop" id="login-modal">
+  <div class="dbt-modal">
+    <h3>Author login</h3>
+    <input type="password" id="login-pw" placeholder="Password" autocomplete="current-password">
+    <div class="dbt-modal-msg" id="login-msg"></div>
+    <div class="dbt-modal-row">
+      <button class="modal-btn" id="login-cancel">Cancel</button>
+      <button class="modal-btn primary" id="login-submit">Log in</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Upload modal: recordings ── -->
+<div class="dbt-modal-backdrop" id="upload-rec-modal">
+  <div class="dbt-modal">
+    <h3>Upload Recordings Corpus XML</h3>
+    <p class="modal-desc">Replace the current audio corpus XML. The page reloads after upload.</p>
+    <input type="file" id="rec-file" accept=".xml">
+    <div class="dbt-modal-msg" id="upload-rec-msg"></div>
+    <div class="dbt-modal-row">
+      <button class="modal-btn" id="upload-rec-cancel">Cancel</button>
+      <button class="modal-btn primary" id="upload-rec-submit">Upload</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Upload modal: fieldnotes ── -->
+<div class="dbt-modal-backdrop" id="upload-fn-modal">
+  <div class="dbt-modal">
+    <h3>Upload Fieldnotes XML</h3>
+    <p class="modal-desc">Replace the current fieldnotes XML (Toolbox database format). The page reloads after upload.</p>
+    <input type="file" id="fn-file" accept=".xml">
+    <div class="dbt-modal-msg" id="upload-fn-msg"></div>
+    <div class="dbt-modal-row">
+      <button class="modal-btn" id="upload-fn-cancel">Cancel</button>
+      <button class="modal-btn primary" id="upload-fn-submit">Upload</button>
+    </div>
+  </div>
+</div>
 
 <nav class="topnav">
   <a class="topnav-brand" href="index.html">◬ DBT Gaua</a>
@@ -226,237 +261,287 @@
     <button class="auth-btn login-btn" title="Author login">🔒 Author</button>
     <button class="auth-btn logout-btn" style="display:none;">Logout</button>
   </div>
-  <div class="topnav-right">LACITO · Pangloss Collection</div>
+  <div class="topnav-right">Corpus · Gaua Languages</div>
 </nav>
 
-<div class="texts-layout">
-  <!-- Filter sidebar -->
-  <aside class="filter-sidebar">
-    <h2>Language</h2>
-    <div id="lang-filters"></div>
-    <hr style="border:none;border-top:1px solid var(--border);margin:1.2rem 0;">
-    <h2>Genre</h2>
-    <div id="genre-filters"></div>
-    <hr style="border:none;border-top:1px solid var(--border);margin:1.2rem 0;">
-    <button id="clear-btn" style="width:100%;font-family:'Crimson Pro',serif;font-size:0.85rem;
-      padding:6px;border:1px solid var(--border);border-radius:4px;background:white;
-      color:var(--ink-mid);cursor:pointer;">Clear all filters</button>
-    <hr style="border:none;border-top:1px solid var(--border);margin:1.2rem 0;">
-    <div style="font-family:'Crimson Pro',serif;font-size:0.78rem;color:var(--ink-light);line-height:1.7;">
-      Texts archived in the <a href="https://pangloss.cnrs.fr" target="_blank"
-        style="color:var(--gold);text-decoration:none;">Pangloss Collection</a>
-      (LACITO, CNRS). Recordings, transcriptions, and translations are freely accessible online.
-    </div>
-    <hr style="border:none;border-top:1px solid var(--border);margin:1.2rem 0;">
-    <div style="font-family:'Crimson Pro',serif;font-size:0.78rem;color:var(--ink-light);line-height:1.65;">
-      <strong style="color:var(--ink-mid);">Linked from Grammar</strong><br>
-      Text cards with a gold highlight were navigated here from a glossed example in the
-      <a href="grammar.html" style="color:var(--gold);text-decoration:none;">Comparative Grammar</a>.
-    </div>
-  </aside>
-
-  <!-- Main content -->
-  <main class="texts-main">
-    <div class="breadcrumb">
-      <a href="index.html">DBT Gaua</a> &rsaquo; Archived Texts
-    </div>
-    <div class="texts-hdr">
-      <h1>Archived Texts</h1>
-      <p>Natural language texts recorded, transcribed, and archived as part of the documentation of the five
-      Gaua languages. Each title links directly to its archived item in the
-      <a href="https://pangloss.cnrs.fr" target="_blank">LACITO Pangloss Collection</a>,
-      where recordings, transcriptions, and translations are freely accessible.
-      Documentation by <strong>Alexandre François</strong> (LACITO, CNRS / ANU).</p>
-    </div>
-
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.4rem;">
-      <div class="stats-bar" id="stats-bar" style="margin-bottom:0;"></div>
-      <button class="edit-tab" id="corpus-edit-tab" title="Upload new corpus XML">✏ Edit</button>
-    </div>
-    <div id="texts-content"></div>
-  </main>
+<!-- ── Tab switcher ── -->
+<div class="texts-tabs">
+  <button class="tab-btn active" data-tab="recordings">🎧 Texts from recordings</button>
+  <button class="tab-btn" data-tab="fieldnotes">📋 Texts from fieldnotes</button>
 </div>
 
-<footer>
-  LACITO &nbsp;/&nbsp; Pangloss Collection &nbsp;·&nbsp; CNRS &nbsp;·&nbsp;
-  Documentation: Alexandre François &nbsp;·&nbsp;
-  Gaua Island, Banks Islands, Vanuatu &nbsp;·&nbsp;
-  <a href="https://pangloss.cnrs.fr" target="_blank">pangloss.cnrs.fr</a>
-</footer>
+<!-- ══════════════════════════════════════════════════════════
+     TAB 1 — Texts from recordings
+══════════════════════════════════════════════════════════ -->
+<div id="panel-recordings" class="tab-panel active">
+  <div class="texts-main">
+    <div class="texts-hdr">
+      <h2>Texts from recordings</h2>
+    </div>
+
+    <div class="rec-edit-bar">
+      <button class="edit-tab" id="rec-edit-tab" title="Upload new recordings corpus XML">✏ Edit</button>
+    </div>
+
+    <div class="filter-row">
+      <label>Language</label>
+      <select id="filter-lang">
+        <option value="">All languages</option>
+        <option>Nume</option><option>Dorig</option><option>Koro</option>
+        <option>Olrat</option><option>Lakon</option>
+      </select>
+      <label style="margin-left:1rem;">Genre</label>
+      <select id="filter-genre">
+        <option value="">All genres</option>
+        <option>Myth</option><option>Narrative</option><option>Personal narrative</option>
+        <option>Traditional narrative</option><option>Fable</option>
+        <option>Procedural</option><option>Ritual speech</option><option>Ethnobotanical</option>
+      </select>
+    </div>
+
+    <div id="stats-bar" class="stats-bar"></div>
+    <div class="texts-grid" id="texts-grid"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     TAB 2 — Texts from fieldnotes
+══════════════════════════════════════════════════════════ -->
+<div id="panel-fieldnotes" class="tab-panel">
+  <div class="fn-shell">
+
+    <!-- Sidebar: group list -->
+    <aside class="fn-sidebar">
+      <div class="fn-sidebar-head">
+        <span class="fn-sidebar-label">Questionnaire topics</span>
+        <button class="edit-tab" id="fn-edit-tab"
+                title="Upload new fieldnotes XML">✏ Edit</button>
+      </div>
+      <ul class="fn-group-list" id="fn-group-list">
+        <li style="padding:1rem;font-family:'Crimson Pro',serif;font-style:italic;
+                   color:var(--ink-light);font-size:0.9rem;">Loading…</li>
+      </ul>
+    </aside>
+
+    <!-- Main: comparative table -->
+    <main class="fn-main" id="fn-main">
+      <p class="fn-loading">Select a topic from the list.</p>
+    </main>
+
+  </div>
+</div>
 
 <script src="data.js"></script>
-<script>
-const LANGS  = ["Nume","Dorig","Koro","Olrat","Lakon"];
-const GENRES = [...new Set(TEXTS.map(t => t.genre))].sort();
-
-let selectedLangs  = new Set(LANGS);
-let selectedGenres = new Set(GENRES);
-
-// ── Filter checkboxes ────────────────────────────────────────
-function makeCheckbox(container, label, checked, color, onChange) {
-  const wrap = document.createElement('label');
-  wrap.className = 'filter-check';
-  const cb = document.createElement('input');
-  cb.type = 'checkbox'; cb.checked = checked;
-  cb.addEventListener('change', () => onChange(cb.checked));
-  wrap.appendChild(cb);
-  if (color) {
-    const dot = document.createElement('span');
-    dot.className = 'lang-dot';
-    dot.style.background = color;
-    wrap.appendChild(dot);
-  }
-  const span = document.createElement('span');
-  span.textContent = label;
-  wrap.appendChild(span);
-  container.appendChild(wrap);
-}
-
-const langDiv  = document.getElementById('lang-filters');
-const genreDiv = document.getElementById('genre-filters');
-LANGS.forEach(l  => makeCheckbox(langDiv,  l, true, LANG_COLORS[l], c => { c ? selectedLangs.add(l)   : selectedLangs.delete(l);   render(); }));
-GENRES.forEach(g => makeCheckbox(genreDiv, g, true, null,           c => { c ? selectedGenres.add(g)  : selectedGenres.delete(g);  render(); }));
-
-document.getElementById('clear-btn').addEventListener('click', () => {
-  selectedLangs  = new Set(LANGS);
-  selectedGenres = new Set(GENRES);
-  document.querySelectorAll('.filter-check input').forEach(cb => cb.checked = true);
-  render();
-});
-
-// ── Render ───────────────────────────────────────────────────
-function render() {
-  const content  = document.getElementById('texts-content');
-  const statsBar = document.getElementById('stats-bar');
-  let total = 0;
-  let html  = '';
-
-  LANGS.forEach(lang => {
-    if (!selectedLangs.has(lang)) return;
-    const group = TEXTS.filter(t => t.lang === lang && selectedGenres.has(t.genre));
-    if (!group.length) return;
-    total += group.length;
-    const col = LANG_COLORS[lang];
-
-    html += `<div class="lang-group" id="lang-${lang}">
-      <div class="lang-group-header">
-        <span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${col};flex-shrink:0;"></span>
-        <span class="lname">${lang}</span>
-        <span class="lcount">${group.length} text${group.length!==1?'s':''}</span>
-      </div>
-      ${group.map(t => {
-        const sid = textSlug(t.lang, t.title);
-        return `<div class="text-card" id="${sid}">
-          <div class="text-card-inner">
-            <div class="text-title">
-              <a href="${t.url}" target="_blank">📄 ${t.title}</a>
-            </div>
-            <div class="text-meta">
-              <span class="genre-pill">${t.genre}</span>
-              <span>Rec. ${t.rec}</span>
-              <span>·</span>
-              <span>${t.year}</span>
-            </div>
-          </div>
-          <a class="pangloss-link" href="${t.url}" target="_blank">Pangloss ↗</a>
-        </div>`;
-      }).join('')}
-    </div>`;
-  });
-
-  content.innerHTML = total
-    ? html
-    : '<div class="no-results">No texts match the current filters.</div>';
-
-  statsBar.innerHTML = `
-    <div class="stat-pill"><strong>${total}</strong> text${total!==1?'s':''} displayed</div>
-    <div class="stat-pill"><strong>${selectedLangs.size}</strong> language${selectedLangs.size!==1?'s':''}</div>
-    <div class="stat-pill"><strong>${selectedGenres.size}</strong> genre${selectedGenres.size!==1?'s':''}</div>`;
-
-  // If there's a hash, scroll to it after a tick (re-render may have recreated the element)
-  const hash = location.hash.slice(1);
-  if (hash) {
-    setTimeout(() => {
-      const el = document.getElementById(hash);
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 80);
-  }
-}
-
-render();
-</script>
-<!-- ── Login modal ── -->
-<div class="dbt-modal-backdrop" id="login-modal">
-  <div class="dbt-modal">
-    <h3>Author login</h3>
-    <input type="password" id="login-pw" placeholder="Password" autocomplete="current-password">
-    <div class="dbt-modal-msg" id="login-msg"></div>
-    <div class="dbt-modal-row">
-      <button class="modal-btn" id="login-cancel">Cancel</button>
-      <button class="modal-btn primary" id="login-submit">Log in</button>
-    </div>
-  </div>
-</div>
-<!-- ── Upload corpus modal ── -->
-<div class="dbt-modal-backdrop" id="upload-modal">
-  <div class="dbt-modal">
-    <h3>Upload Corpus XML</h3>
-    <p class="modal-desc">Select a corpus XML file to replace the current one.
-    The page will reload automatically after a successful upload.</p>
-    <input type="file" id="corpus-file" accept=".xml">
-    <div class="dbt-modal-msg" id="upload-msg"></div>
-    <div class="dbt-modal-row">
-      <button class="modal-btn" id="upload-cancel">Cancel</button>
-      <button class="modal-btn primary" id="upload-submit">Upload</button>
-    </div>
-  </div>
-</div>
 <script src="auth.js"></script>
 <script>
-function onAuthChange(loggedIn) { /* edit tab visibility handled by updateAuthUI */ }
+'use strict';
 
-// Scripts at bottom of body — DOM already ready, no DOMContentLoaded needed
+// ── Language colours ──────────────────────────────────────────
+const LANG_COLORS = {
+  Nume:'#2e5c8a', Dorig:'#c07820', Koro:'#922810', Olrat:'#267040', Lakon:'#5c2878'
+};
+const LANG_CODES = [
+  {code:'num', lang:'Nume'}, {code:'drg', lang:'Dorig'}, {code:'kro', lang:'Koro'},
+  {code:'olr', lang:'Olrat'}, {code:'lkn', lang:'Lakon'}
+];
+
+// ── Tabs ──────────────────────────────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+    document.querySelectorAll('.tab-panel').forEach(p =>
+      p.classList.toggle('active', p.id === 'panel-' + tab)
+    );
+    if (tab === 'fieldnotes' && !fnLoaded) loadFieldnotesGroups();
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+//  RECORDINGS TAB
+// ══════════════════════════════════════════════════════════════
+function textSlug(lang, title) {
+  return ('text-' + lang + '-' + title)
+    .toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'');
+}
+
+function renderRecordings() {
+  const lang  = document.getElementById('filter-lang').value;
+  const genre = document.getElementById('filter-genre').value;
+  const texts = TEXTS.filter(t =>
+    (!lang  || t.lang  === lang) &&
+    (!genre || t.genre === genre)
+  );
+  document.getElementById('stats-bar').textContent =
+    `${texts.length} text${texts.length !== 1 ? 's' : ''}`;
+  const grid = document.getElementById('texts-grid');
+  if (!texts.length) {
+    grid.innerHTML = '<p class="no-results">No texts match the current filters.</p>';
+    return;
+  }
+  const color = c => LANG_COLORS[c] || '#888';
+  grid.innerHTML = texts.map(t => `
+    <div class="text-card" id="${textSlug(t.lang, t.title)}"
+         style="border-left-color:${color(t.lang)};">
+      <span class="tc-lang" style="color:${color(t.lang)};">${t.lang}</span>
+      <span class="tc-title">${t.title}</span>
+      <div class="tc-meta">
+        <span>${t.genre}</span>
+        <span>${t.year}</span>
+        <span>${t.rec}</span>
+      </div>
+      <a class="tc-link" href="${t.url}" target="_blank" rel="noopener">
+        Open in Pangloss →
+      </a>
+    </div>`).join('');
+}
+
+document.getElementById('filter-lang').addEventListener('change', renderRecordings);
+document.getElementById('filter-genre').addEventListener('change', renderRecordings);
+
+// ══════════════════════════════════════════════════════════════
+//  FIELDNOTES TAB
+// ══════════════════════════════════════════════════════════════
+let fnLoaded = false;
+let activeGroupIndex = null;
+
+async function loadFieldnotesGroups() {
+  fnLoaded = true;
+  const list = document.getElementById('fn-group-list');
+  try {
+    const resp = await fetch('/api/fieldnotes/groups');
+    const data = await resp.json();
+    if (!data.groups || !data.groups.length) {
+      list.innerHTML = '<li style="padding:1rem;font-family:\'Crimson Pro\',serif;font-style:italic;color:var(--ink-light);font-size:0.9rem;">No fieldnotes XML loaded.</li>';
+      return;
+    }
+    list.innerHTML = data.groups.map(g => `
+      <li class="fn-group-item">
+        <a href="#" data-index="${g.index}">${g.title}</a>
+      </li>`).join('');
+    list.querySelectorAll('a').forEach(a => {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        loadFieldnotesGroup(parseInt(a.dataset.index), a);
+      });
+    });
+    // Load first group by default
+    const first = list.querySelector('a');
+    if (first) loadFieldnotesGroup(0, first);
+  } catch(e) {
+    list.innerHTML = `<li style="padding:1rem;color:#922810;font-family:'Crimson Pro',serif;font-size:0.9rem;">Error: ${e.message}</li>`;
+  }
+}
+
+async function loadFieldnotesGroup(index, linkEl) {
+  // Highlight active
+  document.querySelectorAll('.fn-group-item a').forEach(a => a.classList.remove('active'));
+  if (linkEl) linkEl.classList.add('active');
+  activeGroupIndex = index;
+
+  const main = document.getElementById('fn-main');
+  main.innerHTML = '<p class="fn-loading">Loading…</p>';
+
+  try {
+    const resp = await fetch(`/api/fieldnotes/group/${index}`);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    renderFieldnotesGroup(data);
+  } catch(e) {
+    main.innerHTML = `<p style="color:#922810;font-family:'Crimson Pro',serif;">Error: ${e.message}</p>`;
+  }
+}
+
+function renderFieldnotesGroup(data) {
+  const main = document.getElementById('fn-main');
+
+  // Build table header
+  const thLangs = LANG_CODES.map(l =>
+    `<th class="th-lang" style="color:${LANG_COLORS[l.lang]};">${l.lang}</th>`
+  ).join('');
+
+  // Build rows
+  const rows = data.items.map(item => {
+    const langCells = LANG_CODES.map(l => {
+      const form = item.forms[l.code] || '';
+      return form
+        ? `<td class="td-lang" style="color:${LANG_COLORS[l.lang]};">${form}</td>`
+        : `<td class="td-empty">—</td>`;
+    }).join('');
+    const prompt = item.prompt
+      ? `<td class="td-prompt">${item.prompt}</td>`
+      : `<td class="td-empty"></td>`;
+    return `<tr>
+      <td class="td-ref">${item.rf}</td>
+      ${prompt}
+      ${langCells}
+    </tr>`;
+  }).join('');
+
+  main.innerHTML = `
+    <h2 class="fn-title">${data.title}</h2>
+    <span class="fn-title-sub">Fieldnotes questionnaire · ${data.items.length} exchanges</span>
+    <div class="fn-table-wrap">
+      <table class="fn-table">
+        <thead>
+          <tr>
+            <th class="th-ref">Ref</th>
+            <th class="th-prompt">Bislama</th>
+            ${thLangs}
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  UPLOAD HANDLERS
+// ══════════════════════════════════════════════════════════════
+function bindUploadModal(editTabId, modalId, fileInputId, msgId, cancelId, submitId, endpoint, reload) {
+  const editTab = document.getElementById(editTabId);
+  const modal   = document.getElementById(modalId);
+  const msg     = document.getElementById(msgId);
+
+  if (editTab) editTab.addEventListener('click', () => {
+    msg.textContent = ''; msg.className = 'dbt-modal-msg';
+    modal.classList.add('visible');
+  });
+  document.getElementById(cancelId).addEventListener('click', () => modal.classList.remove('visible'));
+  modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('visible'); });
+  document.getElementById(submitId).addEventListener('click', async () => {
+    const f = document.getElementById(fileInputId).files[0];
+    if (!f) { msg.textContent = 'Please choose a file.'; msg.className='dbt-modal-msg error'; return; }
+    const form = new FormData(); form.append('file', f);
+    try {
+      const r = await fetch(endpoint, { method:'POST', body:form });
+      const d = await r.json();
+      if (d.ok) {
+        msg.textContent = 'Upload successful — reloading…';
+        msg.className = 'dbt-modal-msg success';
+        setTimeout(() => { modal.classList.remove('visible'); if (reload) location.reload(); }, 900);
+      } else {
+        msg.textContent = d.error || 'Upload failed.';
+        msg.className = 'dbt-modal-msg error';
+      }
+    } catch(e) {
+      msg.textContent = 'Network error.'; msg.className = 'dbt-modal-msg error';
+    }
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════════════
 bindLoginModal();
 checkAuth();
 
-// Edit tab → open upload modal
-const corpusEditTab = document.getElementById('corpus-edit-tab');
-if (corpusEditTab) {
-  corpusEditTab.addEventListener('click', () => {
-    document.getElementById('upload-msg').textContent = '';
-    document.getElementById('upload-msg').className = 'dbt-modal-msg';
-    document.getElementById('upload-modal').classList.add('visible');
-  });
-}
+renderRecordings();
 
-// Upload modal buttons
-document.getElementById('upload-cancel').addEventListener('click', () => {
-  document.getElementById('upload-modal').classList.remove('visible');
-});
-document.getElementById('upload-modal').addEventListener('click', e => {
-  if (e.target === e.currentTarget)
-    document.getElementById('upload-modal').classList.remove('visible');
-});
-document.getElementById('upload-submit').addEventListener('click', async () => {
-  const file = document.getElementById('corpus-file').files[0];
-  const msg  = document.getElementById('upload-msg');
-  if (!file) { msg.textContent = 'Please choose a file.'; msg.className='dbt-modal-msg error'; return; }
-  const form = new FormData(); form.append('file', file);
-  try {
-    const r = await fetch('/api/upload/corpus', { method:'POST', body:form });
-    const d = await r.json();
-    if (d.ok) {
-      msg.textContent = 'Upload successful — reloading…';
-      msg.className = 'dbt-modal-msg success';
-      setTimeout(() => location.reload(), 900);
-    } else {
-      msg.textContent = d.error || 'Upload failed.';
-      msg.className = 'dbt-modal-msg error';
-    }
-  } catch(e) {
-    msg.textContent = 'Network error.';
-    msg.className = 'dbt-modal-msg error';
-  }
-});
+bindUploadModal('rec-edit-tab','upload-rec-modal','rec-file','upload-rec-msg',
+  'upload-rec-cancel','upload-rec-submit','/api/upload/corpus', true);
+bindUploadModal('fn-edit-tab','upload-fn-modal','fn-file','upload-fn-msg',
+  'upload-fn-cancel','upload-fn-submit','/api/upload/fieldnotes', true);
 </script>
 </body>
+</html>
