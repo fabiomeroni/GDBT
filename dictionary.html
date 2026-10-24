@@ -247,6 +247,8 @@ body { overflow: hidden; }
 #lex-tooltip .tt-equivs { margin-top: 5px; display: flex; flex-wrap: wrap; gap: 4px; }
 #lex-tooltip .tt-eq { font-family: 'Source Code Pro', monospace; font-size: 0.7rem; background: rgba(255,255,255,.09); border-radius: 2px; padding: 1px 5px; }
 #lex-tooltip .tt-eq b { color: #c9a458; font-weight: 500; }
+#lex-tooltip .tt-eq.tt-eq-hl { background: rgba(255,255,255,.22); outline: 1px solid rgba(255,255,255,.18); }
+#lex-tooltip .tt-eq.tt-eq-hl b { color: #fdeec8; }
 
 </style>
 </head>
@@ -629,12 +631,20 @@ function bindTooltip() {
     const entry = DICT_MAP[id];
     if (!entry) return;
     clearTimeout(hideTimer);
-    ttHw.textContent    = entry.langs[activeLang] || entry.hw;
-    ttPos.textContent   = '  ' + entry.pos;
+    // Use the hovered word's own language for the headword display,
+    // falling back to activeLang for non-example lexlinks (no data-lang)
+    const hoverLang  = a.dataset.lang || activeLang;
+    const hoverColor = COLORS5[hoverLang] || '#fdeec8';
+    ttHw.textContent  = entry.langs[hoverLang] || entry.hw;
+    ttHw.style.color  = hoverColor;
+    ttPos.textContent = '  ' + entry.pos;
     ttGloss.textContent = entry.gloss;
-    ttEquivs.innerHTML  = LANGS5.map(lang =>
-      `<span class="tt-eq"><b>${ABBR5[lang]}</b> ${entry.langs[lang] || '—'}</span>`
-    ).join('');
+    // Highlight the hovered language's chip in the equivalents row
+    ttEquivs.innerHTML = LANGS5.map(lang => {
+      const isHover = lang === hoverLang;
+      return `<span class="tt-eq${isHover ? ' tt-eq-hl' : ''}">` +
+             `<b>${ABBR5[lang]}</b> ${entry.langs[lang] || '—'}</span>`;
+    }).join('');
     tooltip.classList.add('visible');
     pos(a);
   });
