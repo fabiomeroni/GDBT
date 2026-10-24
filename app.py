@@ -16,10 +16,12 @@ app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-change-in-production')
 
 UPLOAD_FOLDER  = 'uploads'
 GRAMMAR_FOLDER = 'grammar_content'
-AUTHOR_PASSWORD = os.environ.get('AUTHOR_PASSWORD', 'gaua2026')
+AUTHOR_PASSWORD = os.environ.get('AUTHOR_PASSWORD', 'gaua2024')
 
+IMAGES_FOLDER  = 'images'
 os.makedirs(UPLOAD_FOLDER,  exist_ok=True)
 os.makedirs(GRAMMAR_FOLDER, exist_ok=True)
+os.makedirs(IMAGES_FOLDER,  exist_ok=True)
 
 # ── Language constants (mirrors JS side) ───────────────────────
 LANGS5      = ['Nume', 'Dorig', 'Koro', 'Olrat', 'Lakon']
@@ -354,6 +356,47 @@ def delete_grammar(section_id):
     if os.path.exists(path):
         os.remove(path)
     return jsonify({'ok': True})
+
+
+@app.route('/api/grammar', methods=['POST'])
+def create_grammar_section():
+    """Create a new grammar section with an auto-generated ID."""
+    if not session.get('author'):
+        return jsonify({'error': 'Unauthorized'}), 401
+    data    = request.get_json(silent=True) or {}
+    title   = data.get('title', '').strip() or 'New section'
+    # Auto-generate next available sN id
+    n = len([f for f in os.listdir(GRAMMAR_FOLDER) if f.endswith('.md')]) + 1
+    section_id = f's{n}'
+    while os.path.exists(_section_path(section_id)):
+        n += 1
+        section_id = f's{n}'
+    initial = f'## {title}\n\n[Start writing here…]\n'
+    with open(_section_path(section_id), 'w', encoding='utf-8') as f:
+        f.write(initial)
+    return jsonify({'ok': True, 'id': section_id, 'title': title})
+
+
+_ALLOWED_IMG_EXT = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'}
+
+@app.route('/api/upload/image', methods=['POST'])
+def upload_image():
+    if not session.get('author'):
+        return jsonify({'error': 'Unauthorized'}), 401
+    f = request.files.get('file')
+    if not f:
+        return jsonify({'error': 'No file provided'}), 400
+    ext = os.path.splitext(f.filename or '')[1].lower()
+    if ext not in _ALLOWED_IMG_EXT:
+        return jsonify({'error': f'Allowed types: {", ".join(_ALLOWED_IMG_EXT)}'}), 400
+    safe = re.sub(r'[^a-zA-Z0-9._-]', '_', f.filename)
+    f.save(os.path.join(IMAGES_FOLDER, safe))
+    return jsonify({'ok': True, 'url': f'images/{safe}', 'filename': safe})
+
+
+@app.route('/images/<path:filename>')
+def serve_image(filename):
+    return send_from_directory(IMAGES_FOLDER, filename)
 
 
 # ── List available sections ───────────────────────────────────
