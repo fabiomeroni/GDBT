@@ -336,10 +336,8 @@
 <script>
 'use strict';
 
-// ── Language colours ──────────────────────────────────────────
-const LANG_COLORS = {
-  Nume:'#2e5c8a', Dorig:'#c07820', Koro:'#922810', Olrat:'#267040', Lakon:'#5c2878'
-};
+// LANG_COLORS and textSlug come from data.js (already loaded above)
+// LANG_CODES is texts.html-specific: pairs code with language name
 const LANG_CODES = [
   {code:'num', lang:'Nume'}, {code:'drg', lang:'Dorig'}, {code:'kro', lang:'Koro'},
   {code:'olr', lang:'Olrat'}, {code:'lkn', lang:'Lakon'}
@@ -360,10 +358,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 // ══════════════════════════════════════════════════════════════
 //  RECORDINGS TAB
 // ══════════════════════════════════════════════════════════════
-function textSlug(lang, title) {
-  return ('text-' + lang + '-' + title)
-    .toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'');
-}
+// textSlug() comes from data.js
 
 function renderRecordings() {
   const lang  = document.getElementById('filter-lang').value;
