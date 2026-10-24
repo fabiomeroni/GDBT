@@ -446,7 +446,7 @@ function exampleHTML(entryId) {
       if (!f) return `<td class="ex-cell ex-dash">—</td>`;
       if (i === ownCol)
         return `<td class="ex-cell ex-own"><strong style="color:${color};">${f}</strong></td>`;
-      return `<td class="ex-cell"><a class="lexlink" href="#${col.dictId}" data-dict-id="${col.dictId}">${f}</a></td>`;
+      return `<td class="ex-cell"><a class="lexlink" href="#${col.dictId}" data-dict-id="${col.dictId}" data-lang="${row.lang}">${f}</a></td>`;
     }).join('');
     return `<tr><td class="ex-abbr" style="color:${color};">${abbr}</td>${cells}</tr>`;
   }).join('');
@@ -653,6 +653,48 @@ function bindTooltip() {
 // ══════════════════════════════════════════════════════════════
 //  INIT  — fetch XML, parse, wire everything up
 // ══════════════════════════════════════════════════════════════
+// ── Lexlink click: switch headword to the clicked word's language ─────────────
+// Clicking a word in the example table (e.g. a Dorig form while headword=Koro)
+// switches the headword language to Dorig and scrolls to that dictionary entry.
+function bindLexlinkClicks() {
+  document.getElementById('dict-content').addEventListener('click', e => {
+    const a = e.target.closest('a.lexlink');
+    if (!a) return;
+    e.preventDefault();
+
+    const lang   = a.dataset.lang;
+    const dictId = a.dataset.dictId || (a.getAttribute('href') || '').slice(1);
+    if (!dictId) return;
+
+    // Switch headword language if it differs from current
+    if (lang && lang !== activeLang) {
+      activeLang = lang;
+      document.querySelectorAll('.hw-lang-pill').forEach(b =>
+        b.classList.toggle('active', b.dataset.lang === lang)
+      );
+    }
+
+    // Re-render (redraws everything for the new headword language)
+    render();
+
+    // Scroll to the target entry and sync sidebar
+    requestAnimationFrame(() => {
+      const el = document.getElementById(dictId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.querySelectorAll('.hw-index a').forEach(a2 =>
+          a2.classList.toggle('active', a2.dataset.id === dictId)
+        );
+      }
+      // Update URL for bookmarkability
+      const url = new URL(window.location);
+      if (lang) url.searchParams.set('lang', lang);
+      url.hash = dictId;
+      window.history.replaceState(null, '', url);
+    });
+  });
+}
+
 // ── In-page badge-click: switch headword language without reloading ────────────
 function bindBadgeClicks() {
   document.getElementById('dict-content').addEventListener('click', e => {
@@ -707,6 +749,7 @@ async function init() {
     bindScrollspy();
     bindSidebarNav();
     bindBadgeClicks();
+    bindLexlinkClicks();
     bindTooltip();
 
     // ── Scroll to hash entry after render ───────────────────────
