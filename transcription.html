@@ -148,6 +148,23 @@
   white-space: nowrap;
 }
 
+/* ── Comparative display (fieldnotes: 5-language form columns) ── */
+.tx-comparative {
+  display: flex; flex-wrap: wrap;
+  gap: 0.1rem 1.2rem; align-items: flex-start;
+  margin-bottom: 0.35rem; padding: 0.3rem 0;
+}
+.tx-comp-col   { display: flex; flex-direction: column; align-items: flex-start; }
+.tx-comp-abbr  {
+  font-family: 'Crimson Pro', serif; font-variant: small-caps;
+  font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em;
+  line-height: 1.3; margin-bottom: 1px;
+}
+.tx-comp-form  {
+  font-family: 'EB Garamond', serif; font-size: 1.12rem; line-height: 1.4;
+}
+.tx-comp-form.missing { color: #ccc; font-size: 0.95rem; }
+
 /* Translation language tag */
 .tx-transl-lang {
   font-family: 'Source Code Pro', monospace; font-size: 0.62rem;
@@ -225,15 +242,23 @@
 <script>
 'use strict';
 
-// ── Read text key from URL params ─────────────────────────────
-const params  = new URLSearchParams(window.location.search);
-const textKey      = params.get('key')   || '';
-const textTitle    = params.get('title') || 'Transcription';
-const textLangParam = params.get('lang') || '';
+// ── Read URL params ───────────────────────────────────────────
+const params        = new URLSearchParams(window.location.search);
+const isFieldnotes  = params.get('fieldnotes') === '1';
+const textKey       = params.get('key')   || '';
+const fnIndex       = parseInt(params.get('index') || '0', 10);
+const textTitle     = params.get('title') || 'Transcription';
+const textLangParam = params.get('lang')  || '';
+// Gloss key: filename for recordings, fieldnotes_N for fieldnotes
+const glossKey = isFieldnotes ? ('fieldnotes_' + fnIndex) : textKey;
 
 // ── Language colours ──────────────────────────────────────────
 const LANG_COLORS = {
   Nume:'#2e5c8a', Dorig:'#c07820', Koro:'#922810', Olrat:'#267040', Lakon:'#5c2878'
+};
+// ISO code → colour (for fieldnotes comparative display)
+const CODE_COLORS = {
+  num:'#2e5c8a', drg:'#c07820', kro:'#922810', olr:'#267040', lkn:'#5c2878'
 };
 // Map ISO 639-3 / Pangloss codes → Gaua language names
 const LANG_FROM_CODE = {
@@ -265,7 +290,7 @@ function bindScrollspy() {
 // ── Gloss auto-save ───────────────────────────────────────────
 async function saveGloss(sentenceId, value, statusEl) {
   try {
-    const r = await fetch(`/api/transcription/${encodeURIComponent(textKey)}/glosses`, {
+    const r = await fetch(`/api/transcription/${encodeURIComponent(glossKey)}/glosses`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sentence_id: sentenceId, gloss: value })
@@ -324,7 +349,32 @@ function render(data) {
     // Case B: no embedded glosses → render editable input (if logged in) or stored gloss
     let glossSection = '';
 
-    if (s.has_gloss && s.words && s.words.length) {
+    if (s.is_comparative && s.words && s.words.length) {
+      // Case C: fieldnotes comparative — show language columns then editable gloss
+      const cols = s.words.map(w => {
+        const col = CODE_COLORS[w.lang] || 'var(--gold)';
+        const missing = w.form === '—';
+        return `<span class="tx-comp-col">
+          <span class="tx-comp-abbr" style="color:${col};">${w.gloss}</span>
+          <span class="tx-comp-form${missing ? ' missing' : ''}" style="color:${col};">${w.form}</span>
+        </span>`;
+      }).join('');
+      const g = glosses[s.id] || '';
+      const glossInput = isLoggedIn
+        ? `<input class="tx-gloss-input" type="text"
+                data-sid="${s.id}"
+                value="${g.replace(/"/g, '&quot;')}"
+                placeholder="Add interlinear gloss…"
+                spellcheck="false">
+           <span class="tx-gloss-save-status" id="status-${s.id}"></span>`
+        : g
+          ? `<span class="tx-gloss-text">${g}</span>`
+          : `<span class="tx-gloss-text empty">—</span>`;
+      glossSection = `<div class="tx-comparative">${cols}</div>
+        <div class="tx-gloss-wrap">
+          <span class="tx-gloss-label">gloss</span>${glossInput}
+        </div>`;
+    } else if (s.has_gloss && s.words && s.words.length) {
       // Case A: word-aligned interlinear from XML
       const wordCols = s.words.map(w =>
         `<span class="tx-word">
@@ -359,7 +409,8 @@ function render(data) {
     const div = document.createElement('div');
     div.className = 'tx-phrase';
     div.id = s.id;
-    div.dataset.hasGloss = s.has_gloss ? '1' : '0';
+    div.dataset.hasGloss    = s.has_gloss     ? '1' : '0';
+    div.dataset.comparative = s.is_comparative ? '1' : '0';
     div.innerHTML = `
       <div class="tx-phrase-id">${s.id} ${audioInfo}</div>
       <div class="tx-form" style="color:${langColor};">${s.form}</div>
@@ -395,8 +446,8 @@ function render(data) {
 function onAuthChange(loggedIn) {
   if (!sentences.length) return;
 
-  // Only re-render Case B phrases (no embedded XML gloss)
-  document.querySelectorAll('.tx-phrase[data-has-gloss="0"]').forEach(phrase => {
+  // Re-render editable gloss inputs for Case B and Case C (comparative) phrases
+  document.querySelectorAll('.tx-phrase[data-has-gloss="0"], .tx-phrase[data-comparative="1"]').forEach(phrase => {
     const sid  = phrase.id;
     const wrap = phrase.querySelector('.tx-gloss-wrap');
     if (!wrap) return;
@@ -431,7 +482,7 @@ function onAuthChange(loggedIn) {
 
   const legend = document.getElementById('gloss-legend');
   // Show legend only if there are Case B (manually gloss-able) sentences
-  const hasCaseB = document.querySelector('.tx-phrase[data-has-gloss="0"]');
+  const hasCaseB = document.querySelector('.tx-phrase[data-has-gloss="0"], .tx-phrase[data-comparative="1"]');
   if (legend) legend.classList.toggle('visible', loggedIn && !!hasCaseB);
 }
 
@@ -440,17 +491,22 @@ async function init() {
   bindLoginModal();
   await checkAuth();
 
-  if (!textKey) {
+  const hasSrc = isFieldnotes ? true : !!textKey;
+  if (!hasSrc) {
     document.getElementById('tx-main').innerHTML =
       '<p class="tx-loading tx-error">No text key specified in URL.</p>';
     return;
   }
 
   try {
-    // Load transcription and glosses in parallel
+    // Choose endpoint based on source type
+    const txEndpoint = isFieldnotes
+      ? `/api/fieldnotes/tx/${fnIndex}`
+      : `/api/transcription/${encodeURIComponent(textKey)}`;
+    const glEndpoint = `/api/transcription/${encodeURIComponent(glossKey)}/glosses`;
+
     const [txResp, glResp] = await Promise.all([
-      fetch(`/api/transcription/${encodeURIComponent(textKey)}`),
-      fetch(`/api/transcription/${encodeURIComponent(textKey)}/glosses`)
+      fetch(txEndpoint), fetch(glEndpoint)
     ]);
     if (!txResp.ok) throw new Error(`HTTP ${txResp.status}`);
     const [txData, glData] = await Promise.all([txResp.json(), glResp.json()]);
