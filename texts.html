@@ -279,8 +279,9 @@
       <h2>Texts from recordings</h2>
     </div>
 
-    <div class="rec-edit-bar">
-      <button class="edit-tab" id="rec-edit-tab" title="Upload new recordings corpus XML">✏ Edit</button>
+    <div class="rec-edit-bar" style="gap:0.5rem;">
+      <button class="edit-tab" id="rec-edit-tab" title="Upload new recordings corpus XML">✏ Edit corpus</button>
+      <button class="edit-tab" id="tx-upload-tab" title="Upload transcription XML">📜 Upload transcription</button>
     </div>
 
     <div class="filter-row">
@@ -337,6 +338,22 @@
 'use strict';
 
 // LANG_COLORS and textSlug come from data.js (already loaded above)
+
+// Extract oai_secondary from a Pangloss URL
+function getTextKey(url) {
+  const m = (url || '').match(/oai_secondary=([^&]+)/);
+  return m ? m[1] : null;
+}
+
+// Which texts have transcriptions: oai_secondary → XML filename
+let txIndex = {};
+async function loadTxIndex() {
+  try {
+    const r = await fetch('/api/transcriptions/index');
+    txIndex = await r.json();
+  } catch(e) { txIndex = {}; }
+}
+
 // LANG_CODES is texts.html-specific: pairs code with language name
 const LANG_CODES = [
   {code:'num', lang:'Nume'}, {code:'drg', lang:'Dorig'}, {code:'kro', lang:'Koro'},
@@ -375,8 +392,16 @@ function renderRecordings() {
     return;
   }
   const color = c => LANG_COLORS[c] || '#888';
-  grid.innerHTML = texts.map(t => `
-    <div class="text-card" id="${textSlug(t.lang, t.title)}"
+  grid.innerHTML = texts.map(t => {
+    const key = getTextKey(t.url);
+    const hasTx = key && txIndex[key];
+    const txLink = hasTx
+      ? `<a class="tc-link" style="color:var(--gold);"
+            href="transcription.html?key=${encodeURIComponent(key)}&title=${encodeURIComponent(t.title)}&lang=${encodeURIComponent(t.lang)}">
+           📜 View transcription →
+         </a>`
+      : '';
+    return `<div class="text-card" id="${textSlug(t.lang, t.title)}"
          style="border-left-color:${color(t.lang)};">
       <span class="tc-lang" style="color:${color(t.lang)};">${t.lang}</span>
       <span class="tc-title">${t.title}</span>
@@ -385,10 +410,12 @@ function renderRecordings() {
         <span>${t.year}</span>
         <span>${t.rec}</span>
       </div>
+      ${txLink}
       <a class="tc-link" href="${t.url}" target="_blank" rel="noopener">
         Open in Pangloss →
       </a>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 document.getElementById('filter-lang').addEventListener('change', renderRecordings);
@@ -531,12 +558,96 @@ function bindUploadModal(editTabId, modalId, fileInputId, msgId, cancelId, submi
 bindLoginModal();
 checkAuth();
 
-renderRecordings();
+// Load transcription index then render (so cards know which texts have transcriptions)
+loadTxIndex().then(() => renderRecordings());
+
+// Re-render when tab switches to recordings (txIndex already loaded)
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  if (btn.dataset.tab === 'recordings') {
+    btn.addEventListener('click', () => renderRecordings(), { once: false });
+  }
+});
 
 bindUploadModal('rec-edit-tab','upload-rec-modal','rec-file','upload-rec-msg',
   'upload-rec-cancel','upload-rec-submit','/api/upload/corpus', true);
+
+// ── Upload transcription XML ──────────────────────────────────
+const txUploadTab = document.getElementById('tx-upload-tab');
+const txModal     = document.getElementById('upload-tx-modal');
+const txMsg       = document.getElementById('upload-tx-msg');
+const txSelect    = document.getElementById('tx-text-select');
+
+// Populate the text selector from TEXTS
+TEXTS.forEach(t => {
+  const key = getTextKey(t.url);
+  if (!key) return;
+  const opt = document.createElement('option');
+  opt.value = key;
+  opt.textContent = `[${t.lang}] ${t.title}`;
+  txSelect.appendChild(opt);
+});
+
+if (txUploadTab) txUploadTab.addEventListener('click', () => {
+  txMsg.textContent = ''; txMsg.className = 'dbt-modal-msg';
+  txModal.classList.add('visible');
+});
+document.getElementById('upload-tx-cancel').addEventListener('click', () =>
+  txModal.classList.remove('visible')
+);
+txModal.addEventListener('click', e => {
+  if (e.target === txModal) txModal.classList.remove('visible');
+});
+document.getElementById('upload-tx-submit').addEventListener('click', async () => {
+  const file = document.getElementById('tx-file').files[0];
+  const key  = txSelect.value;
+  if (!file) { txMsg.textContent = 'Please choose a file.'; txMsg.className='dbt-modal-msg error'; return; }
+  if (!key)  { txMsg.textContent = 'Please select a text to link it to.'; txMsg.className='dbt-modal-msg error'; return; }
+  const form = new FormData();
+  form.append('file', file);
+  form.append('text_key', key);
+  try {
+    const r = await fetch('/api/upload/transcription', { method:'POST', body:form });
+    const d = await r.json();
+    if (d.ok) {
+      txMsg.textContent = 'Uploaded and linked — reloading…';
+      txMsg.className = 'dbt-modal-msg success';
+      setTimeout(async () => {
+        txModal.classList.remove('visible');
+        await loadTxIndex();
+        renderRecordings();
+      }, 800);
+    } else {
+      txMsg.textContent = d.error || 'Upload failed.';
+      txMsg.className = 'dbt-modal-msg error';
+    }
+  } catch(e) {
+    txMsg.textContent = 'Network error.'; txMsg.className = 'dbt-modal-msg error';
+  }
+});
 bindUploadModal('fn-edit-tab','upload-fn-modal','fn-file','upload-fn-msg',
   'upload-fn-cancel','upload-fn-submit','/api/upload/fieldnotes', true);
 </script>
+<!-- ── Upload transcription modal ── -->
+<div class="dbt-modal-backdrop" id="upload-tx-modal">
+  <div class="dbt-modal">
+    <h3>Upload transcription XML</h3>
+    <p class="modal-desc">Select a Pangloss/COCOON XML transcription file and link it to a text in the corpus.</p>
+    <input type="file" id="tx-file" accept=".xml">
+    <label style="font-family:'Crimson Pro',serif;font-size:0.85rem;color:var(--ink-light);
+                  display:block;margin:0.5rem 0 0.25rem;">Link to text:</label>
+    <select id="tx-text-select"
+            style="width:100%;font-family:'Crimson Pro',serif;font-size:0.95rem;
+                   padding:5px 8px;border:1px solid var(--border);border-radius:3px;
+                   background:white;color:var(--ink);margin-bottom:0.75rem;
+                   box-sizing:border-box;">
+      <option value="">— choose a text —</option>
+    </select>
+    <div class="dbt-modal-msg" id="upload-tx-msg"></div>
+    <div class="dbt-modal-row">
+      <button class="modal-btn" id="upload-tx-cancel">Cancel</button>
+      <button class="modal-btn primary" id="upload-tx-submit">Upload &amp; link</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
