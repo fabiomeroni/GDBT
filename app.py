@@ -526,15 +526,42 @@ def _parse_tx(path):
 
 # ── Transcription API routes ──────────────────────────────────
 
-@app.route('/api/transcriptions/index')
-def tx_index_route():
-    return jsonify(_tx_index())
+@app.route('/api/transcriptions/list')
+def tx_list():
+    """Return metadata for every XML in transcribed_narratives/ — drives the recordings tab."""
+    items = []
+    for fn in sorted(os.listdir(TRANSCRIPTIONS_FOLDER)):
+        if not fn.endswith('.xml'):
+            continue
+        path = os.path.join(TRANSCRIPTIONS_FOLDER, fn)
+        try:
+            xml  = etree.parse(path, _XML_PARSER)
+            root = xml.getroot()
+            lang = (root.get(_XMLLANG) or root.get('xml:lang', '')).strip()
+            tx_id = root.get('id', fn[:-4])
+            titles = {}
+            for t in root.findall('HEADER/TITLE'):
+                lv = (t.get(_XMLLANG) or t.get('xml:lang', '')).strip()
+                if t.text: titles[lv] = t.text.strip()
+            title = (titles.get('en') or titles.get('fr')
+                     or next(iter(titles.values()), fn[:-4]))
+            items.append({
+                'filename': fn,
+                'id': tx_id,
+                'lang': lang,
+                'title': title,
+                'n_sentences': len(root.findall('S')),
+            })
+        except Exception:
+            continue
+    return jsonify({'transcriptions': items})
 
 @app.route('/api/transcription/<path:text_key>')
 def get_transcription(text_key):
-    path = _tx_path(text_key)
-    if not path:
-        return jsonify({'error': 'No transcription found'}), 404
+    # text_key is the XML filename (e.g. crdo-WWO_FARFADETS.xml)
+    path = os.path.join(TRANSCRIPTIONS_FOLDER, text_key)
+    if not os.path.exists(path):
+        return jsonify({'error': 'Transcription not found'}), 404
     try:
         data = _parse_tx(path)
     except Exception as e:
@@ -543,6 +570,7 @@ def get_transcription(text_key):
 
 @app.route('/api/transcription/<path:text_key>/glosses', methods=['GET'])
 def get_glosses(text_key):
+    # text_key is the XML filename; gloss stored by sanitised filename key
     p = _gloss_path(text_key)
     if os.path.exists(p):
         with open(p, encoding='utf-8') as f:
@@ -570,13 +598,13 @@ def save_gloss(text_key):
 
 @app.route('/api/upload/transcription', methods=['POST'])
 def upload_transcription():
+    """Save a transcription XML to transcribed_narratives/.
+    The title and language are read from the XML itself — no manual linking needed."""
     if not session.get('author'):
         return jsonify({'error': 'Unauthorized'}), 401
-    f        = request.files.get('file')
-    text_key = request.form.get('text_key', '').strip()
+    f = request.files.get('file')
     if not f:
         return jsonify({'error': 'No file provided'}), 400
-    # Validate XML
     try:
         etree.parse(f, _XML_PARSER)
     except etree.XMLSyntaxError as e:
@@ -584,13 +612,7 @@ def upload_transcription():
     f.seek(0)
     safe_fn = re.sub(r'[^a-zA-Z0-9._-]', '_', f.filename or 'transcription.xml')
     f.save(os.path.join(TRANSCRIPTIONS_FOLDER, safe_fn))
-    # Update index if text_key provided
-    if text_key:
-        idx = _tx_index()
-        idx[text_key] = safe_fn
-        with open(TRANSCRIPTIONS_INDEX, 'w', encoding='utf-8') as fi:
-            json.dump(idx, fi, ensure_ascii=False, indent=2)
-    return jsonify({'ok': True, 'filename': safe_fn, 'linked_to': text_key or None})
+    return jsonify({'ok': True, 'filename': safe_fn})
 
 # ── Static file serving ───────────────────────────────────────
 
