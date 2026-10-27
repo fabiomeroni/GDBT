@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transcription — DBT Gaua Languages</title>
+<link rel="stylesheet" href="style.css">
+<style>
+
+/* ── Layout ── */
+.tx-shell {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  min-height: calc(100vh - 52px);
+}
+
+/* ── Sidebar ── */
+.tx-sidebar {
+  background: #faf6ef;
+  border-right: 1px solid var(--border);
+  padding: 1.2rem 0 3rem;
+  position: sticky; top: 52px;
+  height: calc(100vh - 52px);
+  overflow-y: auto;
+}
+.tx-sidebar-label {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.67rem; letter-spacing: 0.13em; text-transform: uppercase;
+  color: var(--ink-light); padding: 0 1rem 0.5rem; display: block;
+}
+.tx-nav { list-style: none; padding: 0; margin: 0; }
+.tx-nav a {
+  display: block; font-family: 'Crimson Pro', serif; font-size: 0.9rem;
+  color: var(--ink-mid); text-decoration: none;
+  padding: 3px 1rem 3px 1.1rem;
+  border-left: 3px solid transparent;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+  line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.tx-nav a:hover  { background: #ede4d4; color: var(--ink); }
+.tx-nav a.active { background: #e8d8b8; color: var(--ink); border-left-color: var(--gold); }
+.tx-nav .tx-nav-id {
+  font-family: 'Source Code Pro', monospace; font-size: 0.68rem;
+  color: var(--ink-light); display: block;
+}
+
+/* ── Main ── */
+.tx-main { padding: 2rem 4rem 6rem; max-width: 860px; }
+
+.tx-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--gold);
+}
+.tx-back {
+  font-family: 'Crimson Pro', serif; font-size: 0.85rem;
+  color: var(--gold); text-decoration: none;
+  border-bottom: 1px solid var(--border-lt);
+  transition: color 0.12s; display: inline-block; margin-bottom: 0.8rem;
+}
+.tx-back:hover { color: #b84c10; }
+.tx-title {
+  font-family: 'EB Garamond', serif; font-size: 2rem; font-weight: 500;
+  color: var(--ink); line-height: 1.15; margin-bottom: 0.3rem;
+}
+.tx-meta {
+  font-family: 'Crimson Pro', serif; font-size: 0.8rem;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-light);
+  display: flex; gap: 1.2rem; flex-wrap: wrap;
+}
+
+/* ── Phrase blocks ── */
+.tx-phrase {
+  border-bottom: 1px solid var(--border-lt);
+  padding: 1rem 0 1.1rem;
+  scroll-margin-top: 4px;
+  transition: background 0.1s;
+}
+.tx-phrase:hover { background: #fffdf7; }
+.tx-phrase:last-child { border-bottom: none; }
+
+.tx-phrase-id {
+  font-family: 'Source Code Pro', monospace; font-size: 0.65rem;
+  color: var(--ink-light); letter-spacing: 0.06em;
+  margin-bottom: 0.4rem; display: flex; align-items: center; gap: 0.6rem;
+}
+.tx-audio-badge {
+  font-size: 0.6rem; background: #f0e8d8; border: 1px solid var(--border);
+  border-radius: 2px; padding: 1px 5px; color: var(--ink-light);
+}
+
+/* Line 1 — FORM (original language) */
+.tx-form {
+  font-family: 'EB Garamond', serif; font-size: 1.35rem; font-weight: 500;
+  color: var(--ink); line-height: 1.6; margin-bottom: 0.35rem;
+}
+
+/* Line 2 — GLOSS (interlinear, editable) */
+.tx-gloss-wrap { margin-bottom: 0.35rem; }
+.tx-gloss-label {
+  font-family: 'Source Code Pro', monospace; font-size: 0.6rem;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-light); margin-right: 0.4rem;
+}
+.tx-gloss-text {
+  font-family: 'Source Code Pro', monospace; font-size: 0.82rem;
+  color: var(--ink-mid); line-height: 1.55; letter-spacing: 0.02em;
+}
+.tx-gloss-text.empty { color: #ccc; font-style: italic; font-family: 'Crimson Pro', serif; font-size: 0.85rem; }
+.tx-gloss-input {
+  font-family: 'Source Code Pro', monospace; font-size: 0.82rem;
+  color: var(--ink); line-height: 1.55; letter-spacing: 0.02em;
+  width: 100%; border: none; border-bottom: 1.5px dashed var(--border);
+  background: transparent; outline: none; padding: 2px 0;
+  transition: border-color 0.15s;
+  resize: none; overflow: hidden;
+}
+.tx-gloss-input:focus { border-bottom-color: var(--gold); }
+.tx-gloss-input::placeholder { color: #c0b090; font-style: italic; font-family: 'Crimson Pro', serif; }
+.tx-gloss-save-status {
+  font-family: 'Crimson Pro', serif; font-size: 0.72rem;
+  color: #267040; margin-left: 0.5rem; opacity: 0; transition: opacity 0.3s;
+}
+.tx-gloss-save-status.visible { opacity: 1; }
+
+/* Line 3 — TRANSL (English translation) */
+.tx-transl {
+  font-family: 'Crimson Pro', serif; font-size: 1.05rem; font-style: italic;
+  color: var(--ink-light); line-height: 1.7;
+}
+
+/* ── Word-aligned interlinear (when W/M glosses exist in XML) ── */
+.tx-aligned {
+  display: flex; flex-wrap: wrap;
+  gap: 0.1rem 1.1rem; align-items: flex-end;
+  margin-bottom: 0.35rem;
+  padding: 0.3rem 0;
+}
+.tx-word { display: flex; flex-direction: column; align-items: flex-start; }
+.tx-word-form {
+  font-family: 'EB Garamond', serif; font-size: 1.12rem;
+  color: var(--ink); line-height: 1.4;
+}
+.tx-word-gloss {
+  font-family: 'Source Code Pro', monospace; font-size: 0.7rem;
+  color: var(--ink-light); letter-spacing: 0.03em; line-height: 1.4;
+  white-space: nowrap;
+}
+
+/* Translation language tag */
+.tx-transl-lang {
+  font-family: 'Source Code Pro', monospace; font-size: 0.62rem;
+  color: var(--ink-light); letter-spacing: 0.08em; text-transform: uppercase;
+  margin-right: 0.35rem; vertical-align: middle;
+}
+
+/* Loading / error */
+.tx-loading {
+  font-family: 'Crimson Pro', serif; font-style: italic;
+  color: var(--ink-light); padding: 3rem 0;
+}
+.tx-error { color: #922810; font-style: normal; font-size: 0.95rem; }
+
+/* Gloss legend (shown when logged in) */
+.gloss-legend {
+  display: none;
+  background: #f5f0e8; border: 1px solid var(--border);
+  border-left: 3px solid var(--gold);
+  border-radius: 0 4px 4px 0;
+  padding: 0.7rem 1rem; margin-bottom: 2rem;
+  font-family: 'Crimson Pro', serif; font-size: 0.85rem; color: var(--ink-light);
+}
+.gloss-legend.visible { display: block; }
+.gloss-legend strong { color: var(--ink); }
+
+</style>
+</head>
+<body>
+
+<!-- ── Login modal ── -->
+<div class="dbt-modal-backdrop" id="login-modal">
+  <div class="dbt-modal">
+    <h3>Author login</h3>
+    <input type="password" id="login-pw" placeholder="Password" autocomplete="current-password">
+    <div class="dbt-modal-msg" id="login-msg"></div>
+    <div class="dbt-modal-row">
+      <button class="modal-btn" id="login-cancel">Cancel</button>
+      <button class="modal-btn primary" id="login-submit">Log in</button>
+    </div>
+  </div>
+</div>
+
+<nav class="topnav">
+  <a class="topnav-brand" href="index.html">◬ DBT Gaua</a>
+  <ul>
+    <li><a href="index.html">Home</a></li>
+    <li><a href="grammar.html">Grammar</a></li>
+    <li><a href="texts.html" class="active">Texts</a></li>
+    <li><a href="dictionary.html">Dictionary</a></li>
+  </ul>
+  <div class="topnav-auth">
+    <button class="auth-btn login-btn">🔒 Author</button>
+    <button class="auth-btn logout-btn" style="display:none;">Logout</button>
+  </div>
+  <div class="topnav-right" id="topnav-lang">Transcription</div>
+</nav>
+
+<div class="tx-shell">
+
+  <!-- ── Sidebar: phrase navigator ── -->
+  <aside class="tx-sidebar">
+    <span class="tx-sidebar-label">Phrases</span>
+    <ul class="tx-nav" id="tx-nav"></ul>
+  </aside>
+
+  <!-- ── Main: interlinear view ── -->
+  <main class="tx-main" id="tx-main">
+    <p class="tx-loading">Loading transcription…</p>
+  </main>
+
+</div>
+
+<script src="auth.js"></script>
+<script>
+'use strict';
+
+// ── Read text key from URL params ─────────────────────────────
+const params  = new URLSearchParams(window.location.search);
+const textKey = params.get('key') || '';
+const textTitle = params.get('title') || 'Transcription';
+const textLang  = params.get('lang')  || '';
+
+// ── Language colours ──────────────────────────────────────────
+const LANG_COLORS = {
+  Nume:'#2e5c8a', Dorig:'#c07820', Koro:'#922810', Olrat:'#267040', Lakon:'#5c2878'
+};
+const langColor = LANG_COLORS[textLang] || 'var(--gold)';
+
+// ── State ─────────────────────────────────────────────────────
+let sentences = [];
+let glosses   = {};
+let saveTimers = {};
+
+// ── Scrollspy ─────────────────────────────────────────────────
+function bindScrollspy() {
+  window.addEventListener('scroll', () => {
+    let active = null;
+    document.querySelectorAll('.tx-phrase').forEach(el => {
+      if (el.getBoundingClientRect().top < 130) active = el.id;
+    });
+    document.querySelectorAll('.tx-nav a').forEach(a =>
+      a.classList.toggle('active', a.getAttribute('href') === '#' + active)
+    );
+  }, { passive: true });
+}
+
+// ── Gloss auto-save ───────────────────────────────────────────
+async function saveGloss(sentenceId, value, statusEl) {
+  try {
+    const r = await fetch(`/api/transcription/${encodeURIComponent(textKey)}/glosses`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sentence_id: sentenceId, gloss: value })
+    });
+    const d = await r.json();
+    if (d.ok) {
+      glosses[sentenceId] = value;
+      statusEl.textContent = '✓ saved';
+      statusEl.classList.add('visible');
+      setTimeout(() => statusEl.classList.remove('visible'), 1500);
+    }
+  } catch(e) {
+    statusEl.textContent = '⚠ error';
+    statusEl.classList.add('visible');
+  }
+}
+
+// ── Render ────────────────────────────────────────────────────
+function render(data) {
+  sentences = data.sentences;
+  const main = document.getElementById('tx-main');
+  const nav  = document.getElementById('tx-nav');
+
+  // Update page title and topnav
+  document.title = `${data.title || textTitle} — DBT Gaua`;
+  document.getElementById('topnav-lang').textContent = textLang;
+
+  // Header
+  const nSentences = sentences.length;
+  main.innerHTML = `
+    <div class="tx-header">
+      <a class="tx-back" href="texts.html">← Back to Texts</a>
+      <div class="tx-title" style="color:${langColor};">${data.title || textTitle}</div>
+      <div class="tx-meta">
+        <span style="color:${langColor};">${textLang}</span>
+        <span>Recorded 2003 · A. François</span>
+        <span>${nSentences} phrase${nSentences !== 1 ? 's' : ''}</span>
+      </div>
+    </div>
+    <div class="gloss-legend${isLoggedIn ? ' visible' : ''}" id="gloss-legend">
+      <strong>Author mode:</strong> click any gloss line to edit it.
+      Use standard Leipzig abbreviations (e.g. <code>3PL NEG know properly</code>).
+      Changes are saved automatically.
+    </div>
+    <div id="phrases-container"></div>`;
+
+  const container = document.getElementById('phrases-container');
+
+  sentences.forEach(s => {
+    const audioInfo = s.audio && s.audio.start
+      ? `<span class="tx-audio-badge">⏱ ${parseFloat(s.audio.start).toFixed(1)}s – ${parseFloat(s.audio.end).toFixed(1)}s</span>`
+      : '';
+
+    // ── Gloss section ──────────────────────────────────────────
+    // Case A: XML has embedded W/M glosses → render word-aligned table
+    // Case B: no embedded glosses → render editable input (if logged in) or stored gloss
+    let glossSection = '';
+
+    if (s.has_gloss && s.words && s.words.length) {
+      // Case A: word-aligned interlinear from XML
+      const wordCols = s.words.map(w =>
+        `<span class="tx-word">
+          <span class="tx-word-form">${w.form}</span>
+          <span class="tx-word-gloss">${w.gloss || '&nbsp;'}</span>
+        </span>`
+      ).join('');
+      glossSection = `<div class="tx-aligned">${wordCols}</div>`;
+    } else {
+      // Case B: no embedded glosses — use stored gloss or editable input
+      const g = glosses[s.id] || '';
+      const glossContent = isLoggedIn
+        ? `<input class="tx-gloss-input" type="text"
+                data-sid="${s.id}"
+                value="${g.replace(/"/g, '&quot;')}"
+                placeholder="Add interlinear gloss…"
+                spellcheck="false">
+           <span class="tx-gloss-save-status" id="status-${s.id}"></span>`
+        : g
+          ? `<span class="tx-gloss-text">${g}</span>`
+          : `<span class="tx-gloss-text empty">—</span>`;
+      glossSection = `<div class="tx-gloss-wrap">
+        <span class="tx-gloss-label">gloss</span>${glossContent}
+      </div>`;
+    }
+
+    // ── Translation line ───────────────────────────────────────
+    const translLangTag = s.transl_lang && s.transl_lang !== 'en'
+      ? `<span class="tx-transl-lang">${s.transl_lang}</span>`
+      : '';
+
+    const div = document.createElement('div');
+    div.className = 'tx-phrase';
+    div.id = s.id;
+    div.dataset.hasGloss = s.has_gloss ? '1' : '0';
+    div.innerHTML = `
+      <div class="tx-phrase-id">${s.id} ${audioInfo}</div>
+      <div class="tx-form" style="color:${langColor};">${s.form}</div>
+      ${glossSection}
+      <div class="tx-transl">${translLangTag}${s.transl}</div>`;
+    container.appendChild(div);
+
+    // Sidebar nav entry
+    const li = document.createElement('li');
+    li.innerHTML = `<a href="#${s.id}">
+      <span class="tx-nav-id">${s.id.split('_').pop()}</span>
+      ${s.form.slice(0, 28)}${s.form.length > 28 ? '…' : ''}
+    </a>`;
+    nav.appendChild(li);
+  });
+
+  // Bind gloss inputs for Case B sentences (only when logged in)
+  if (isLoggedIn) {
+    container.querySelectorAll('.tx-gloss-input').forEach(input => {
+      const sid = input.dataset.sid;
+      const statusEl = document.getElementById('status-' + sid);
+      input.addEventListener('input', () => {
+        clearTimeout(saveTimers[sid]);
+        saveTimers[sid] = setTimeout(() => saveGloss(sid, input.value, statusEl), 600);
+      });
+    });
+  }
+
+  bindScrollspy();
+}
+
+// ── Auth callback ─────────────────────────────────────────────
+function onAuthChange(loggedIn) {
+  if (!sentences.length) return;
+
+  // Only re-render Case B phrases (no embedded XML gloss)
+  document.querySelectorAll('.tx-phrase[data-has-gloss="0"]').forEach(phrase => {
+    const sid  = phrase.id;
+    const wrap = phrase.querySelector('.tx-gloss-wrap');
+    if (!wrap) return;
+    const g     = glosses[sid] || '';
+    const label = wrap.querySelector('.tx-gloss-label');
+    // Remove everything after the label
+    while (wrap.children.length > 1) wrap.removeChild(wrap.lastChild);
+    if (loggedIn) {
+      const input = document.createElement('input');
+      input.className    = 'tx-gloss-input';
+      input.type         = 'text';
+      input.dataset.sid  = sid;
+      input.value        = g;
+      input.placeholder  = 'Add interlinear gloss…';
+      input.spellcheck   = false;
+      const statusEl = document.createElement('span');
+      statusEl.className = 'tx-gloss-save-status';
+      statusEl.id = 'status-' + sid;
+      wrap.appendChild(input);
+      wrap.appendChild(statusEl);
+      input.addEventListener('input', () => {
+        clearTimeout(saveTimers[sid]);
+        saveTimers[sid] = setTimeout(() => saveGloss(sid, input.value, statusEl), 600);
+      });
+    } else {
+      const span = document.createElement('span');
+      span.className   = g ? 'tx-gloss-text' : 'tx-gloss-text empty';
+      span.textContent = g || '—';
+      wrap.appendChild(span);
+    }
+  });
+
+  const legend = document.getElementById('gloss-legend');
+  // Show legend only if there are Case B (manually gloss-able) sentences
+  const hasCaseB = document.querySelector('.tx-phrase[data-has-gloss="0"]');
+  if (legend) legend.classList.toggle('visible', loggedIn && !!hasCaseB);
+}
+
+// ── Init ─────────────────────────────────────────────────────
+async function init() {
+  bindLoginModal();
+  await checkAuth();
+
+  if (!textKey) {
+    document.getElementById('tx-main').innerHTML =
+      '<p class="tx-loading tx-error">No text key specified in URL.</p>';
+    return;
+  }
+
+  try {
+    // Load transcription and glosses in parallel
+    const [txResp, glResp] = await Promise.all([
+      fetch(`/api/transcription/${encodeURIComponent(textKey)}`),
+      fetch(`/api/transcription/${encodeURIComponent(textKey)}/glosses`)
+    ]);
+    if (!txResp.ok) throw new Error(`HTTP ${txResp.status}`);
+    const [txData, glData] = await Promise.all([txResp.json(), glResp.json()]);
+    glosses = glData;
+    render(txData);
+  } catch(e) {
+    document.getElementById('tx-main').innerHTML =
+      `<p class="tx-loading tx-error">Could not load transcription: ${e.message}</p>`;
+  }
+}
+
+init();
+</script>
+</body>
+</html>
