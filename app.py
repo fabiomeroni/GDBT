@@ -265,6 +265,63 @@ def upload_corpus():
 def upload_fieldnotes():
     return _handle_upload('fieldnotes.xml')
 
+# Language columns for fieldnotes comparative display
+_FN_LANGS = [
+    ('num', 'Num', 'Nume'),
+    ('drg', 'Drg', 'Dorig'),
+    ('kro', 'Kro', 'Koro'),
+    ('olr', 'Olr', 'Olrat'),
+    ('lkn', 'Lkn', 'Lakon'),
+]
+
+@app.route('/api/fieldnotes/tx/<int:index>')
+def fieldnotes_tx(index):
+    """Return a fieldnotes tiGroup in transcription-viewer format.
+    Each rfGroup becomes a sentence with:
+      - words: [{form: langForm, gloss: langAbbr, lang: code, lang_name: name}]
+      - transl: the Bislama prompt
+      - is_comparative: True  →  triggers comparative display in the viewer
+    """
+    xml = get_fieldnotes_xml()
+    if xml is None:
+        return jsonify({'error': 'No fieldnotes XML found'}), 404
+    tgs = xml.findall('.//tiGroup')
+    if index < 0 or index >= len(tgs):
+        return jsonify({'error': 'Group not found'}), 404
+    tg = tgs[index]
+    ti = (tg.findtext('ti') or '').strip()
+    sentences = []
+    for rfg in tg.findall('rfGroup'):
+        rf  = (rfg.findtext('rf') or '').strip()
+        grp = rfg.find('bslGroup') or rfg.find('frGroup')
+        if grp is None:
+            continue
+        prompt = (grp.findtext('bsl') or grp.findtext('fr') or '').strip()
+        words = []
+        for code, abbr, name in _FN_LANGS:
+            nodes = grp.findall(code)
+            vals  = [n.text.strip() for n in nodes if n.text and n.text.strip()]
+            form  = ' / '.join(vals) if vals else '—'
+            words.append({'form': form, 'gloss': abbr,
+                          'lang': code, 'lang_name': name})
+        if prompt or any(w['form'] != '—' for w in words):
+            sentences.append({
+                'id':            rf,
+                'form':          '',      # display handled via words
+                'transl':        prompt,
+                'transl_lang':   'bsl',
+                'words':         words,
+                'has_gloss':     True,    # use word-aligned block
+                'is_comparative': True,   # flag → special comparative rendering
+                'audio':         None,
+            })
+    return jsonify({
+        'title':        ti,
+        'is_fieldnotes': True,
+        'lang':         'comparative',
+        'sentences':    sentences,
+    })
+
 
 # ── Fieldnotes routes ─────────────────────────────────────────
 
