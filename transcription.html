@@ -227,14 +227,21 @@
 
 // ── Read text key from URL params ─────────────────────────────
 const params  = new URLSearchParams(window.location.search);
-const textKey = params.get('key') || '';
-const textTitle = params.get('title') || 'Transcription';
-const textLang  = params.get('lang')  || '';
+const textKey      = params.get('key')   || '';
+const textTitle    = params.get('title') || 'Transcription';
+const textLangParam = params.get('lang') || '';
 
 // ── Language colours ──────────────────────────────────────────
 const LANG_COLORS = {
   Nume:'#2e5c8a', Dorig:'#c07820', Koro:'#922810', Olrat:'#267040', Lakon:'#5c2878'
 };
+// Map ISO 639-3 / Pangloss codes → Gaua language names
+const LANG_FROM_CODE = {
+  wwo:'Dorig', drg:'Dorig', lkn:'Lakon', krf:'Koro',
+  kro:'Koro',  num:'Nume',  olr:'Olrat',
+};
+// textLang from URL may be an ISO code or a language name
+const textLang = LANG_FROM_CODE[textLangParam] || textLangParam;
 const langColor = LANG_COLORS[textLang] || 'var(--gold)';
 
 // ── State ─────────────────────────────────────────────────────
