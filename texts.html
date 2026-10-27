@@ -303,26 +303,17 @@
      TAB 2 — Texts from fieldnotes
 ══════════════════════════════════════════════════════════ -->
 <div id="panel-fieldnotes" class="tab-panel">
-  <div class="fn-shell">
-
-    <!-- Sidebar: group list -->
-    <aside class="fn-sidebar">
-      <div class="fn-sidebar-head">
-        <span class="fn-sidebar-label">Questionnaire topics</span>
-        <button class="edit-tab" id="fn-edit-tab"
-                title="Upload new fieldnotes XML">✏ Edit</button>
-      </div>
-      <ul class="fn-group-list" id="fn-group-list">
-        <li style="padding:1rem;font-family:'Crimson Pro',serif;font-style:italic;
-                   color:var(--ink-light);font-size:0.9rem;">Loading…</li>
-      </ul>
-    </aside>
-
-    <!-- Main: comparative table -->
-    <main class="fn-main" id="fn-main">
-      <p class="fn-loading">Select a topic from the list.</p>
-    </main>
-
+  <div class="texts-main">
+    <div class="texts-hdr">
+      <h2>Texts from fieldnotes</h2>
+    </div>
+    <div class="rec-edit-bar">
+      <button class="edit-tab" id="fn-edit-tab" title="Upload new fieldnotes XML">✏ Edit</button>
+    </div>
+    <div id="fn-stats" class="stats-bar"></div>
+    <div class="texts-grid" id="fn-grid">
+      <p class="no-results" style="font-style:italic;">Loading…</p>
+    </div>
   </div>
 </div>
 
@@ -362,7 +353,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     document.querySelectorAll('.tab-panel').forEach(p =>
       p.classList.toggle('active', p.id === 'panel-' + tab)
     );
-    if (tab === 'fieldnotes' && !fnLoaded) loadFieldnotesGroups();
+    if (tab === 'fieldnotes' && !fnLoaded) renderFieldnotesCards();
   });
 });
 
@@ -425,100 +416,37 @@ document.getElementById('filter-lang').addEventListener('change', renderRecordin
 // ══════════════════════════════════════════════════════════════
 //  FIELDNOTES TAB
 // ══════════════════════════════════════════════════════════════
+// ── Fieldnotes tab: card grid ────────────────────────────────
 let fnLoaded = false;
-let activeGroupIndex = null;
 
-async function loadFieldnotesGroups() {
+async function renderFieldnotesCards() {
   fnLoaded = true;
-  const list = document.getElementById('fn-group-list');
+  const grid  = document.getElementById('fn-grid');
+  const stats = document.getElementById('fn-stats');
   try {
     const resp = await fetch('/api/fieldnotes/groups');
     const data = await resp.json();
-    if (!data.groups || !data.groups.length) {
-      list.innerHTML = '<li style="padding:1rem;font-family:\'Crimson Pro\',serif;font-style:italic;color:var(--ink-light);font-size:0.9rem;">No fieldnotes XML loaded.</li>';
+    const groups = data.groups || [];
+    stats.textContent = `${groups.length} topic${groups.length !== 1 ? 's' : ''}`;
+    if (!groups.length) {
+      grid.innerHTML = '<p class="no-results">No fieldnotes XML loaded. Log in and use ✏ Edit to upload one.</p>';
       return;
     }
-    list.innerHTML = data.groups.map(g => `
-      <li class="fn-group-item">
-        <a href="#" data-index="${g.index}">${g.title}</a>
-      </li>`).join('');
-    list.querySelectorAll('a').forEach(a => {
-      a.addEventListener('click', e => {
-        e.preventDefault();
-        loadFieldnotesGroup(parseInt(a.dataset.index), a);
-      });
-    });
-    // Load first group by default
-    const first = list.querySelector('a');
-    if (first) loadFieldnotesGroup(0, first);
-  } catch(e) {
-    list.innerHTML = `<li style="padding:1rem;color:#922810;font-family:'Crimson Pro',serif;font-size:0.9rem;">Error: ${e.message}</li>`;
-  }
-}
-
-async function loadFieldnotesGroup(index, linkEl) {
-  // Highlight active
-  document.querySelectorAll('.fn-group-item a').forEach(a => a.classList.remove('active'));
-  if (linkEl) linkEl.classList.add('active');
-  activeGroupIndex = index;
-
-  const main = document.getElementById('fn-main');
-  main.innerHTML = '<p class="fn-loading">Loading…</p>';
-
-  try {
-    const resp = await fetch(`/api/fieldnotes/group/${index}`);
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    const data = await resp.json();
-    renderFieldnotesGroup(data);
-  } catch(e) {
-    main.innerHTML = `<p style="color:#922810;font-family:'Crimson Pro',serif;">Error: ${e.message}</p>`;
-  }
-}
-
-function renderFieldnotesGroup(data) {
-  const main = document.getElementById('fn-main');
-
-  // Build table header
-  const thLangs = LANG_CODES.map(l =>
-    `<th class="th-lang" style="color:${LANG_COLORS[l.lang]};">${l.lang}</th>`
-  ).join('');
-
-  // Build rows
-  const rows = data.items.map(item => {
-    const langCells = LANG_CODES.map(l => {
-      const form = item.forms[l.code] || '';
-      return form
-        ? `<td class="td-lang" style="color:${LANG_COLORS[l.lang]};">${form}</td>`
-        : `<td class="td-empty">—</td>`;
+    grid.innerHTML = groups.map(g => {
+      const txUrl = `transcription.html?fieldnotes=1&index=${g.index}&title=${encodeURIComponent(g.title)}`;
+      return `<div class="text-card" style="border-left-color:var(--gold);">
+        <span class="tc-lang" style="color:var(--gold);">All languages</span>
+        <span class="tc-title">${g.title}</span>
+        <a class="tc-link" href="${txUrl}">📜 View transcription →</a>
+      </div>`;
     }).join('');
-    const prompt = item.prompt
-      ? `<td class="td-prompt">${item.prompt}</td>`
-      : `<td class="td-empty"></td>`;
-    return `<tr>
-      <td class="td-ref">${item.rf}</td>
-      ${prompt}
-      ${langCells}
-    </tr>`;
-  }).join('');
-
-  main.innerHTML = `
-    <h2 class="fn-title">${data.title}</h2>
-    <span class="fn-title-sub">Fieldnotes questionnaire · ${data.items.length} exchanges</span>
-    <div class="fn-table-wrap">
-      <table class="fn-table">
-        <thead>
-          <tr>
-            <th class="th-ref">Ref</th>
-            <th class="th-prompt">Bislama</th>
-            ${thLangs}
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>`;
+  } catch(e) {
+    grid.innerHTML = `<p class="no-results" style="color:#922810;">Error: ${e.message}</p>`;
+  }
 }
 
 // ══════════════════════════════════════════════════════════════
+//  UPLOAD HANDLERS// ══════════════════════════════════════════════════════════════
 //  UPLOAD HANDLERS
 // ══════════════════════════════════════════════════════════════
 function bindUploadModal(editTabId, modalId, fileInputId, msgId, cancelId, submitId, endpoint, reload) {
