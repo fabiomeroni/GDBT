@@ -180,6 +180,43 @@
 }
 .fn-gloss-input-cell { padding: 5px 0 3px; vertical-align: baseline; border: none; }
 
+/* Per-column gloss input */
+.fn-col-gloss {
+  font-family: 'Source Code Pro', monospace; font-size: 0.75rem;
+  color: var(--ink-light); border: none;
+  border-bottom: 1.5px dashed var(--border);
+  background: transparent; outline: none;
+  padding: 1px 0; width: 100%; min-width: 3ch;
+  max-width: 14ch; transition: border-color 0.15s;
+}
+.fn-col-gloss:focus { border-bottom-color: var(--gold); color: var(--ink); }
+.fn-col-gloss::placeholder { color: #c8b890; }
+
+/* Inline alignment editor */
+.fn-editor {
+  background: #f5f0e8; border: 1px solid var(--border);
+  border-radius: 4px; padding: 0.8rem 1rem 1rem;
+  margin-bottom: 0.4rem; overflow-x: auto;
+}
+.fn-editor-table { border-collapse: collapse; }
+.fn-editor-table td { padding: 2px 4px; vertical-align: middle; }
+.fn-cell-input {
+  font-family: 'EB Garamond', serif; font-size: 1rem;
+  border: 1px solid var(--border); border-radius: 2px;
+  padding: 2px 5px; width: 7ch; min-width: 4ch;
+  outline: none; background: white;
+  transition: border-color 0.12s;
+}
+.fn-cell-input:focus { border-color: var(--gold); }
+.fn-editor-abbr { font-family: 'Crimson Pro', serif; font-variant: small-caps; font-size: 0.8rem; font-weight: 700; padding-right: 8px; }
+.fn-col-del { font-size: 0.7rem; color: #c06060; background: none; border: none; cursor: pointer; padding: 0 4px; }
+.fn-col-del:hover { color: #922810; }
+.fn-col-add { font-family: 'Crimson Pro', serif; font-size: 0.8rem; color: var(--gold); background: none; border: 1px dashed var(--gold); border-radius: 3px; padding: 2px 8px; cursor: pointer; margin-left: 6px; }
+.fn-col-add:hover { background: #f5edd8; }
+.fn-editor-actions { display: flex; gap: 0.5rem; margin-top: 0.6rem; justify-content: flex-end; }
+.fn-edit-btn { font-family: 'Crimson Pro', serif; font-size: 0.75rem; color: var(--ink-light); background: none; border: 1px solid var(--border); border-radius: 3px; padding: 2px 9px 3px; cursor: pointer; position: absolute; top: 0; right: 0; transition: border-color 0.12s, color 0.12s; }
+.fn-edit-btn:hover { color: var(--gold); border-color: var(--gold); }
+
 /* Translation language tag */
 .tx-transl-lang {
   font-family: 'Source Code Pro', monospace; font-size: 0.62rem;
@@ -302,6 +339,246 @@ function bindScrollspy() {
   }, { passive: true });
 }
 
+// ── Fieldnotes column-aligned table helpers ───────────────────
+
+const FN_CODES = ['num','drg','kro','olr','lkn'];
+const FN_ABBRS = {num:'Num',drg:'Drg',kro:'Kro',olr:'Olr',lkn:'Lkn'};
+
+function tokenizeForm(form) {
+  if (!form || form === '—') return [];
+  return form.trim().split(/\s+/).filter(Boolean);
+}
+
+function buildAlignment(words, stored) {
+  // Returns {tokens: {code: [...]}, colGlosses: [...], nCols: N}
+  if (stored && typeof stored === 'object' && stored.tokens) {
+    const nCols = Math.max(...FN_CODES.map(c => (stored.tokens[c] || []).length), 0);
+    const tokens = {};
+    FN_CODES.forEach(c => {
+      tokens[c] = [...(stored.tokens[c] || [])];
+      while (tokens[c].length < nCols) tokens[c].push('');
+    });
+    return { tokens, colGlosses: stored.glosses || Array(nCols).fill(''), nCols };
+  }
+  // Auto-tokenize
+  const tokens = {};
+  let nCols = 0;
+  words.forEach(w => {
+    const toks = tokenizeForm(w.form);
+    tokens[w.lang] = toks;
+    if (toks.length > nCols) nCols = toks.length;
+  });
+  FN_CODES.forEach(c => {
+    tokens[c] = tokens[c] || [];
+    while (tokens[c].length < nCols) tokens[c].push('');
+  });
+  return { tokens, colGlosses: Array(nCols).fill(''), nCols };
+}
+
+function renderAlignedTable(words, tokens, colGlosses, nCols, sid, editable) {
+  const emptyHeader = `<td></td>`;
+  const langRows = words.map(w => {
+    const col = CODE_COLORS[w.lang] || 'var(--gold)';
+    const cells = Array.from({length: nCols}, (_, i) => {
+      const form = tokens[w.lang]?.[i] || '';
+      return `<td class="fn-form-cell${!form ? ' missing' : ''}"
+                  style="color:${col};">${form || '—'}</td>`;
+    }).join('');
+    return `<tr>
+      <td class="fn-lang-abbr" style="color:${col};">${FN_ABBRS[w.lang]}</td>
+      ${cells}
+    </tr>`;
+  }).join('');
+
+  const sepCells = `<td></td>${Array(nCols).fill('<td></td>').join('')}`;
+  const glossCells = Array.from({length: nCols}, (_, i) => {
+    const g = (colGlosses[i] || '').replace(/"/g, '&quot;');
+    if (editable) {
+      return `<td class="fn-gloss-input-cell">
+        <input class="fn-col-gloss" data-sid="${sid}" data-col="${i}"
+               value="${g}" placeholder="…" spellcheck="false">
+      </td>`;
+    }
+    return `<td class="fn-gloss-input-cell">
+      <span class="${g ? 'tx-gloss-text' : 'tx-gloss-text empty'}">${g || '—'}</span>
+    </td>`;
+  }).join('');
+
+  return `<table class="fn-il-table" id="fn-table-${sid}">
+    ${langRows}
+    <tr class="fn-sep">${sepCells}</tr>
+    <tr>
+      <td class="fn-gloss-label-cell">gloss</td>
+      ${glossCells}
+    </tr>
+  </table>`;
+}
+
+function buildComparativeSection(s, storedGloss, editable) {
+  const {tokens, colGlosses, nCols} = buildAlignment(s.words, storedGloss);
+  const editBtn = editable
+    ? `<button class="fn-edit-btn" onclick="showAlignmentEditor('${s.id}',this)"
+              title="Edit column alignment">✏</button>`
+    : '';
+  const tableHTML = renderAlignedTable(s.words, tokens, colGlosses, nCols, s.id, editable);
+  return `<div class="fn-interlinear" style="position:relative;">
+    ${editBtn}
+    <div id="fn-display-${s.id}">${tableHTML}</div>
+    <div id="fn-editor-${s.id}" style="display:none;"></div>
+  </div>`;
+}
+
+function showAlignmentEditor(sid, btn) {
+  const phrase   = btn.closest('.tx-phrase');
+  const stored   = glosses[sid];
+  const wordEls  = [...phrase.querySelectorAll('.fn-form-cell, .fn-lang-abbr')]; // unused, use data
+  // Rebuild alignment from current displayed table or stored data
+  const s = sentences.find(s => s.id === sid);
+  if (!s) return;
+  const {tokens, colGlosses, nCols} = buildAlignment(s.words, stored);
+
+  // Work on a mutable copy
+  const editTokens    = {};
+  FN_CODES.forEach(c => { editTokens[c] = [...(tokens[c] || [])]; });
+  let editGlosses = [...colGlosses];
+  let editNCols   = nCols;
+
+  function renderEditor() {
+    const colHeaders = Array.from({length: editNCols}, (_, i) =>
+      `<td style="text-align:center;padding:0 4px 2px;">
+        <button class="fn-col-del" onclick="delCol(${i})">×</button>
+      </td>`
+    ).join('');
+
+    const langRows2 = s.words.map(w => {
+      const col = CODE_COLORS[w.lang] || 'var(--gold)';
+      const cells = Array.from({length: editNCols}, (_, i) => {
+        const val = (editTokens[w.lang]?.[i] || '').replace(/"/g, '&quot;');
+        return `<td><input class="fn-cell-input" data-lang="${w.lang}" data-col="${i}"
+                       value="${val}" spellcheck="false"
+                       style="color:${col};"
+                       oninput="editTokens['${w.lang}'][${i}]=this.value"></td>`;
+      }).join('');
+      return `<tr>
+        <td class="fn-editor-abbr" style="color:${col};">${FN_ABBRS[w.lang]}</td>
+        ${cells}
+        <td></td>
+      </tr>`;
+    }).join('');
+
+    const glossCells2 = Array.from({length: editNCols}, (_, i) => {
+      const val = (editGlosses[i] || '').replace(/"/g, '&quot;');
+      return `<td><input class="fn-cell-input" data-col="${i}"
+                     value="${val}" placeholder="gloss" spellcheck="false"
+                     oninput="editGlosses[${i}]=this.value"
+                     style="font-family:'Source Code Pro',monospace;font-size:0.75rem;"></td>`;
+    }).join('');
+
+    const editorDiv = document.getElementById('fn-editor-' + sid);
+    editorDiv.innerHTML = `<div class="fn-editor">
+      <table class="fn-editor-table">
+        <tr><td></td>${colHeaders}<td></td></tr>
+        ${langRows2}
+        <tr><td style="font-size:0.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-light);padding-right:8px;">gloss</td>${glossCells2}<td></td></tr>
+      </table>
+      <div class="fn-editor-actions">
+        <button class="fn-col-add" onclick="addCol()">+ Column</button>
+        <button class="modal-btn" onclick="cancelEdit('${sid}')">Cancel</button>
+        <button class="modal-btn primary" onclick="saveAlignment('${sid}')">Save</button>
+      </div>
+    </div>`;
+
+    // Re-attach event handlers for inputs (since innerHTML was reset)
+    editorDiv.querySelectorAll('input[data-lang]').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const lang = inp.dataset.lang;
+        const col  = parseInt(inp.dataset.col);
+        editTokens[lang][col] = inp.value;
+      });
+    });
+    editorDiv.querySelectorAll('input:not([data-lang])').forEach(inp => {
+      if (inp.dataset.col !== undefined) {
+        inp.addEventListener('input', () => {
+          editGlosses[parseInt(inp.dataset.col)] = inp.value;
+        });
+      }
+    });
+  }
+
+  function addCol() {
+    editNCols++;
+    FN_CODES.forEach(c => { editTokens[c] = editTokens[c] || []; editTokens[c].push(''); });
+    editGlosses.push('');
+    renderEditor();
+  }
+  function delCol(i) {
+    if (editNCols <= 1) return;
+    editNCols--;
+    FN_CODES.forEach(c => { editTokens[c].splice(i, 1); });
+    editGlosses.splice(i, 1);
+    renderEditor();
+  }
+
+  // Make helpers accessible to onclick
+  window.addCol  = addCol;
+  window.delCol  = delCol;
+  window.cancelEdit = (s) => {
+    document.getElementById('fn-editor-' + s).style.display = 'none';
+    document.getElementById('fn-display-' + s).style.display = '';
+    btn.style.display = '';
+  };
+  window.saveAlignment = async (s) => {
+    const newData = {tokens: editTokens, glosses: editGlosses};
+    glosses[s] = newData;
+    try {
+      await fetch(`/api/transcription/${encodeURIComponent(glossKey)}/glosses`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({sentence_id: s, gloss: newData})
+      });
+    } catch(e) { console.error(e); }
+    // Re-render the display
+    const display = document.getElementById('fn-display-' + s);
+    display.innerHTML = renderAlignedTable(
+      sentences.find(x => x.id === s).words,
+      editTokens, editGlosses, editNCols, s, true
+    );
+    bindColGlossInputs();
+    document.getElementById('fn-editor-' + s).style.display = 'none';
+    display.style.display = '';
+    btn.style.display = '';
+  };
+
+  document.getElementById('fn-display-' + sid).style.display = 'none';
+  document.getElementById('fn-editor-' + sid).style.display = '';
+  btn.style.display = 'none';
+  renderEditor();
+}
+
+function bindColGlossInputs() {
+  document.querySelectorAll('.fn-col-gloss').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const sid = inp.dataset.sid;
+      const col = parseInt(inp.dataset.col);
+      // Update local glosses cache and debounce-save
+      const stored = glosses[sid];
+      const {tokens, colGlosses, nCols} = buildAlignment(
+        sentences.find(s => s.id === sid)?.words || [], stored
+      );
+      colGlosses[col] = inp.value;
+      clearTimeout(saveTimers[sid + '_g']);
+      saveTimers[sid + '_g'] = setTimeout(async () => {
+        glosses[sid] = {tokens, glosses: colGlosses};
+        await fetch(`/api/transcription/${encodeURIComponent(glossKey)}/glosses`, {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({sentence_id: sid, gloss: {tokens, glosses: colGlosses}})
+        });
+      }, 600);
+    });
+  });
+}
+
 // ── Gloss auto-save ───────────────────────────────────────────
 async function saveGloss(sentenceId, value, statusEl) {
   try {
@@ -365,42 +642,9 @@ function render(data) {
     let glossSection = '';
 
     if (s.is_comparative && s.words && s.words.length) {
-      // Case C: fieldnotes — row-per-language interlinear table, like grammar example
-      const langRows = s.words.map(w => {
-        const col     = CODE_COLORS[w.lang] || 'var(--gold)';
-        const missing = w.form === '—';
-        return `<tr>
-          <td class="fn-lang-abbr" style="color:${col};">${w.gloss}</td>
-          <td class="fn-form-cell${missing ? ' missing' : ''}"
-              style="color:${col};">${w.form}</td>
-        </tr>`;
-      }).join('');
-
-      const g = glosses[s.id] || '';
-      const glossInput = isLoggedIn
-        ? `<input class="tx-gloss-input" type="text"
-                  data-sid="${s.id}"
-                  value="${g.replace(/"/g, '&quot;')}"
-                  placeholder="Add gloss…"
-                  spellcheck="false">
-           <span class="tx-gloss-save-status" id="status-${s.id}"></span>`
-        : g
-          ? `<span class="tx-gloss-text">${g}</span>`
-          : `<span class="tx-gloss-text empty">—</span>`;
-
-      // The TRANSL (Bislama prompt) goes outside the table as a separate line
-      // so we suppress the default tx-transl div and render it inside glossSection
-      glossSection = `
-        <div class="fn-interlinear">
-          <table class="fn-il-table">
-            ${langRows}
-            <tr class="fn-sep"><td></td><td></td></tr>
-            <tr>
-              <td class="fn-gloss-label-cell">gloss</td>
-              <td class="fn-gloss-input-cell">${glossInput}</td>
-            </tr>
-          </table>
-        </div>`;
+      // Case C: fieldnotes — column-aligned interlinear table
+      // Columns = tokens (words/affixes/clitics), rows = languages
+      glossSection = buildComparativeSection(s, glosses[s.id], isLoggedIn);
 
     } else if (s.has_gloss && s.words && s.words.length) {
       // Case A: word-aligned interlinear from XML
@@ -460,9 +704,9 @@ function render(data) {
     nav.appendChild(li);
   });
 
-  // Bind gloss inputs for Case B sentences (only when logged in)
+  // Bind Case B gloss inputs (single-line editable, non-comparative)
   if (isLoggedIn) {
-    container.querySelectorAll('.tx-gloss-input').forEach(input => {
+    container.querySelectorAll('.tx-gloss-input:not(.fn-col-gloss)').forEach(input => {
       const sid = input.dataset.sid;
       const statusEl = document.getElementById('status-' + sid);
       input.addEventListener('input', () => {
@@ -470,6 +714,8 @@ function render(data) {
         saveTimers[sid] = setTimeout(() => saveGloss(sid, input.value, statusEl), 600);
       });
     });
+    // Bind per-column gloss inputs (comparative / fieldnotes)
+    bindColGlossInputs();
   }
 
   bindScrollspy();
@@ -479,8 +725,22 @@ function render(data) {
 function onAuthChange(loggedIn) {
   if (!sentences.length) return;
 
-  // Re-render editable gloss inputs for Case B and Case C (comparative) phrases
-  document.querySelectorAll('.tx-phrase[data-has-gloss="0"], .tx-phrase[data-comparative="1"]').forEach(phrase => {
+  // Re-render full comparative sections on auth change (edit btn appears/disappears)
+  document.querySelectorAll('.tx-phrase[data-comparative="1"]').forEach(phrase => {
+    const sid = phrase.id;
+    const s   = sentences.find(x => x.id === sid);
+    if (!s) return;
+    const display = document.getElementById('fn-display-' + sid);
+    if (!display) return;
+    const {tokens, colGlosses, nCols} = buildAlignment(s.words, glosses[sid]);
+    display.innerHTML = renderAlignedTable(s.words, tokens, colGlosses, nCols, sid, loggedIn);
+    const editBtn = phrase.querySelector('.fn-edit-btn');
+    if (editBtn) editBtn.style.display = loggedIn ? '' : 'none';
+    if (loggedIn) bindColGlossInputs();
+  });
+
+  // Re-render editable gloss inputs for Case B phrases (single-line)
+  document.querySelectorAll('.tx-phrase[data-has-gloss="0"]').forEach(phrase => {
     const sid  = phrase.id;
     const wrap = phrase.querySelector('.tx-gloss-wrap');
     if (!wrap) return;
