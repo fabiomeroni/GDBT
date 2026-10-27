@@ -6,6 +6,7 @@ Run: python app.py   (then open http://localhost:5000)
 
 import os
 import re
+import json
 from flask import Flask, request, jsonify, session, send_from_directory
 from lxml import etree
 import markdown as md_lib
@@ -16,12 +17,18 @@ app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-change-in-production')
 
 UPLOAD_FOLDER  = 'uploads'
 GRAMMAR_FOLDER = 'grammar_content'
-AUTHOR_PASSWORD = os.environ.get('AUTHOR_PASSWORD', 'gaua2024')
+AUTHOR_PASSWORD = os.environ.get('AUTHOR_PASSWORD', 'gaua2026')
 
-IMAGES_FOLDER  = 'images'
-os.makedirs(UPLOAD_FOLDER,  exist_ok=True)
-os.makedirs(GRAMMAR_FOLDER, exist_ok=True)
-os.makedirs(IMAGES_FOLDER,  exist_ok=True)
+IMAGES_FOLDER         = 'images'
+TRANSCRIPTIONS_FOLDER = 'transcribed_narratives'
+GLOSSES_FOLDER        = os.path.join(TRANSCRIPTIONS_FOLDER, 'glosses')
+TRANSCRIPTIONS_INDEX  = os.path.join(TRANSCRIPTIONS_FOLDER, 'index.json')
+
+os.makedirs(UPLOAD_FOLDER,         exist_ok=True)
+os.makedirs(GRAMMAR_FOLDER,        exist_ok=True)
+os.makedirs(IMAGES_FOLDER,         exist_ok=True)
+os.makedirs(TRANSCRIPTIONS_FOLDER, exist_ok=True)
+os.makedirs(GLOSSES_FOLDER,        exist_ok=True)
 
 # ── Language constants (mirrors JS side) ───────────────────────
 LANGS5      = ['Nume', 'Dorig', 'Koro', 'Olrat', 'Lakon']
@@ -409,6 +416,181 @@ def list_sections():
             sections.append({'id': fname[:-3]})
     return jsonify({'sections': sections})
 
+
+# ── Transcription helpers ─────────────────────────────────────
+
+# xml:lang="en" uses the XML namespace
+_XMLLANG = '{http://www.w3.org/XML/1998/namespace}lang'
+# Parse without downloading DTD (Pangloss DTD referenced in files)
+_XML_PARSER = etree.XMLParser(load_dtd=False, no_network=True, resolve_entities=False)
+
+def _tx_index():
+    if os.path.exists(TRANSCRIPTIONS_INDEX):
+        with open(TRANSCRIPTIONS_INDEX, encoding='utf-8') as f:
+            return json.load(f)
+    return {}
+
+def _tx_path(text_key):
+    idx = _tx_index()
+    fn  = idx.get(text_key)
+    if not fn:
+        return None
+    p = os.path.join(TRANSCRIPTIONS_FOLDER, fn)
+    return p if os.path.exists(p) else None
+
+def _gloss_path(text_key):
+    safe = re.sub(r'[^a-zA-Z0-9_-]', '_', text_key)
+    return os.path.join(GLOSSES_FOLDER, f'{safe}.json')
+
+_TRANSL_PREFS = ('en', 'fr', 'it', 'de', 'es', 'nl')
+
+def _best_transl(el):
+    """Return (text, lang_code) of the most preferred translation on an element."""
+    found = {}
+    for t in el.findall('TRANSL'):
+        lv  = t.get(_XMLLANG, '') or t.get('xml:lang', '')
+        txt = (t.text or '').strip()
+        if txt:
+            found[lv] = txt
+    for pref in _TRANSL_PREFS:
+        if pref in found:
+            return found[pref], pref
+    # Fallback: any available
+    for lv, txt in found.items():
+        return txt, lv
+    return '', ''
+
+def _extract_words(s_el):
+    """
+    Extract word-aligned gloss from <W><M> elements.
+    Returns a list of {'form': str, 'gloss': str} — one entry per <W>.
+    Returns [] if no W elements or none have M children with content.
+    """
+    words = []
+    for w in s_el.findall('W'):
+        morphs_form  = []
+        morphs_gloss = []
+        for m in w.findall('M'):
+            mf = (m.findtext('FORM')  or '').strip()
+            mg = (m.findtext('TRANSL') or '').strip()
+            if mf:
+                morphs_form.append(mf)
+            if mg:
+                morphs_gloss.append(mg)
+        if morphs_form:
+            words.append({
+                'form':  '-'.join(morphs_form),
+                'gloss': '-'.join(morphs_gloss) if morphs_gloss else '',
+            })
+    return words
+
+def _parse_tx(path):
+    xml  = etree.parse(path, _XML_PARSER)
+    root = xml.getroot()
+    lang_code = (root.get(_XMLLANG) or root.get('xml:lang', '')).strip()
+    text_id   = root.get('id', '')
+
+    # Titles — prefer English, fall back to French or first available
+    titles = {}
+    for t in root.findall('HEADER/TITLE'):
+        lv = (t.get(_XMLLANG) or t.get('xml:lang', '')).strip()
+        if t.text: titles[lv] = t.text.strip()
+    title = titles.get('en') or titles.get('fr') or next(iter(titles.values()), '')
+
+    # Sentences
+    sentences = []
+    for s in root.findall('S'):
+        sid  = s.get('id', '')
+        form = (s.findtext('FORM') or '').strip()
+        if not form:
+            continue
+        transl, transl_lang = _best_transl(s)
+        audio_el = s.find('AUDIO')
+        audio    = {'start': audio_el.get('start', ''),
+                    'end':   audio_el.get('end', '')} if audio_el is not None else None
+        words     = _extract_words(s)
+        has_gloss = bool(words and any(w['gloss'] for w in words))
+        sentences.append({
+            'id': sid, 'form': form,
+            'transl': transl, 'transl_lang': transl_lang,
+            'audio': audio,
+            'words': words,          # word-aligned gloss from W/M
+            'has_gloss': has_gloss,  # True = gloss already in XML
+        })
+
+    return {
+        'id': text_id, 'lang': lang_code,
+        'title': title,
+        'sentences': sentences,
+    }
+
+# ── Transcription API routes ──────────────────────────────────
+
+@app.route('/api/transcriptions/index')
+def tx_index_route():
+    return jsonify(_tx_index())
+
+@app.route('/api/transcription/<path:text_key>')
+def get_transcription(text_key):
+    path = _tx_path(text_key)
+    if not path:
+        return jsonify({'error': 'No transcription found'}), 404
+    try:
+        data = _parse_tx(path)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    return jsonify(data)
+
+@app.route('/api/transcription/<path:text_key>/glosses', methods=['GET'])
+def get_glosses(text_key):
+    p = _gloss_path(text_key)
+    if os.path.exists(p):
+        with open(p, encoding='utf-8') as f:
+            return jsonify(json.load(f))
+    return jsonify({})
+
+@app.route('/api/transcription/<path:text_key>/glosses', methods=['POST'])
+def save_gloss(text_key):
+    if not session.get('author'):
+        return jsonify({'error': 'Unauthorized'}), 401
+    data    = request.get_json(silent=True) or {}
+    sent_id = data.get('sentence_id', '')
+    gloss   = data.get('gloss', '')
+    if not sent_id:
+        return jsonify({'error': 'No sentence_id'}), 400
+    p = _gloss_path(text_key)
+    glosses = {}
+    if os.path.exists(p):
+        with open(p, encoding='utf-8') as f:
+            glosses = json.load(f)
+    glosses[sent_id] = gloss
+    with open(p, 'w', encoding='utf-8') as f:
+        json.dump(glosses, f, ensure_ascii=False, indent=2)
+    return jsonify({'ok': True})
+
+@app.route('/api/upload/transcription', methods=['POST'])
+def upload_transcription():
+    if not session.get('author'):
+        return jsonify({'error': 'Unauthorized'}), 401
+    f        = request.files.get('file')
+    text_key = request.form.get('text_key', '').strip()
+    if not f:
+        return jsonify({'error': 'No file provided'}), 400
+    # Validate XML
+    try:
+        etree.parse(f, _XML_PARSER)
+    except etree.XMLSyntaxError as e:
+        return jsonify({'error': f'Invalid XML: {e}'}), 400
+    f.seek(0)
+    safe_fn = re.sub(r'[^a-zA-Z0-9._-]', '_', f.filename or 'transcription.xml')
+    f.save(os.path.join(TRANSCRIPTIONS_FOLDER, safe_fn))
+    # Update index if text_key provided
+    if text_key:
+        idx = _tx_index()
+        idx[text_key] = safe_fn
+        with open(TRANSCRIPTIONS_INDEX, 'w', encoding='utf-8') as fi:
+            json.dump(idx, fi, ensure_ascii=False, indent=2)
+    return jsonify({'ok': True, 'filename': safe_fn, 'linked_to': text_key or None})
 
 # ── Static file serving ───────────────────────────────────────
 
