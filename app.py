@@ -683,7 +683,46 @@ def serve_image(filename):
 
 
 # ── Dictionary entries (compact JSON for client-side gloss lookup) ────────────
-_ABBREV_LINKS_PATH = os.path.join(TRANSCRIPTIONS_FOLDER, 'abbrev_links.json')
+_ABBREV_LINKS_PATH      = os.path.join(TRANSCRIPTIONS_FOLDER, 'abbrev_links.json')
+_CONFIRMED_GLOSSES_PATH = os.path.join(TRANSCRIPTIONS_FOLDER, 'confirmed_glosses.json')
+
+def _load_confirmed_glosses():
+    if os.path.exists(_CONFIRMED_GLOSSES_PATH):
+        with open(_CONFIRMED_GLOSSES_PATH, encoding='utf-8') as f:
+            content = f.read().strip()
+        if content:
+            try:
+                return json.loads(content)
+            except json.JSONDecodeError:
+                try:
+                    obj, _ = json.JSONDecoder().raw_decode(content)
+                    return obj if isinstance(obj, dict) else {}
+                except Exception:
+                    pass
+    return {}
+
+@app.route('/api/confirmed_glosses')
+def get_confirmed_glosses():
+    return jsonify(_load_confirmed_glosses())
+
+@app.route('/api/confirmed_glosses', methods=['POST'])
+def save_confirmed_glosses():
+    """Receive {colKey: [gloss, ...]} pairs from confirmed sentences."""
+    if not session.get('author'):
+        return jsonify({'error': 'Unauthorized'}), 401
+    data   = request.get_json(silent=True) or {}
+    stored = _load_confirmed_glosses()
+    for col_key, glist in data.items():
+        if col_key not in stored:
+            stored[col_key] = []
+        for g in glist:
+            if g and g not in stored[col_key]:
+                stored[col_key].append(g)
+    tmp = _CONFIRMED_GLOSSES_PATH + '.tmp'
+    with open(tmp, 'w', encoding='utf-8') as f:
+        json.dump(stored, f, ensure_ascii=False, indent=2)
+    os.replace(tmp, _CONFIRMED_GLOSSES_PATH)
+    return jsonify({'ok': True})
 
 @app.route('/api/abbrev_links')
 def get_abbrev_links():
