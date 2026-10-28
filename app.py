@@ -101,10 +101,24 @@ def _tokenize_form(form):
 
 def _load_stored_glosses(key):
     p = _gloss_path(key)
-    if os.path.exists(p):
-        with open(p, encoding='utf-8') as f:
-            return json.load(f)
-    return {}
+    if not os.path.exists(p):
+        return {}
+    with open(p, encoding='utf-8') as f:
+        content = f.read().strip()
+    if not content:
+        return {}
+    try:
+        return json.loads(content)
+    except json.JSONDecodeError:
+        # File may have extra data (two objects concatenated after interrupted save).
+        # raw_decode parses the first valid JSON value and ignores the rest.
+        try:
+            obj, _ = json.JSONDecoder().raw_decode(content)
+            if isinstance(obj, dict):
+                return obj
+        except Exception:
+            pass
+        return {}
 
 def _cite_ilg_table(words, stored_gloss):
     """Word-aligned interlinear table from _parse_tx words + stored gloss."""
@@ -466,8 +480,10 @@ def save_fieldnotes_gloss(index):
         with open(p, encoding='utf-8') as f:
             stored = json.load(f)
     stored[sent_id] = gloss
-    with open(p, 'w', encoding='utf-8') as f:
+    tmp = p + '.tmp'
+    with open(tmp, 'w', encoding='utf-8') as f:
         json.dump(stored, f, ensure_ascii=False, indent=2)
+    os.replace(tmp, p)
     return jsonify({'ok': True})
 
 @app.route('/api/fieldnotes/tx/<int:index>')
@@ -911,8 +927,11 @@ def save_gloss(text_key):
         with open(p, encoding='utf-8') as f:
             glosses = json.load(f)
     glosses[sent_id] = gloss
-    with open(p, 'w', encoding='utf-8') as f:
+    # Atomic write: temp file + rename prevents corruption on interrupted saves
+    tmp = p + '.tmp'
+    with open(tmp, 'w', encoding='utf-8') as f:
         json.dump(glosses, f, ensure_ascii=False, indent=2)
+    os.replace(tmp, p)
     return jsonify({'ok': True})
 
 @app.route('/api/upload/transcription', methods=['POST'])
