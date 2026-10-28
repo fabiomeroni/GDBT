@@ -406,7 +406,7 @@ async function loadSection(id) {
     <button class="delete-tab${isLoggedIn ? ' visible' : ''}"
             onclick="deleteSection('${id}')"
             title="Delete this section">🗑 Delete</button>
-    <button class="edit-tab section-edit" onclick="enterEditMode('${id}')"
+    <button class="edit-tab section-edit${isLoggedIn ? ' visible' : ''}" onclick="enterEditMode('${id}')"
             title="Edit this section">✏ Edit</button>
     <div class="section-content" id="content-${id}">
       <p class="section-loading">Loading…</p>
@@ -640,6 +640,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     .catch(() => ({ sections: [{ id: 's1' }] }));
 
   for (const sec of secResp.sections) await loadSection(sec.id);
+
+  // Re-apply auth visibility now that section buttons exist in the DOM
+  updateAuthUI();
 
   buildTOC();
   bindScrollspy();
