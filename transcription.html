@@ -1091,7 +1091,7 @@ function buildNarrativeSection(s, storedGloss, editable) {
   } else {
     tokens      = tokenizeForm(s.form);
     colGlosses  = [];
-    translation = s.transl;
+    translation = s.transl || '';
   }
   const nCols = tokens.length;
   while (colGlosses.length < nCols) colGlosses.push('');
@@ -1131,7 +1131,7 @@ function buildNarrativeSection(s, storedGloss, editable) {
                 data-gloss="${g}">${ctrl}</td>`;
   }).join('');
 
-  const sepCells = `<td></td>${'<td></td>'.repeat(nCols)}`;
+  const sepCells = '<td></td>'.repeat(nCols);
 
   const editBtn = editable
     ? `<button class="fn-edit-btn"
@@ -1139,18 +1139,16 @@ function buildNarrativeSection(s, storedGloss, editable) {
               title="Edit column alignment">✏</button>`
     : '';
 
-  const translField = renderTranslationField(s.id, translation, editable);
+  const translField = renderTranslationField(s.id, translation || '', editable);
 
   return `<div class="fn-interlinear" style="position:relative;">
     ${editBtn}
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">${badgeEl}</div>
     <div id="fn-display-${s.id}">
       <table class="fn-il-table">
         <tr>${formCells}</tr>
         <tr class="fn-sep">${sepCells}</tr>
-        <tr>
-          <td class="fn-gloss-label-cell" style="white-space:nowrap;">${badgeEl}gloss</td>
-          ${glossCells}
-        </tr>
+        <tr>${glossCells}</tr>
       </table>
     </div>
     <div id="fn-editor-${s.id}" style="display:none;"></div>
@@ -1218,19 +1216,34 @@ function showNarrativeAlignmentEditor(sid, btn) {
     btn.style.display = '';
   };
   window.saveNarrAlignment = async (s) => {
-    const stored2  = glosses[s];
-    const newData  = {...(typeof stored2==='object'?stored2:{}), tokens: editTokens, glosses: editGlosses, confirmed: false};
-    glosses[s]     = newData;
+    const stored2   = glosses[s];
+    const prevTransl = stored2?.translation !== undefined
+      ? stored2.translation
+      : sentences.find(x=>x.id===s)?.transl || '';
+    const newData   = {
+      ...(typeof stored2==='object' ? stored2 : {}),
+      tokens: editTokens, glosses: editGlosses, confirmed: false,
+      translation: prevTransl
+    };
+    glosses[s] = newData;
     updateBadge(s, editGlosses);
     await fetch(`/api/transcription/${encodeURIComponent(glossKey)}/glosses`, {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({sentence_id: s, gloss: newData})
     });
-    const display = document.getElementById('fn-display-'+s);
-    display.innerHTML = buildNarrativeSection(sentences.find(x=>x.id===s), newData, true).match(/(<div id="fn-display[^>]+>)([\s\S]*?)(<\/div>\s*<div id="fn-editor)/)?.[2] || '';
-    buildConcordanceFromGlosses(); bindNarrGlossInputs(); bindHoverTooltips(); bindTranslationInputs();
-    document.getElementById('fn-editor-'+s).style.display='none';
-    display.style.display=''; btn.style.display='';
+    // Re-render the display section
+    const sent    = sentences.find(x => x.id === s);
+    const wrapper = document.getElementById('fn-display-'+s).closest('.fn-interlinear');
+    if (wrapper && sent) {
+      const tmp = document.createElement('div');
+      tmp.innerHTML = buildNarrativeSection(sent, newData, true);
+      const newInterlinear = tmp.querySelector('.fn-interlinear');
+      if (newInterlinear) wrapper.replaceWith(newInterlinear);
+    }
+    buildConcordanceFromGlosses();
+    bindNarrGlossInputs();
+    bindHoverTooltips();
+    bindTranslationInputs();
   };
 
   document.getElementById('fn-display-'+sid).style.display='none';
@@ -1557,9 +1570,7 @@ function render(data) {
   const container = document.getElementById('phrases-container');
 
   sentences.forEach(s => {
-    const audioInfo = s.audio && s.audio.start
-      ? `<span class="tx-audio-badge">⏱ ${parseFloat(s.audio.start).toFixed(1)}s – ${parseFloat(s.audio.end).toFixed(1)}s</span>`
-      : '';
+    const audioInfo = ''; // audio timestamps not shown in viewer
 
     // ── Gloss section ──────────────────────────────────────────
     // Case A: XML has embedded W/M glosses → render word-aligned table
@@ -1596,12 +1607,12 @@ function render(data) {
     div.dataset.hasGloss    = s.has_gloss     ? '1' : '0';
     div.dataset.comparative = s.is_comparative ? '1' : '0';
     // Case B and C handle form/translation internally; Case A keeps the 3-line layout
-    const isColAligned = s.is_comparative || (!s.has_gloss || !s.words?.length);
-    const formLine = (s.is_comparative || isColAligned)
+    const isColAligned = s.is_comparative || !s.has_gloss;
+    const formLine = isColAligned
       ? ''
       : `<div class="tx-form" style="color:${langColor};">${s.form}</div>`;
     // Translation div: only for Case A (Cases B & C render it inside glossSection)
-    const translDiv = (s.is_comparative || isColAligned)
+    const translDiv = isColAligned
       ? ''
       : `<div class="tx-transl">${translLangTag}${s.transl}</div>`;
 
