@@ -42,6 +42,7 @@
       <Sens identifiant="3plⓢ1">
         <NuméroDeSens>1</NuméroDeSens>
         <Glose langue="eng">3PL — third person plural subject</Glose>
+        <gloss>3PL</gloss>
         <Définition>
           <ReprésentationDeTexte langue="eng">3PL — third person plural subject</ReprésentationDeTexte>
         </Définition>
@@ -71,6 +72,7 @@
       <Sens identifiant="nondum1ⓢ1">
         <NuméroDeSens>1</NuméroDeSens>
         <Glose langue="eng">NONDUM₁ — pre-verbal negator ('not yet')</Glose>
+        <gloss>NONDUM₁</gloss>
         <Définition>
           <ReprésentationDeTexte langue="eng">NONDUM₁ — pre-verbal negator &lt;em&gt;('not yet')&lt;/em&gt;</ReprésentationDeTexte>
         </Définition>
@@ -101,6 +103,7 @@
       <Sens identifiant="knowⓢ1">
         <NuméroDeSens>1</NuméroDeSens>
         <Glose langue="eng">know, be familiar with</Glose>
+        <gloss>know</gloss>
         <Définition>
           <ReprésentationDeTexte langue="eng">know, be familiar with</ReprésentationDeTexte>
         </Définition>
@@ -126,6 +129,7 @@
       <Sens identifiant="properlyⓢ1">
         <NuméroDeSens>1</NuméroDeSens>
         <Glose langue="eng">properly, well, thoroughly</Glose>
+        <gloss>properly</gloss>
         <Définition>
           <ReprésentationDeTexte langue="eng">properly, well, thoroughly</ReprésentationDeTexte>
         </Définition>
@@ -151,6 +155,7 @@
       <Sens identifiant="nondum2ⓢ1">
         <NuméroDeSens>1</NuméroDeSens>
         <Glose langue="eng">NONDUM₂ — post-verbal negator (bound, discontinuous)</Glose>
+        <gloss>NONDUM₂</gloss>
         <Définition>
           <ReprésentationDeTexte langue="eng">NONDUM₂ — post-verbal negator &lt;em&gt;(bound, discontinuous)&lt;/em&gt;</ReprésentationDeTexte>
         </Définition>
@@ -181,6 +186,7 @@
       <Sens identifiant="artⓢ1">
         <NuméroDeSens>1</NuméroDeSens>
         <Glose langue="eng">ART — article (nominal determiner)</Glose>
+        <gloss>ART</gloss>
         <Définition>
           <ReprésentationDeTexte langue="eng">ART — article (nominal determiner)</ReprésentationDeTexte>
         </Définition>
@@ -208,6 +214,7 @@
           <Langue>POc</Langue>
           <Forme>*[qa]liŋa-</Forme>
           <Glose langue="eng">voice</Glose>
+        <gloss>speech</gloss>
           <LienTLOPO>https://tlopo.clld.org/parameters/5-3-4-14-138-POc-qalia-a#6/-5.859/152.761</LienTLOPO>
           <LienEtymograph>https://evosem.huma-num.fr/etymograph.html?etym=Oceanic/qali%C5%8Ba-&amp;node1=voice</LienEtymograph>
         </Étymon>
@@ -245,6 +252,7 @@
       <Sens identifiant="possⓢ1">
         <NuméroDeSens>1</NuméroDeSens>
         <Glose langue="eng">POSS:1INCL.PL — 1st person inclusive plural possessive</Glose>
+        <gloss>POSS:1INCL.PL</gloss>
         <Définition>
           <ReprésentationDeTexte langue="eng">POSS:1INCL.PL — 1st person inclusive plural possessive</ReprésentationDeTexte>
         </Définition>
