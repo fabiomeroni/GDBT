@@ -1075,11 +1075,17 @@ function bindTranslationInputs() {
   document.querySelectorAll('.tx-transl-input').forEach(inp => {
     const sid = inp.dataset.sid;
     const statusEl = document.getElementById('tstatus-' + sid);
+    // Debounced save while typing
     inp.addEventListener('input', () => {
       clearTimeout(saveTimers['t_' + sid]);
       saveTimers['t_' + sid] = setTimeout(
         () => saveTranslation(sid, inp.value, statusEl), 700
       );
+    });
+    // Immediate save when field loses focus (user clicks away / navigates)
+    inp.addEventListener('blur', () => {
+      clearTimeout(saveTimers['t_' + sid]);
+      saveTranslation(sid, inp.value, statusEl);
     });
   });
 }
@@ -1520,6 +1526,10 @@ function bindColGlossFull() {
         () => saveColGloss(sid, col, inp.value, status), 600
       );
     });
+    inp.addEventListener('blur', () => {
+      clearTimeout(saveTimers[`${sid}_c${col}`]);
+      saveColGloss(sid, col, inp.value, status);
+    });
   });
 }
 
@@ -1647,6 +1657,10 @@ function render(data) {
         clearTimeout(saveTimers[sid]);
         saveTimers[sid] = setTimeout(() => saveGloss(sid, input.value, statusEl), 600);
       });
+      input.addEventListener('blur', () => {
+        clearTimeout(saveTimers[sid]);
+        saveGloss(sid, input.value, statusEl);
+      });
     });
     // Bind per-column gloss inputs (comparative / fieldnotes)
     bindColGlossFull();
@@ -1703,6 +1717,10 @@ function onAuthChange(loggedIn) {
       input.addEventListener('input', () => {
         clearTimeout(saveTimers[sid]);
         saveTimers[sid] = setTimeout(() => saveGloss(sid, input.value, statusEl), 600);
+      });
+      input.addEventListener('blur', () => {
+        clearTimeout(saveTimers[sid]);
+        saveGloss(sid, input.value, statusEl);
       });
     } else {
       const span = document.createElement('span');
