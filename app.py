@@ -830,7 +830,7 @@ def tx_list():
             continue
     return jsonify({'transcriptions': items})
 
-@app.route('/api/transcription/<path:text_key>')
+@app.route('/api/transcription/<string:text_key>')
 def get_transcription(text_key):
     # text_key is the XML filename (e.g. crdo-WWO_FARFADETS.xml)
     path = os.path.join(TRANSCRIPTIONS_FOLDER, text_key)
@@ -842,7 +842,7 @@ def get_transcription(text_key):
         return jsonify({'error': str(e)}), 500
     return jsonify(data)
 
-@app.route('/api/transcription/<path:text_key>/glosses', methods=['GET'])
+@app.route('/api/transcription/<string:text_key>/glosses', methods=['GET'])
 def get_glosses(text_key):
     # text_key is the XML filename; gloss stored by sanitised filename key
     p = _gloss_path(text_key)
@@ -851,7 +851,7 @@ def get_glosses(text_key):
             return jsonify(json.load(f))
     return jsonify({})
 
-@app.route('/api/transcription/<path:text_key>/glosses', methods=['POST'])
+@app.route('/api/transcription/<string:text_key>/glosses', methods=['POST'])
 def save_gloss(text_key):
     if not session.get('author'):
         return jsonify({'error': 'Unauthorized'}), 401
