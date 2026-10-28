@@ -70,6 +70,35 @@ _LANG_FROM_CODE = {
 
 # ── Citation builders ─────────────────────────────────────────
 
+def _tokenize_form(form):
+    """Python mirror of the JS tokenizeForm() in transcription.html.
+    Splits on whitespace then on morpheme boundaries (- and =),
+    keeping the marker with the left fragment and stripping trailing punctuation."""
+    if not form or form == '—':
+        return []
+    tokens = []
+    for word in form.strip().split():
+        clean = re.sub(r'[.,;!?]+$', '', word)
+        if not clean:
+            continue
+        if '-' not in clean and '=' not in clean:
+            tokens.append(clean)
+            continue
+        parts = re.split(r'([-=])', clean)
+        current = ''
+        frags   = []
+        for p in parts:
+            if p in ('-', '='):
+                current += p
+                frags.append(current)
+                current = ''
+            else:
+                current = p
+        if current:
+            frags.append(current)
+        tokens.extend(f for f in frags if f)
+    return tokens
+
 def _load_stored_glosses(key):
     p = _gloss_path(key)
     if os.path.exists(p):
@@ -148,7 +177,7 @@ def build_fieldnotes_citation(group_index, sent_id, n):
     else:
         tokens = {}; n_cols = 0
         for code, _, _ in _FN_LANGS:
-            toks = raw[code].split() if raw[code] != '—' else []
+            toks = _tokenize_form(raw[code]) if raw[code] != '—' else []
             tokens[code] = toks; n_cols = max(n_cols, len(toks))
         col_glosses = [''] * n_cols
         for code, _, _ in _FN_LANGS:
