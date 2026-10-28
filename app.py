@@ -458,11 +458,7 @@ _FN_LANGS = [
 @app.route('/api/fieldnotes/tx/<int:index>/glosses', methods=['GET'])
 def get_fieldnotes_glosses(index):
     """Dedicated gloss GET for fieldnotes — avoids routing ambiguity."""
-    p = _gloss_path(f'fieldnotes_{index}')
-    if os.path.exists(p):
-        with open(p, encoding='utf-8') as f:
-            return jsonify(json.load(f))
-    return jsonify({})
+    return jsonify(_load_stored_glosses(f'fieldnotes_{index}'))
 
 @app.route('/api/fieldnotes/tx/<int:index>/glosses', methods=['POST'])
 def save_fieldnotes_gloss(index):
@@ -474,11 +470,8 @@ def save_fieldnotes_gloss(index):
     gloss   = data.get('gloss', '')
     if not sent_id:
         return jsonify({'error': 'No sentence_id'}), 400
-    p = _gloss_path(f'fieldnotes_{index}')
-    stored = {}
-    if os.path.exists(p):
-        with open(p, encoding='utf-8') as f:
-            stored = json.load(f)
+    p      = _gloss_path(f'fieldnotes_{index}')
+    stored = _load_stored_glosses(f'fieldnotes_{index}')   # robust: handles corrupted files
     stored[sent_id] = gloss
     tmp = p + '.tmp'
     with open(tmp, 'w', encoding='utf-8') as f:
@@ -906,11 +899,7 @@ def get_transcription(text_key):
 @app.route('/api/transcription/<string:text_key>/glosses', methods=['GET'])
 def get_glosses(text_key):
     # text_key is the XML filename; gloss stored by sanitised filename key
-    p = _gloss_path(text_key)
-    if os.path.exists(p):
-        with open(p, encoding='utf-8') as f:
-            return jsonify(json.load(f))
-    return jsonify({})
+    return jsonify(_load_stored_glosses(text_key))
 
 @app.route('/api/transcription/<string:text_key>/glosses', methods=['POST'])
 def save_gloss(text_key):
@@ -921,11 +910,8 @@ def save_gloss(text_key):
     gloss   = data.get('gloss', '')
     if not sent_id:
         return jsonify({'error': 'No sentence_id'}), 400
-    p = _gloss_path(text_key)
-    glosses = {}
-    if os.path.exists(p):
-        with open(p, encoding='utf-8') as f:
-            glosses = json.load(f)
+    p       = _gloss_path(text_key)
+    glosses = _load_stored_glosses(text_key)   # robust: handles corrupted files
     glosses[sent_id] = gloss
     # Atomic write: temp file + rename prevents corruption on interrupted saves
     tmp = p + '.tmp'
