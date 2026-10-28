@@ -283,3 +283,67 @@ footer a { color: #9a8060; }
   font-size: 0.93rem; color: var(--ink-light);
   line-height: 1.6; margin-bottom: 0.9rem;
 }
+
+/* ── Grammar inline citations {{cite:…}} ── */
+.grammar-cite {
+  display: flex; align-items: flex-start; gap: 1rem;
+  margin: 1.2rem 0 1.4rem; font-family: 'Crimson Pro', serif;
+}
+.cite-n {
+  font-family: 'Crimson Pro', serif; font-size: 1rem;
+  color: var(--ink-light); min-width: 1.8rem; flex-shrink: 0;
+  padding-top: 2px;
+}
+.cite-body  { flex: 1; }
+
+/* Interlinear table (narrative citations) */
+.cite-ilg   { margin-bottom: 0.35rem; overflow-x: auto; }
+.cite-ilg-table { border-collapse: collapse; white-space: nowrap; }
+.cite-form-cell {
+  font-family: 'EB Garamond', serif; font-size: 1.08rem;
+  color: var(--cite-color, var(--ink));
+  padding: 1px 18px 1px 0; vertical-align: baseline; border: none;
+}
+.cite-gloss-row .cite-gloss-cell {
+  font-family: 'Source Code Pro', monospace; font-size: 0.7rem;
+  letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--ink-light); padding: 3px 18px 2px 0;
+  vertical-align: baseline; border: none;
+}
+
+/* Fieldnotes comparative table (fieldnotes citations) */
+.cite-fn-table  { border-collapse: collapse; white-space: nowrap; margin-bottom: 0.2rem; }
+.cite-fn-abbr   {
+  font-family: 'Crimson Pro', serif; font-variant: small-caps;
+  font-size: 0.8rem; font-weight: 700; letter-spacing: 0.05em;
+  padding: 2px 12px 2px 0; vertical-align: baseline; border: none;
+}
+.cite-fn-form   {
+  font-family: 'EB Garamond', serif; font-size: 1.05rem;
+  padding: 2px 18px 2px 0; vertical-align: baseline; border: none;
+}
+.cite-fn-sep td { border-top: 1px solid var(--border); padding: 0; height: 0; border-bottom: none; }
+.cite-fn-label  {
+  font-family: 'Source Code Pro', monospace; font-size: 0.6rem;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-light); padding: 4px 12px 2px 0;
+  vertical-align: baseline; border: none;
+}
+.cite-fn-gloss  {
+  font-family: 'Source Code Pro', monospace; font-size: 0.7rem;
+  letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--ink-light); padding: 4px 18px 2px 0;
+  vertical-align: baseline; border: none;
+}
+
+/* Translation and reference */
+.cite-transl {
+  font-family: 'Crimson Pro', serif; font-style: italic;
+  font-size: 1rem; color: var(--ink-mid); margin-bottom: 0.2rem;
+}
+.cite-ref {
+  font-family: 'Crimson Pro', serif; font-size: 0.78rem;
+  color: var(--ink-light); letter-spacing: 0.02em;
+}
+.cite-ref-link { color: var(--ink-light); text-decoration: none; border-bottom: 1px solid var(--border-lt); }
+.cite-ref-link:hover { color: var(--gold); border-bottom-color: var(--gold); }
