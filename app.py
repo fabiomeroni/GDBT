@@ -433,53 +433,83 @@ _FN_LANGS = [
     ('lkn', 'Lkn', 'Lakon'),
 ]
 
+@app.route('/api/fieldnotes/tx/<int:index>/glosses', methods=['GET'])
+def get_fieldnotes_glosses(index):
+    """Dedicated gloss GET for fieldnotes — avoids routing ambiguity."""
+    p = _gloss_path(f'fieldnotes_{index}')
+    if os.path.exists(p):
+        with open(p, encoding='utf-8') as f:
+            return jsonify(json.load(f))
+    return jsonify({})
+
+@app.route('/api/fieldnotes/tx/<int:index>/glosses', methods=['POST'])
+def save_fieldnotes_gloss(index):
+    """Dedicated gloss POST for fieldnotes — avoids routing ambiguity."""
+    if not session.get('author'):
+        return jsonify({'error': 'Unauthorized'}), 401
+    data    = request.get_json(silent=True) or {}
+    sent_id = data.get('sentence_id', '')
+    gloss   = data.get('gloss', '')
+    if not sent_id:
+        return jsonify({'error': 'No sentence_id'}), 400
+    p = _gloss_path(f'fieldnotes_{index}')
+    stored = {}
+    if os.path.exists(p):
+        with open(p, encoding='utf-8') as f:
+            stored = json.load(f)
+    stored[sent_id] = gloss
+    with open(p, 'w', encoding='utf-8') as f:
+        json.dump(stored, f, ensure_ascii=False, indent=2)
+    return jsonify({'ok': True})
+
 @app.route('/api/fieldnotes/tx/<int:index>')
 def fieldnotes_tx(index):
-    """Return a fieldnotes tiGroup in transcription-viewer format.
-    Each rfGroup becomes a sentence with:
-      - words: [{form: langForm, gloss: langAbbr, lang: code, lang_name: name}]
-      - transl: the Bislama prompt
-      - is_comparative: True  →  triggers comparative display in the viewer
-    """
-    xml = get_fieldnotes_xml()
-    if xml is None:
-        return jsonify({'error': 'No fieldnotes XML found'}), 404
-    tgs = xml.findall('.//tiGroup')
-    if index < 0 or index >= len(tgs):
-        return jsonify({'error': 'Group not found'}), 404
-    tg = tgs[index]
-    ti = (tg.findtext('ti') or '').strip()
-    sentences = []
-    for rfg in tg.findall('rfGroup'):
-        rf  = (rfg.findtext('rf') or '').strip()
-        grp = rfg.find('bslGroup') or rfg.find('frGroup')
-        if grp is None:
-            continue
-        prompt = (grp.findtext('bsl') or grp.findtext('fr') or '').strip()
-        words = []
-        for code, abbr, name in _FN_LANGS:
-            nodes = grp.findall(code)
-            vals  = [n.text.strip() for n in nodes if n.text and n.text.strip()]
-            form  = ' / '.join(vals) if vals else '—'
-            words.append({'form': form, 'gloss': abbr,
-                          'lang': code, 'lang_name': name})
-        if prompt or any(w['form'] != '—' for w in words):
-            sentences.append({
-                'id':            rf,
-                'form':          '',      # display handled via words
-                'transl':        prompt,
-                'transl_lang':   'bsl',
-                'words':         words,
-                'has_gloss':     True,    # use word-aligned block
-                'is_comparative': True,   # flag → special comparative rendering
-                'audio':         None,
-            })
-    return jsonify({
-        'title':        ti,
-        'is_fieldnotes': True,
-        'lang':         'comparative',
-        'sentences':    sentences,
-    })
+    """Return a fieldnotes tiGroup in transcription-viewer format."""
+    try:
+        xml = get_fieldnotes_xml()
+        if xml is None:
+            return jsonify({'error': 'No fieldnotes XML found'}), 404
+        tgs = xml.findall('.//tiGroup')
+        if index < 0 or index >= len(tgs):
+            return jsonify({'error': 'Group not found'}), 404
+        tg = tgs[index]
+        ti = (tg.findtext('ti') or '').strip()
+        sentences = []
+        for rfg in tg.findall('rfGroup'):
+            rf  = (rfg.findtext('rf') or '').strip()
+            grp = rfg.find('bslGroup')
+            if grp is None:
+                grp = rfg.find('frGroup')
+            if grp is None:
+                continue
+            prompt = (grp.findtext('bsl') or grp.findtext('fr') or '').strip()
+            words = []
+            for code, abbr, name in _FN_LANGS:
+                nodes = grp.findall(code)
+                vals  = [n.text.strip() for n in nodes if n.text and n.text.strip()]
+                form  = ' / '.join(vals) if vals else '—'
+                words.append({'form': form, 'gloss': abbr,
+                              'lang': code, 'lang_name': name})
+            if prompt or any(w['form'] != '—' for w in words):
+                sentences.append({
+                    'id':            rf,
+                    'form':          '',
+                    'transl':        prompt,
+                    'transl_lang':   'bsl',
+                    'words':         words,
+                    'has_gloss':     True,
+                    'is_comparative': True,
+                    'audio':         None,
+                })
+        return jsonify({
+            'title':        ti,
+            'is_fieldnotes': True,
+            'lang':         'comparative',
+            'sentences':    sentences,
+        })
+    except Exception as e:
+        import traceback
+        return jsonify({'error': str(e), 'traceback': traceback.format_exc()}), 500
 
 
 # ── Fieldnotes routes ─────────────────────────────────────────
