@@ -716,6 +716,7 @@ function showAlignmentEditor(sid, btn) {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({sentence_id: s, gloss: newData})
+        keepalive: true,
       });
     } catch(e) { console.error(e); }
     // Re-render the display
@@ -1062,7 +1063,8 @@ async function saveTranslation(sid, value, statusEl) {
   try {
     await fetch(glossUrl(), {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({sentence_id: sid, gloss: newData})
+      body: JSON.stringify({sentence_id: sid, gloss: newData}),
+      keepalive: true
     });
     if (statusEl) {
       statusEl.textContent = '✓'; statusEl.classList.add('visible');
@@ -1242,6 +1244,7 @@ function showNarrativeAlignmentEditor(sid, btn) {
     await fetch(glossUrl(), {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({sentence_id: s, gloss: newData})
+      keepalive: true,
     });
     // Re-render the display section
     const sent    = sentences.find(x => x.id === s);
@@ -1283,6 +1286,7 @@ function bindNarrGlossInputs() {
         fetch(glossUrl(), {
           method:'POST', headers:{'Content-Type':'application/json'},
           body: JSON.stringify({sentence_id: sid, gloss: newData})
+          keepalive: true,
         }).catch(console.error);
       }, 600);
     });
@@ -1414,6 +1418,7 @@ async function toggleConfirmation(sid) {
     await fetch(glossUrl(), {
       method: 'POST', headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({sentence_id: sid, gloss: glosses[sid]})
+      keepalive: true,
     });
   } catch(e) { console.error(e); }
 }
@@ -1443,7 +1448,8 @@ async function saveColGloss(sid, colIdx, value, statusEl) {
   try {
     await fetch(glossUrl(), {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({sentence_id: sid, gloss: newData})
+      body: JSON.stringify({sentence_id: sid, gloss: newData}),
+      keepalive: true
     });
     if (statusEl) {
       statusEl.textContent = '✓ saved';
@@ -1540,6 +1546,7 @@ async function saveGloss(sentenceId, value, statusEl) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sentence_id: sentenceId, gloss: value })
+      keepalive: true,
     });
     const d = await r.json();
     if (d.ok) {
