@@ -715,7 +715,7 @@ function showAlignmentEditor(sid, btn) {
       await fetch(glossUrl(), {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({sentence_id: s, gloss: newData})
+        body: JSON.stringify({sentence_id: s, gloss: newData}),
         keepalive: true,
       });
     } catch(e) { console.error(e); }
@@ -1243,7 +1243,7 @@ function showNarrativeAlignmentEditor(sid, btn) {
     updateBadge(s, editGlosses);
     await fetch(glossUrl(), {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({sentence_id: s, gloss: newData})
+      body: JSON.stringify({sentence_id: s, gloss: newData}),
       keepalive: true,
     });
     // Re-render the display section
@@ -1285,7 +1285,7 @@ function bindNarrGlossInputs() {
         updateBadge(sid, cg);
         fetch(glossUrl(), {
           method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({sentence_id: sid, gloss: newData})
+          body: JSON.stringify({sentence_id: sid, gloss: newData}),
           keepalive: true,
         }).catch(console.error);
       }, 600);
@@ -1417,7 +1417,7 @@ async function toggleConfirmation(sid) {
   try {
     await fetch(glossUrl(), {
       method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({sentence_id: sid, gloss: glosses[sid]})
+      body: JSON.stringify({sentence_id: sid, gloss: glosses[sid]}),
       keepalive: true,
     });
   } catch(e) { console.error(e); }
@@ -1545,7 +1545,7 @@ async function saveGloss(sentenceId, value, statusEl) {
     const r = await fetch(glossUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sentence_id: sentenceId, gloss: value })
+      body: JSON.stringify({ sentence_id: sentenceId, gloss: value }),
       keepalive: true,
     });
     const d = await r.json();
