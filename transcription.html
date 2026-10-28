@@ -854,6 +854,105 @@ const ABBREV_LEGEND = {
   'POSS:1INCL.PL': {full:'1st person inclusive plural possessive', desc:'Possessive clitic or suffix marking the 1st person inclusive plural possessor.'},
 };
 
+// ── Texts concordance: confirmed glosses from all sentences ──
+// colKey → [glosses confirmed by author, usable as suggestions in matching columns]
+let textsConcordance = {};
+
+async function loadTextsConcordance() {
+  try {
+    const r = await fetch('/api/confirmed_glosses');
+    if (r.ok) textsConcordance = await r.json();
+  } catch(e) {}
+}
+
+async function saveToTextsConcordance(sid) {
+  // Only fieldnotes comparative sentences have colKey-based alignment
+  const s = sentences.find(x => x.id === sid);
+  if (!s || !s.is_comparative) return;
+  const stored = glosses[sid];
+  if (!stored?.tokens || !stored?.glosses) return;
+
+  const tokens     = stored.tokens;
+  const colGlosses = stored.glosses;
+  const nCols      = Math.max(...FN_CODES.map(c => (tokens[c] || []).length), 0);
+  const toSave     = {};
+
+  for (let i = 0; i < nCols; i++) {
+    const g = colGlosses[i] || '';
+    if (!g) continue;
+    const key = FN_CODES.map(c => (tokens[c]?.[i] || '')).join('|');
+    if (!toSave[key]) toSave[key] = [];
+    if (!toSave[key].includes(g)) toSave[key].push(g);
+    // Update local cache immediately
+    if (!textsConcordance[key]) textsConcordance[key] = [];
+    if (!textsConcordance[key].includes(g)) {
+      textsConcordance[key].push(g);
+      addTextsOptionToDropdowns(key, g);  // propagate to open dropdowns
+    }
+  }
+
+  if (Object.keys(toSave).length) {
+    fetch('/api/confirmed_glosses', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(toSave),
+      keepalive: true
+    }).catch(console.error);
+  }
+}
+
+function addTextsOptionToDropdowns(key, newGloss) {
+  // Add gloss to any currently-rendered dropdown whose column key matches
+  document.querySelectorAll('.fn-gloss-control').forEach(ctrl => {
+    const sid = ctrl.dataset.sid;
+    const col = parseInt(ctrl.dataset.col);
+    const s   = sentences.find(x => x.id === sid);
+    if (!s) return;
+    const stored2 = glosses[sid];
+    const {tokens: t2} = buildAlignment(s.words,
+      stored2 && typeof stored2 === 'object' ? stored2 : null);
+    const ctrlKey = FN_CODES.map(c => (t2[c]?.[col] || '')).join('|');
+    if (ctrlKey !== key) return;
+    const sel = ctrl.querySelector('.fn-gloss-select');
+    if (!sel || [...sel.options].some(o => o.value === newGloss)) return;
+    const plusOpt = [...sel.options].find(o => o.value === '__new__');
+    // Add under a 'Texts' optgroup if one exists, else create it
+    let tGroup = [...sel.querySelectorAll('optgroup')]
+      .find(g2 => g2.label === '📜 Texts');
+    if (!tGroup) {
+      tGroup = document.createElement('optgroup');
+      tGroup.label = '📜 Texts';
+      sel.insertBefore(tGroup, plusOpt || null);
+    }
+    const opt = document.createElement('option');
+    opt.value = newGloss; opt.textContent = newGloss;
+    tGroup.appendChild(opt);
+  });
+}
+
+function getTextsGlosses(tokens, colIdx) {
+  if (!Object.keys(textsConcordance).length) return {full: [], partial: []};
+  const key      = FN_CODES.map(c => (tokens[c]?.[colIdx] || '')).join('|');
+  const full     = textsConcordance[key] ? [...textsConcordance[key]] : [];
+  // Partial: keys sharing ≥ 2 non-empty forms with this column
+  const colForms = FN_CODES.map(c => tokens[c]?.[colIdx] || '');
+  const partial  = [];
+  for (const [tKey, tGlosses] of Object.entries(textsConcordance)) {
+    if (tKey === key) continue;
+    const tForms = tKey.split('|');
+    let matches = 0;
+    for (let i = 0; i < 5; i++) {
+      if (colForms[i] && colForms[i] === tForms[i]) matches++;
+    }
+    if (matches >= 2) {
+      for (const tg of tGlosses) {
+        if (!full.includes(tg) && !partial.includes(tg)) partial.push(tg);
+      }
+    }
+  }
+  return {full, partial};
+}
+
 // ── Abbreviation → grammar section links ─────────────────────
 let abbrevLinks = {};
 
@@ -1327,13 +1426,18 @@ function renderColGlossControl(words, tokens, sid, colIdx, currentGloss, editabl
   const key         = getColKey(words, tokens, colIdx);
   const concordSugg = concordance[key] ? [...concordance[key]] : [];
   const dictSugg    = getDictionaryGlosses(words, tokens, colIdx);
+  const textsSugg   = getTextsGlosses(tokens, colIdx);
 
-  // Filter dict suggestions to avoid duplicating concordance entries
+  // Filter to avoid duplicating across optgroups
   const dictFull    = dictSugg.full.filter(x => !concordSugg.includes(x));
   const dictPartial = dictSugg.partial.filter(x =>
     !concordSugg.includes(x) && !dictSugg.full.includes(x));
+  const textsFull   = textsSugg.full.filter(x =>
+    !concordSugg.includes(x) && !dictFull.includes(x) && !dictPartial.includes(x));
+  const textsPartial = textsSugg.partial.filter(x =>
+    !concordSugg.includes(x) && !dictFull.includes(x) && !dictPartial.includes(x) && !textsFull.includes(x));
 
-  const hasSuggestions = concordSugg.length || dictFull.length || dictPartial.length;
+  const hasSuggestions = concordSugg.length || dictFull.length || dictPartial.length || textsFull.length || textsPartial.length;
 
   if (!hasSuggestions) {
     // No suggestions — plain input
@@ -1342,7 +1446,7 @@ function renderColGlossControl(words, tokens, sid, colIdx, currentGloss, editabl
             <span class="tx-gloss-save-status" id="${statusId}"></span>`;
   }
 
-  const allKnown = [...concordSugg, ...dictFull, ...dictPartial];
+  const allKnown = [...concordSugg, ...dictFull, ...dictPartial, ...textsFull, ...textsPartial];
   const hasMatch = allKnown.includes(g);
   const emptyOpt = `<option value=""${!g ? ' selected':''}>—</option>`;
 
@@ -1367,6 +1471,20 @@ function renderColGlossControl(words, tokens, sid, colIdx, currentGloss, editabl
       `<option value="${s.replace(/"/g,'&quot;')}"${s===g?' selected':''}>~${s}</option>`
     ).join('');
     groupsHTML += `<optgroup label="📖 Dictionary (partial match)">${opts}</optgroup>`;
+  }
+
+  if (textsFull.length) {
+    const opts = textsFull.map(s =>
+      `<option value="${s.replace(/"/g,'&quot;')}"${s===g?' selected':''}>${s}</option>`
+    ).join('');
+    groupsHTML += `<optgroup label="📜 Texts">${opts}</optgroup>`;
+  }
+
+  if (textsPartial.length) {
+    const opts = textsPartial.map(s =>
+      `<option value="${s.replace(/"/g,'&quot;')}"${s===g?' selected':''}>~${s}</option>`
+    ).join('');
+    groupsHTML += `<optgroup label="📜 Texts (partial)">${opts}</optgroup>`;
   }
 
   const newOpt    = `<option value="__new__"${g && !hasMatch ? ' selected' : ''}>+ New</option>`;
@@ -1413,6 +1531,9 @@ async function toggleConfirmation(sid) {
       : 'Automatically glossed from previous examples, needs confirmation by the author';
     badge.classList.toggle('confirmed', newConf);
   }
+  // When confirming, propagate glosses to the texts concordance
+  if (newConf) await saveToTextsConcordance(sid);
+
   // Save to server
   try {
     await fetch(glossUrl(), {
@@ -1746,7 +1867,7 @@ function onAuthChange(loggedIn) {
 // ── Init ─────────────────────────────────────────────────────
 async function init() {
   bindLoginModal();
-  await Promise.all([checkAuth(), loadDictionary(), loadAbbrevLinks()]);
+  await Promise.all([checkAuth(), loadDictionary(), loadAbbrevLinks(), loadTextsConcordance()]);
 
   const hasSrc = isFieldnotes ? true : !!textKey;
   if (!hasSrc) {
