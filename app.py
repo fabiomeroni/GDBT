@@ -202,18 +202,26 @@ def build_fieldnotes_citation(group_index, sent_id, n):
             f'</div></div>')
 
 def build_citation(spec, n):
-    if spec.startswith('fieldnotes#'):
-        parts = spec.split('#', 2)
-        if len(parts) < 3:
-            return f'<span class="shortcode-error">Invalid fieldnotes cite: {spec}</span>'
-        try: idx = int(parts[1])
-        except ValueError:
-            return f'<span class="shortcode-error">Bad group index: {parts[1]}</span>'
-        return build_fieldnotes_citation(idx, parts[2].strip(), n)
-    elif '#' in spec:
-        filename, sent_id = spec.split('#', 1)
-        return build_narrative_citation(filename.strip(), sent_id.strip(), n)
-    return f'<span class="shortcode-error">Invalid cite spec: {spec}</span>'
+    """Dispatch {{cite: spec}} — all exceptions become inline error spans, never HTML."""
+    try:
+        if spec.startswith('fieldnotes#'):
+            parts = spec.split('#', 2)
+            if len(parts) < 3:
+                return f'<span class="shortcode-error">Invalid fieldnotes cite: {spec}</span>'
+            try:
+                idx = int(parts[1])
+            except ValueError:
+                return f'<span class="shortcode-error">Bad group index: {parts[1]}</span>'
+            return build_fieldnotes_citation(idx, parts[2].strip(), n)
+        elif '#' in spec:
+            filename, sent_id = spec.split('#', 1)
+            return build_narrative_citation(filename.strip(), sent_id.strip(), n)
+        return f'<span class="shortcode-error">Invalid cite spec: {spec}</span>'
+    except Exception as e:
+        import traceback as _tb
+        return (f'<details class="shortcode-error">'
+                f'<summary>Citation error: {e}</summary>'
+                f'<pre>{_tb.format_exc()}</pre></details>')
 
 #  SHORTCODE RESOLVERS
 # ══════════════════════════════════════════════════════════════
@@ -573,7 +581,11 @@ def get_grammar_html(section_id):
     if not os.path.exists(path):
         return jsonify({'error': f'Section not found: {section_id}'}), 404
     with open(path, encoding='utf-8') as f:
-        html = render_grammar(f.read())
+        source = f.read()
+    try:
+        html = render_grammar(source)
+    except Exception as e:
+        html = f'<div class="shortcode-error">Render error: {e}</div>'
     return jsonify({'html': html, 'id': section_id})
 
 
@@ -597,7 +609,10 @@ def save_grammar(section_id):
     path = _section_path(section_id)
     with open(path, 'w', encoding='utf-8') as f:
         f.write(source)
-    html = render_grammar(source)
+    try:
+        html = render_grammar(source)
+    except Exception as e:
+        html = f'<div class="shortcode-error">Render error: {e}</div>'
     return jsonify({'ok': True, 'html': html})
 
 
