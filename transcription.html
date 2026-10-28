@@ -168,7 +168,7 @@
 }
 .fn-form-cell  {
   font-family: 'EB Garamond', serif; font-size: 1.12rem;
-  padding: 2px 0; vertical-align: baseline; border: none;
+  padding: 2px 20px 2px 0; vertical-align: baseline; border: none;
 }
 .fn-form-cell.missing { color: #ccc; font-size: 0.95rem; }
 .fn-sep td  { border-top: 1px solid var(--border); padding: 0; height: 0; border-bottom: none; }
@@ -178,7 +178,111 @@
   color: var(--ink-light); padding: 5px 14px 3px 0;
   vertical-align: baseline; border: none; font-variant: normal;
 }
-.fn-gloss-input-cell { padding: 5px 0 3px; vertical-align: baseline; border: none; }
+.fn-gloss-input-cell { padding: 5px 20px 3px 0; vertical-align: baseline; border: none; }
+
+/* ── Hover tooltip ── */
+#tx-tooltip {
+  position: fixed; z-index: 9999; pointer-events: none;
+  opacity: 0; transition: opacity 0.08s ease; max-width: 300px;
+}
+#tx-tooltip.visible  { opacity: 1; }
+#tx-tooltip.interactive { pointer-events: auto; }
+
+/* Grammar link inside tooltip */
+.tt-grammar-link { margin-top: 6px; }
+.tt-grammar-link a {
+  font-family: 'Crimson Pro', serif; font-size: 0.8rem;
+  color: #c9a458; text-decoration: none;
+  border-bottom: 1px solid rgba(201,164,88,0.35);
+  transition: color 0.1s, border-color 0.1s;
+}
+.tt-grammar-link a:hover { color: #fdeec8; border-bottom-color: #fdeec8; }
+/* Author edit row for grammar link */
+.tt-grammar-edit {
+  margin-top: 6px; display: flex; gap: 4px; align-items: center;
+}
+.tt-link-input {
+  font-family: 'Source Code Pro', monospace; font-size: 0.72rem;
+  background: rgba(255,255,255,0.1); color: #f0dfc0;
+  border: 1px solid rgba(201,164,88,0.3); border-radius: 2px;
+  padding: 2px 6px; outline: none; flex: 1; min-width: 0;
+  transition: border-color 0.12s;
+}
+.tt-link-input:focus { border-color: rgba(201,164,88,0.7); }
+.tt-link-input::placeholder { color: rgba(201,164,88,0.4); }
+.tt-link-save {
+  font-family: 'Crimson Pro', serif; font-size: 0.75rem;
+  background: rgba(201,164,88,0.2); color: #c9a458;
+  border: 1px solid rgba(201,164,88,0.3); border-radius: 2px;
+  padding: 2px 8px 3px; cursor: pointer; white-space: nowrap;
+  transition: background 0.12s;
+}
+.tt-link-save:hover { background: rgba(201,164,88,0.35); }
+#tx-tooltip .tt-inner {
+  background: #1c0f06; color: #f0dfc0;
+  border-radius: 5px; padding: 9px 14px 10px;
+  box-shadow: 0 4px 18px rgba(0,0,0,.38), 0 0 0 1px rgba(201,164,88,.25);
+  font-family: 'Crimson Pro', serif; font-size: 0.9rem; line-height: 1.5;
+}
+#tx-tooltip .tt-hw   { font-family: 'EB Garamond', serif; font-size: 1.1rem; font-weight: 500; color: #fdeec8; }
+#tx-tooltip .tt-pos  { font-style: italic; font-size: 0.78rem; color: #c9a458; margin-left: 4px; }
+#tx-tooltip .tt-def  { color: #e8d0a8; margin-top: 3px; font-size: 0.86rem; }
+#tx-tooltip .tt-desc { color: #c0a880; margin-top: 3px; font-size: 0.8rem; line-height: 1.4; }
+#tx-tooltip .tt-equivs { margin-top: 5px; display: flex; flex-wrap: wrap; gap: 4px; }
+#tx-tooltip .tt-eq { font-family: 'Source Code Pro', monospace; font-size: 0.7rem; background: rgba(255,255,255,.09); border-radius: 2px; padding: 1px 5px; }
+#tx-tooltip .tt-eq b { font-weight: 600; }
+
+/* Hoverable form cells and gloss cells */
+.fn-form-cell[data-form]:not(.missing) { cursor: default; }
+.fn-form-cell[data-form]:not(.missing):hover { text-decoration: underline dotted currentColor; }
+.fn-gloss-cell { cursor: default; }
+
+/* ── Gloss status badge (? / ✓) ── */
+.gloss-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px; min-width: 16px; border-radius: 50%;
+  background: #1c0f06; color: white;
+  font-size: 0.65rem; font-weight: 700; line-height: 1;
+  cursor: pointer; user-select: none;
+  transition: background 0.15s, transform 0.1s;
+  position: relative; margin-right: 7px;
+}
+.gloss-badge:hover { background: #3a2010; transform: scale(1.1); }
+.gloss-badge.confirmed { background: #267040; }
+.gloss-badge.confirmed:hover { background: #1a5030; }
+.gloss-badge.no-click { cursor: default; }
+/* CSS tooltip */
+.gloss-badge::after {
+  content: attr(data-tooltip);
+  position: absolute; left: 120%; top: 50%; transform: translateY(-50%);
+  background: #1c0f06; color: #f0dfc0;
+  font-family: 'Crimson Pro', serif; font-size: 0.78rem; font-weight: 400;
+  white-space: nowrap; padding: 4px 10px 5px;
+  border-radius: 3px; box-shadow: 0 2px 10px rgba(0,0,0,.35);
+  pointer-events: none; opacity: 0; transition: opacity 0.12s;
+  z-index: 200; font-variant: normal; letter-spacing: 0;
+}
+.gloss-badge:hover::after { opacity: 1; }
+.gloss-badge-empty { display: inline-block; width: 16px; height: 16px; min-width: 16px; margin-right: 7px; }
+
+/* ── Gloss concordance dropdown ── */
+.fn-gloss-control { display: inline-flex; align-items: center; gap: 3px; }
+.fn-gloss-select {
+  font-family: 'Source Code Pro', monospace; font-size: 0.74rem;
+  border: 1px solid var(--border); border-radius: 2px;
+  padding: 1px 4px; background: white; color: var(--ink);
+  outline: none; cursor: pointer; max-width: 13ch;
+  transition: border-color 0.12s;
+}
+.fn-gloss-select:focus { border-color: var(--gold); }
+.fn-gloss-new-input {
+  font-family: 'Source Code Pro', monospace; font-size: 0.74rem;
+  border: none; border-bottom: 1.5px dashed var(--border);
+  background: transparent; outline: none;
+  padding: 1px 0; width: 9ch;
+  transition: border-color 0.15s;
+}
+.fn-gloss-new-input:focus { border-bottom-color: var(--gold); }
 
 /* Per-column gloss input */
 .fn-col-gloss {
@@ -258,6 +362,11 @@
       <button class="modal-btn primary" id="login-submit">Log in</button>
     </div>
   </div>
+</div>
+
+<!-- ── Hover tooltip ── -->
+<div id="tx-tooltip" role="tooltip" aria-hidden="true">
+  <div class="tt-inner"></div>
 </div>
 
 <nav class="topnav">
@@ -382,7 +491,9 @@ function renderAlignedTable(words, tokens, colGlosses, nCols, sid, editable) {
     const cells = Array.from({length: nCols}, (_, i) => {
       const form = tokens[w.lang]?.[i] || '';
       return `<td class="fn-form-cell${!form ? ' missing' : ''}"
-                  style="color:${col};">${form || '—'}</td>`;
+                  style="color:${col};"
+                  data-lang="${w.lang}"
+                  data-form="${form || '—'}">${form || '—'}</td>`;
     }).join('');
     return `<tr>
       <td class="fn-lang-abbr" style="color:${col};">${FN_ABBRS[w.lang]}</td>
@@ -392,23 +503,30 @@ function renderAlignedTable(words, tokens, colGlosses, nCols, sid, editable) {
 
   const sepCells = `<td></td>${Array(nCols).fill('<td></td>').join('')}`;
   const glossCells = Array.from({length: nCols}, (_, i) => {
-    const g = (colGlosses[i] || '').replace(/"/g, '&quot;');
-    if (editable) {
-      return `<td class="fn-gloss-input-cell">
-        <input class="fn-col-gloss" data-sid="${sid}" data-col="${i}"
-               value="${g}" placeholder="…" spellcheck="false">
-      </td>`;
-    }
-    return `<td class="fn-gloss-input-cell">
-      <span class="${g ? 'tx-gloss-text' : 'tx-gloss-text empty'}">${g || '—'}</span>
-    </td>`;
+    const ctrl = renderColGlossControl(words, tokens, sid, i, colGlosses[i], editable);
+    const g    = (colGlosses[i] || '').replace(/"/g, '&quot;');
+    return `<td class="fn-gloss-input-cell fn-gloss-cell" data-gloss="${g}">${ctrl}</td>`;
   }).join('');
+
+  // Badge: ? = has glosses but unconfirmed; ✓ = confirmed; empty = no glosses
+  const stored2    = glosses[sid];
+  const hasAnyGloss = colGlosses.some(g => g);
+  const confirmed  = stored2?.confirmed === true;
+  const badgeEl = hasAnyGloss
+    ? `<span class="gloss-badge${confirmed ? ' confirmed' : ''}${editable ? '' : ' no-click'}"
+             id="gbadge-${sid}"
+             data-sid="${sid}"
+             data-tooltip="${confirmed
+               ? 'Gloss confirmed by the author'
+               : 'Automatically glossed from previous examples, needs confirmation by the author'
+             }">${confirmed ? '✓' : '?'}</span>`
+    : `<span class="gloss-badge-empty" id="gbadge-${sid}"></span>`;
 
   return `<table class="fn-il-table" id="fn-table-${sid}">
     ${langRows}
     <tr class="fn-sep">${sepCells}</tr>
     <tr>
-      <td class="fn-gloss-label-cell">gloss</td>
+      <td class="fn-gloss-label-cell" style="white-space:nowrap;">${badgeEl}gloss</td>
       ${glossCells}
     </tr>
   </table>`;
@@ -528,7 +646,8 @@ function showAlignmentEditor(sid, btn) {
     btn.style.display = '';
   };
   window.saveAlignment = async (s) => {
-    const newData = {tokens: editTokens, glosses: editGlosses};
+    // Editing the alignment resets confirmation
+    const newData = {tokens: editTokens, glosses: editGlosses, confirmed: false};
     glosses[s] = newData;
     try {
       await fetch(`/api/transcription/${encodeURIComponent(glossKey)}/glosses`, {
@@ -543,7 +662,9 @@ function showAlignmentEditor(sid, btn) {
       sentences.find(x => x.id === s).words,
       editTokens, editGlosses, editNCols, s, true
     );
-    bindColGlossInputs();
+    buildConcordanceFromGlosses();
+    bindColGlossFull();
+    bindHoverTooltips();
     document.getElementById('fn-editor-' + s).style.display = 'none';
     display.style.display = '';
     btn.style.display = '';
@@ -555,26 +676,540 @@ function showAlignmentEditor(sid, btn) {
   renderEditor();
 }
 
-function bindColGlossInputs() {
+// ── Dictionary entries (loaded once for gloss lookup) ────────
+let dictEntries = []; // [{id, gloss, forms: {num, drg, kro, olr, lkn}}]
+
+async function loadDictionary() {
+  try {
+    const r = await fetch('/api/dictionary/entries');
+    if (!r.ok) return;
+    const d = await r.json();
+    dictEntries = d.entries || [];
+    buildDictLookups();
+  } catch(e) { /* dictionary lookup unavailable */ }
+}
+
+function getDictionaryGlosses(words, tokens, colIdx) {
+  if (!dictEntries.length) return { full: [], partial: [] };
+  const full    = new Set();
+  const partial = new Set();
+
+  FN_CODES.forEach(langCode => {
+    const raw   = (tokens[langCode]?.[colIdx] || '').trim();
+    if (!raw || raw === '—') return;
+    // Strip morpheme boundary markers for comparison
+    const clean = raw.replace(/^[-=]+|[-=.,;]+$/g, '').toLowerCase();
+
+    dictEntries.forEach(entry => {
+      const dictRaw   = (entry.forms[langCode] || '').trim();
+      if (!dictRaw) return;
+      const dictClean = dictRaw.replace(/^[-=]+|[-=.,;]+$/g, '').toLowerCase();
+      if (!dictClean || !entry.gloss) return;
+
+      if (dictClean === clean || dictRaw.toLowerCase() === raw.toLowerCase()) {
+        full.add(entry.gloss);
+      } else if (
+        clean.length >= 2 && dictClean.length >= 2 &&
+        (clean.includes(dictClean) || dictClean.includes(clean))
+      ) {
+        partial.add(entry.gloss);
+      }
+    });
+  });
+
+  // Remove from partial anything already in full
+  full.forEach(g => partial.delete(g));
+  return { full: [...full], partial: [...partial] };
+}
+
+// ── Abbreviation legend (Leipzig + DBT-specific) ─────────────
+const ABBREV_LEGEND = {
+  // Person
+  '1SG':  {full:'1st person singular',      desc:'The speaker alone.'},
+  '2SG':  {full:'2nd person singular',      desc:'The addressee alone.'},
+  '3SG':  {full:'3rd person singular',      desc:'A third individual.'},
+  '1PL':  {full:'1st person plural',        desc:'Speaker and others (inclusive or exclusive depending on the language).'},
+  '2PL':  {full:'2nd person plural',        desc:'Multiple addressees.'},
+  '3PL':  {full:'3rd person plural',        desc:'Third person, multiple referents.'},
+  'INCL': {full:'Inclusive',                desc:'Includes the addressee in the reference group.'},
+  'EXCL': {full:'Exclusive',                desc:'Excludes the addressee from the reference group.'},
+  '1INCL':{full:'1st person inclusive',     desc:'Speaker + addressee (+ others).'},
+  '1EXCL':{full:'1st person exclusive',     desc:'Speaker + others, not the addressee.'},
+  // Number
+  'SG':   {full:'Singular',                 desc:'Denotes a single entity.'},
+  'PL':   {full:'Plural',                   desc:'Denotes more than one entity.'},
+  'DU':   {full:'Dual',                     desc:'Denotes exactly two entities.'},
+  'TRI':  {full:'Trial',                    desc:'Denotes exactly three entities (rare).'},
+  // Tense/Aspect/Mood
+  'IPFV': {full:'Imperfective',             desc:'Ongoing, repeated, or incomplete event.'},
+  'PFV':  {full:'Perfective',               desc:'Completed, bounded event.'},
+  'PRF':  {full:'Perfect',                  desc:'Resulting state relevant to the present.'},
+  'IPRF': {full:'Imperfect',                desc:'Ongoing past situation.'},
+  'STA':  {full:'Stative',                  desc:'Marks a state or property rather than an event or action.'},
+  'STAT': {full:'Stative',                  desc:'Marks a state or property rather than an event or action.'},
+  'IRR':  {full:'Irrealis',                 desc:'Non-actual, hypothetical, or future event.'},
+  'REAL': {full:'Realis',                   desc:'Actual, observed event.'},
+  'SBJV': {full:'Subjunctive',              desc:'Expresses wishes, hypotheticals, or subordinate moods.'},
+  // Voice / valency
+  'CAUS': {full:'Causative',                desc:'The subject causes another entity to perform the action.'},
+  'PASS': {full:'Passive',                  desc:'The subject is the patient of the action.'},
+  'REFL': {full:'Reflexive',                desc:'The subject acts on itself.'},
+  'RECIP':{full:'Reciprocal',               desc:'Two subjects act on each other simultaneously.'},
+  'APPL': {full:'Applicative',              desc:'Adds an extra argument to the verb.'},
+  // Grammatical categories
+  'NEG':  {full:'Negation',                 desc:'Marks negation of the predicate.'},
+  'ART':  {full:'Article',                  desc:'Nominal article or determiner.'},
+  'DET':  {full:'Determiner',               desc:'Nominal determiner.'},
+  'POSS': {full:'Possessive',               desc:'Marks a possessive relationship.'},
+  'GEN':  {full:'Genitive',                 desc:'Marks a genitive or possessive relation.'},
+  'ACC':  {full:'Accusative',               desc:'Marks the direct object.'},
+  'DAT':  {full:'Dative',                   desc:'Marks the indirect object or recipient.'},
+  'LOC':  {full:'Locative',                 desc:'Marks location or place.'},
+  'DIR':  {full:'Directional',              desc:'Marks direction of movement.'},
+  'COM':  {full:'Comitative',               desc:'Marks accompaniment.'},
+  'INS':  {full:'Instrumental',             desc:'Marks instrument or means.'},
+  'ABL':  {full:'Ablative',                 desc:'Marks source or origin.'},
+  'TOP':  {full:'Topic',                    desc:'Marks the topic of the sentence.'},
+  'FOC':  {full:'Focus',                    desc:'Marks the focused constituent.'},
+  'EMPH': {full:'Emphatic',                 desc:'Emphatic or contrastive marker.'},
+  'Q':    {full:'Question marker',           desc:'Marks an interrogative sentence.'},
+  'COP':  {full:'Copula',                   desc:'Links subject and predicate.'},
+  'PREP': {full:'Preposition',              desc:'Spatial or relational preposition.'},
+  'COMP': {full:'Complementizer',           desc:'Introduces a complement clause.'},
+  'REL':  {full:'Relativizer',             desc:'Introduces a relative clause.'},
+  'CONJ': {full:'Conjunction',              desc:'Coordinates clauses or phrases.'},
+  'DEM':  {full:'Demonstrative',            desc:'Deictic pronoun or determiner.'},
+  'PROX': {full:'Proximal',                 desc:'Refers to something near the speaker.'},
+  'DIST': {full:'Distal',                   desc:'Refers to something far from the speaker.'},
+  'PRO':  {full:'Pronoun',                  desc:'Personal pronoun.'},
+  // DBT / Oceanic specific
+  'NONDUM\u2081': {full:'Pre-verbal negator (NONDUM)', desc:'First element of the discontinuous negation construction. Occupies pre-verbal position.'},
+  'NONDUM\u2082': {full:'Post-verbal negator (NONDUM)',desc:'Second element of the discontinuous negation construction. Follows the verbal complex.'},
+  'NONDUM':{full:'Negator (nondum-type)',    desc:'Element of the discontinuous negation construction. Semantically related to Latin nondum "not yet".'},
+  'POSS:1INCL.PL': {full:'1st person inclusive plural possessive', desc:'Possessive clitic or suffix marking the 1st person inclusive plural possessor.'},
+};
+
+// ── Abbreviation → grammar section links ─────────────────────
+let abbrevLinks = {};
+
+async function loadAbbrevLinks() {
+  try {
+    const r = await fetch('/api/abbrev_links');
+    if (r.ok) abbrevLinks = await r.json();
+  } catch(e) {}
+}
+
+async function saveAbbrevLink(abbr, link) {
+  try {
+    await fetch('/api/abbrev_links', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({abbr, link})
+    });
+    abbrevLinks[abbr] = link;
+    if (!link) delete abbrevLinks[abbr];
+  } catch(e) { console.error(e); }
+}
+
+// ── Dictionary form/gloss lookup maps ────────────────────────
+let dictByGloss = {}; // short gloss (lowercase) → entry
+let dictByForm  = {}; // "langCode:form(lowercase)" → entry
+
+function buildDictLookups() {
+  dictByGloss = {};
+  dictByForm  = {};
+  dictEntries.forEach(entry => {
+    if (entry.gloss) dictByGloss[entry.gloss.toLowerCase()] = entry;
+    Object.entries(entry.forms || {}).forEach(([lang, form]) => {
+      if (!form || form === '—') return;
+      const key   = `${lang}:${form.toLowerCase()}`;
+      const clean = form.replace(/^[-=]+|[-=.,;]+$/g,'').toLowerCase();
+      dictByForm[key] = entry;
+      if (clean !== form.toLowerCase()) dictByForm[`${lang}:${clean}`] = entry;
+    });
+  });
+}
+
+// ── Tooltip helpers ───────────────────────────────────────────
+const _ABBRS5  = {num:'Num',drg:'Drg',kro:'Kro',olr:'Olr',lkn:'Lkn'};
+const _COLORS5 = {num:'#2e5c8a',drg:'#c07820',kro:'#922810',olr:'#267040',lkn:'#5c2878'};
+
+function _dictTooltipHTML(entry) {
+  const equivs = FN_CODES.map(c =>
+    `<span class="tt-eq"><b style="color:${_COLORS5[c]};">${_ABBRS5[c]}</b> ${entry.forms?.[c] || '—'}</span>`
+  ).join('');
+  return `<span class="tt-hw">${entry.gloss}</span>
+    <div class="tt-equivs">${equivs}</div>`;
+}
+
+function _abbrTooltipHTML(abbr, info) {
+  const link = abbrevLinks[abbr] || '';
+  const linkRow = link
+    ? `<div class="tt-grammar-link"><a href="${link}">📐 See in grammar →</a></div>`
+    : '';
+  const editRow = isLoggedIn
+    ? `<div class="tt-grammar-edit">
+         <input class="tt-link-input" data-abbr="${abbr}"
+                value="${link.replace(/"/g,'&quot;')}"
+                placeholder="grammar.html#section">
+         <button class="tt-link-save" data-abbr="${abbr}">Save</button>
+       </div>`
+    : '';
+  return `<span class="tt-hw">${abbr}</span>
+    <div class="tt-def">${info.full}</div>
+    ${linkRow}${editRow}`;
+}
+
+let _hideTimer = null;
+
+function _bindTooltipInteraction() {
+  const t = document.getElementById('tx-tooltip');
+  // When logged in, allow mouse to enter tooltip to interact with the edit row
+  t.classList.toggle('interactive', isLoggedIn);
+  if (isLoggedIn) {
+    t.addEventListener('mouseenter', () => clearTimeout(_hideTimer));
+    t.addEventListener('mouseleave', hideTooltip);
+    // Save button handler (delegated)
+    t.addEventListener('click', async e => {
+      const btn = e.target.closest('.tt-link-save');
+      if (!btn) return;
+      const abbr  = btn.dataset.abbr;
+      const input = t.querySelector(`.tt-link-input[data-abbr="${abbr}"]`);
+      const link  = input ? input.value.trim() : '';
+      await saveAbbrevLink(abbr, link);
+      // Update the link row immediately
+      const linkRow = t.querySelector('.tt-grammar-link');
+      if (link) {
+        const html = `<a href="${link}">📐 See in grammar →</a>`;
+        if (linkRow) linkRow.innerHTML = html;
+        else input.closest('.tt-inner').insertAdjacentHTML(
+          'afterbegin',
+          `<div class="tt-grammar-link">${html}</div>`
+        );
+      } else if (linkRow) {
+        linkRow.remove();
+      }
+      btn.textContent = '✓';
+      setTimeout(() => { btn.textContent = 'Save'; }, 1200);
+    });
+  }
+}
+
+function _positionTooltip(el) {
+  const t    = document.getElementById('tx-tooltip');
+  const rect = el.getBoundingClientRect();
+  const tw   = Math.min(300, window.innerWidth - 16);
+  let left   = rect.left + rect.width / 2 - 24;
+  if (left + tw > window.innerWidth - 8) left = window.innerWidth - tw - 8;
+  if (left < 8) left = 8;
+  const ttH  = t.offsetHeight || 80;
+  t.style.left = left + 'px';
+  t.style.top  = (rect.top - ttH - 8 < 8)
+    ? (rect.bottom + 8 + window.scrollY) + 'px'
+    : (rect.top - ttH - 8 + window.scrollY) + 'px';
+}
+
+function showFormTooltip(el) {
+  const lang = el.dataset.lang;
+  const form = el.dataset.form;
+  if (!lang || !form || form === '—') return;
+  const clean  = form.replace(/^[-=]+|[-=.,;]+$/g,'').toLowerCase();
+  const entry  = dictByForm[`${lang}:${form.toLowerCase()}`]
+              || dictByForm[`${lang}:${clean}`];
+  if (!entry) return;
+  const t = document.getElementById('tx-tooltip');
+  t.querySelector('.tt-inner').innerHTML = _dictTooltipHTML(entry);
+  t.classList.add('visible');
+  _positionTooltip(el);
+}
+
+function showGlossTooltip(el) {
+  // Read current gloss from whatever control is in the cell
+  let g = '';
+  const sel  = el.querySelector('.fn-gloss-select');
+  const inp  = el.querySelector('.fn-col-gloss');
+  const span = el.querySelector('.tx-gloss-text:not(.empty)');
+  if      (sel  && sel.value && sel.value !== '__new__') g = sel.value;
+  else if (inp)                                          g = inp.value;
+  else if (span)                                         g = span.textContent;
+  else                                                   g = el.dataset.gloss || '';
+  g = g.replace(/^~/, '').trim();
+  if (!g || g === '—') return;
+
+  // 1. Dictionary entry?
+  const entry = dictByGloss[g.toLowerCase()];
+  if (entry) {
+    const t = document.getElementById('tx-tooltip');
+    t.querySelector('.tt-inner').innerHTML = _dictTooltipHTML(entry);
+    t.classList.add('visible');
+    _positionTooltip(el);
+    return;
+  }
+  // 2. Abbreviation legend?
+  const info = ABBREV_LEGEND[g] || ABBREV_LEGEND[g.toUpperCase()];
+  if (info) {
+    const t = document.getElementById('tx-tooltip');
+    t.querySelector('.tt-inner').innerHTML = _abbrTooltipHTML(g, info);
+    t.classList.add('visible');
+    _positionTooltip(el);
+  }
+}
+
+function hideTooltip() {
+  clearTimeout(_hideTimer);
+  _hideTimer = setTimeout(() =>
+    document.getElementById('tx-tooltip').classList.remove('visible'), 80);
+}
+
+function bindHoverTooltips() {
+  // Form cells (language rows)
+  document.querySelectorAll('.fn-form-cell[data-form]').forEach(cell => {
+    cell.addEventListener('mouseenter', () => { clearTimeout(_hideTimer); showFormTooltip(cell); });
+    cell.addEventListener('mouseleave', hideTooltip);
+  });
+  // Gloss cells (gloss row)
+  document.querySelectorAll('.fn-gloss-cell').forEach(cell => {
+    cell.addEventListener('mouseenter', () => { clearTimeout(_hideTimer); showGlossTooltip(cell); });
+    cell.addEventListener('mouseleave', hideTooltip);
+  });
+}
+
+// ── Concordance: colKey → Set of glosses ─────────────────────
+let concordance = {};
+
+function getColKey(words, tokens, colIdx) {
+  return FN_CODES.map(c => (tokens[c]?.[colIdx] || '')).join('|');
+}
+
+function buildConcordanceFromGlosses() {
+  concordance = {};
+  sentences.forEach(s => {
+    if (!s.is_comparative) return;
+    const stored = glosses[s.id];
+    if (!stored || typeof stored !== 'object' || !stored.tokens || !stored.glosses) return;
+    const {tokens, glosses: cg} = stored;
+    cg.forEach((g, i) => {
+      if (!g) return;
+      const key = getColKey(s.words, tokens, i);
+      if (!concordance[key]) concordance[key] = new Set();
+      concordance[key].add(g);
+    });
+  });
+}
+
+function renderColGlossControl(words, tokens, sid, colIdx, currentGloss, editable) {
+  const g        = currentGloss || '';
+  const statusId = `gstatus-${sid}-${colIdx}`;
+
+  if (!editable) {
+    return `<span class="${g ? 'tx-gloss-text' : 'tx-gloss-text empty'}">${g || '—'}</span>`;
+  }
+
+  const key         = getColKey(words, tokens, colIdx);
+  const concordSugg = concordance[key] ? [...concordance[key]] : [];
+  const dictSugg    = getDictionaryGlosses(words, tokens, colIdx);
+
+  // Filter dict suggestions to avoid duplicating concordance entries
+  const dictFull    = dictSugg.full.filter(x => !concordSugg.includes(x));
+  const dictPartial = dictSugg.partial.filter(x =>
+    !concordSugg.includes(x) && !dictSugg.full.includes(x));
+
+  const hasSuggestions = concordSugg.length || dictFull.length || dictPartial.length;
+
+  if (!hasSuggestions) {
+    // No suggestions — plain input
+    return `<input class="fn-col-gloss" data-sid="${sid}" data-col="${colIdx}"
+                   value="${g.replace(/"/g,'&quot;')}" placeholder="…" spellcheck="false">
+            <span class="tx-gloss-save-status" id="${statusId}"></span>`;
+  }
+
+  const allKnown = [...concordSugg, ...dictFull, ...dictPartial];
+  const hasMatch = allKnown.includes(g);
+  const emptyOpt = `<option value=""${!g ? ' selected':''}>—</option>`;
+
+  let groupsHTML = '';
+
+  if (concordSugg.length) {
+    const opts = concordSugg.map(s =>
+      `<option value="${s.replace(/"/g,'&quot;')}"${s===g?' selected':''}>${s}</option>`
+    ).join('');
+    groupsHTML += `<optgroup label="Previous glosses">${opts}</optgroup>`;
+  }
+
+  if (dictFull.length) {
+    const opts = dictFull.map(s =>
+      `<option value="${s.replace(/"/g,'&quot;')}"${s===g?' selected':''}>${s}</option>`
+    ).join('');
+    groupsHTML += `<optgroup label="📖 Dictionary">${opts}</optgroup>`;
+  }
+
+  if (dictPartial.length) {
+    const opts = dictPartial.map(s =>
+      `<option value="${s.replace(/"/g,'&quot;')}"${s===g?' selected':''}>~${s}</option>`
+    ).join('');
+    groupsHTML += `<optgroup label="📖 Dictionary (partial match)">${opts}</optgroup>`;
+  }
+
+  const newOpt    = `<option value="__new__"${g && !hasMatch ? ' selected' : ''}>+ New</option>`;
+  const newHidden = g && !hasMatch ? '' : 'display:none;';
+
+  return `<div class="fn-gloss-control" data-sid="${sid}" data-col="${colIdx}">
+    <select class="fn-gloss-select">${emptyOpt}${groupsHTML}${newOpt}</select>
+    <input  class="fn-gloss-new-input" style="${newHidden}"
+            value="${(g && !hasMatch ? g : '').replace(/"/g,'&quot;')}"
+            placeholder="New gloss…" spellcheck="false">
+    <span class="tx-gloss-save-status" id="${statusId}"></span>
+  </div>`;
+}
+
+// ── Badge: confirmation toggle ────────────────────────────────
+function updateBadge(sid, colGlosses) {
+  const badge = document.getElementById('gbadge-' + sid);
+  if (!badge) return;
+  const hasGloss  = (colGlosses || []).some(g => g);
+  const confirmed = glosses[sid]?.confirmed === true;
+  if (!hasGloss) {
+    badge.className   = 'gloss-badge-empty';
+    badge.textContent = '';
+    return;
+  }
+  badge.textContent = confirmed ? '✓' : '?';
+  badge.className   = `gloss-badge${confirmed ? ' confirmed' : ''}${isLoggedIn ? '' : ' no-click'}`;
+  badge.dataset.tooltip = confirmed
+    ? 'Gloss confirmed by the author'
+    : 'Automatically glossed from previous examples, needs confirmation by the author';
+}
+
+async function toggleConfirmation(sid) {
+  const stored = glosses[sid];
+  if (!stored || typeof stored !== 'object') return;
+  const newConf  = !stored.confirmed;
+  glosses[sid]   = {...stored, confirmed: newConf};
+  // Update badge appearance immediately
+  const badge = document.getElementById('gbadge-' + sid);
+  if (badge) {
+    badge.textContent    = newConf ? '✓' : '?';
+    badge.dataset.tooltip = newConf
+      ? 'Gloss confirmed by the author'
+      : 'Automatically glossed from previous examples, needs confirmation by the author';
+    badge.classList.toggle('confirmed', newConf);
+  }
+  // Save to server
+  try {
+    await fetch(`/api/transcription/${encodeURIComponent(glossKey)}/glosses`, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({sentence_id: sid, gloss: glosses[sid]})
+    });
+  } catch(e) { console.error(e); }
+}
+
+async function saveColGloss(sid, colIdx, value, statusEl) {
+  const s = sentences.find(x => x.id === sid);
+  if (!s) return;
+  const stored   = glosses[sid];
+  const {tokens, colGlosses} = buildAlignment(s.words,
+    stored && typeof stored === 'object' ? stored : null);
+  colGlosses[colIdx] = value;
+  // Changing a gloss resets confirmation — author must re-confirm
+  const newData = {tokens, glosses: colGlosses, confirmed: false};
+  glosses[sid]  = newData;
+  updateBadge(sid, colGlosses);
+
+  // Update concordance and propagate new suggestion to matching dropdowns
+  if (value) {
+    const key = getColKey(s.words, tokens, colIdx);
+    if (!concordance[key]) concordance[key] = new Set();
+    if (!concordance[key].has(value)) {
+      concordance[key].add(value);
+      addOptionToMatchingDropdowns(key, value);
+    }
+  }
+
+  try {
+    await fetch(`/api/transcription/${encodeURIComponent(glossKey)}/glosses`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({sentence_id: sid, gloss: newData})
+    });
+    if (statusEl) {
+      statusEl.textContent = '✓ saved';
+      statusEl.classList.add('visible');
+      setTimeout(() => statusEl.classList.remove('visible'), 1200);
+    }
+  } catch(e) { console.error(e); }
+}
+
+function addOptionToMatchingDropdowns(key, newGloss) {
+  // Add the new gloss option to any dropdown whose column matches this key
+  document.querySelectorAll('.fn-gloss-control').forEach(ctrl => {
+    const sid    = ctrl.dataset.sid;
+    const col    = parseInt(ctrl.dataset.col);
+    const s      = sentences.find(x => x.id === sid);
+    if (!s) return;
+    const stored = glosses[sid];
+    const {tokens} = buildAlignment(s.words,
+      stored && typeof stored === 'object' ? stored : null);
+    if (getColKey(s.words, tokens, col) !== key) return;
+    const sel = ctrl.querySelector('.fn-gloss-select');
+    if (!sel) return;
+    // Check if option already exists
+    if ([...sel.options].some(o => o.value === newGloss)) return;
+    const newOpt = document.createElement('option');
+    newOpt.value = newGloss;
+    newOpt.textContent = newGloss;
+    // Insert before the "+ New" option
+    const plusOpt = [...sel.options].find(o => o.value === '__new__');
+    sel.insertBefore(newOpt, plusOpt || null);
+  });
+}
+
+function bindColGlossFull() {
+  // Dropdowns (concordance suggestions)
+  document.querySelectorAll('.fn-gloss-control').forEach(ctrl => {
+    const sid    = ctrl.dataset.sid;
+    const col    = parseInt(ctrl.dataset.col);
+    const sel    = ctrl.querySelector('.fn-gloss-select');
+    const inp    = ctrl.querySelector('.fn-gloss-new-input');
+    const status = ctrl.querySelector('.tx-gloss-save-status');
+
+    sel.addEventListener('change', async () => {
+      if (sel.value === '__new__') {
+        inp.style.display = ''; inp.focus();
+      } else {
+        inp.style.display = 'none';
+        await saveColGloss(sid, col, sel.value, status);
+      }
+    });
+    const saveNew = async () => {
+      const v = inp.value.trim();
+      if (!v) return;
+      await saveColGloss(sid, col, v, status);
+      // Switch back to select showing new value
+      const opt = document.createElement('option');
+      opt.value = v; opt.textContent = v; opt.selected = true;
+      const plusOpt = [...sel.options].find(o => o.value === '__new__');
+      sel.insertBefore(opt, plusOpt || null);
+      inp.style.display = 'none';
+      sel.value = v;
+    };
+    inp.addEventListener('blur', saveNew);
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); saveNew(); }});
+  });
+
+  // Confirmation badges — clickable only when logged in
+  document.querySelectorAll('.gloss-badge:not(.no-click)').forEach(badge => {
+    badge.addEventListener('click', () => toggleConfirmation(badge.dataset.sid));
+  });
+
+  // Plain inputs (no prior concordance entry)
   document.querySelectorAll('.fn-col-gloss').forEach(inp => {
+    const sid = inp.dataset.sid;
+    const col = parseInt(inp.dataset.col);
+    const status = document.getElementById(`gstatus-${sid}-${col}`);
     inp.addEventListener('input', () => {
-      const sid = inp.dataset.sid;
-      const col = parseInt(inp.dataset.col);
-      // Update local glosses cache and debounce-save
-      const stored = glosses[sid];
-      const {tokens, colGlosses, nCols} = buildAlignment(
-        sentences.find(s => s.id === sid)?.words || [], stored
+      clearTimeout(saveTimers[`${sid}_c${col}`]);
+      saveTimers[`${sid}_c${col}`] = setTimeout(
+        () => saveColGloss(sid, col, inp.value, status), 600
       );
-      colGlosses[col] = inp.value;
-      clearTimeout(saveTimers[sid + '_g']);
-      saveTimers[sid + '_g'] = setTimeout(async () => {
-        glosses[sid] = {tokens, glosses: colGlosses};
-        await fetch(`/api/transcription/${encodeURIComponent(glossKey)}/glosses`, {
-          method: 'POST',
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({sentence_id: sid, gloss: {tokens, glosses: colGlosses}})
-        });
-      }, 600);
     });
   });
 }
@@ -715,7 +1350,7 @@ function render(data) {
       });
     });
     // Bind per-column gloss inputs (comparative / fieldnotes)
-    bindColGlossInputs();
+    bindColGlossFull();
   }
 
   bindScrollspy();
@@ -736,7 +1371,12 @@ function onAuthChange(loggedIn) {
     display.innerHTML = renderAlignedTable(s.words, tokens, colGlosses, nCols, sid, loggedIn);
     const editBtn = phrase.querySelector('.fn-edit-btn');
     if (editBtn) editBtn.style.display = loggedIn ? '' : 'none';
-    if (loggedIn) bindColGlossInputs();
+    // Update badge clickability
+    document.querySelectorAll('.gloss-badge').forEach(b => {
+      b.classList.toggle('no-click', !loggedIn);
+    });
+    document.getElementById('tx-tooltip').classList.toggle('interactive', loggedIn);
+    if (loggedIn) { buildConcordanceFromGlosses(); bindColGlossFull(); }
   });
 
   // Re-render editable gloss inputs for Case B phrases (single-line)
@@ -782,7 +1422,7 @@ function onAuthChange(loggedIn) {
 // ── Init ─────────────────────────────────────────────────────
 async function init() {
   bindLoginModal();
-  await checkAuth();
+  await Promise.all([checkAuth(), loadDictionary(), loadAbbrevLinks()]);
 
   const hasSrc = isFieldnotes ? true : !!textKey;
   if (!hasSrc) {
@@ -804,7 +1444,10 @@ async function init() {
     if (!txResp.ok) throw new Error(`HTTP ${txResp.status}`);
     const [txData, glData] = await Promise.all([txResp.json(), glResp.json()]);
     glosses = glData;
+    buildConcordanceFromGlosses();
     render(txData);
+    bindHoverTooltips();
+    _bindTooltipInteraction();
   } catch(e) {
     document.getElementById('tx-main').innerHTML =
       `<p class="tx-loading tx-error">Could not load transcription: ${e.message}</p>`;
