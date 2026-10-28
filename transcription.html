@@ -444,6 +444,12 @@ const textTitle     = params.get('title') || 'Transcription';
 const textLangParam = params.get('lang')  || '';
 // Gloss key: filename for recordings, fieldnotes_N for fieldnotes
 const glossKey = isFieldnotes ? ('fieldnotes_' + fnIndex) : textKey;
+// Gloss endpoint: dedicated routes for fieldnotes, /api/transcription/ for recordings
+function glossUrl() {
+  return isFieldnotes
+    ? `/api/fieldnotes/tx/${fnIndex}/glosses`
+    : `/api/transcription/${encodeURIComponent(textKey)}/glosses`;
+}
 
 // ── Language colours ──────────────────────────────────────────
 const LANG_COLORS = {
@@ -706,7 +712,7 @@ function showAlignmentEditor(sid, btn) {
     const newData = {tokens: editTokens, glosses: editGlosses, confirmed: false};
     glosses[s] = newData;
     try {
-      await fetch(`/api/transcription/${encodeURIComponent(glossKey)}/glosses`, {
+      await fetch(glossUrl(), {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({sentence_id: s, gloss: newData})
@@ -1054,7 +1060,7 @@ async function saveTranslation(sid, value, statusEl) {
     : {translation: value};
   glosses[sid] = newData;
   try {
-    await fetch(`/api/transcription/${encodeURIComponent(glossKey)}/glosses`, {
+    await fetch(glossUrl(), {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({sentence_id: sid, gloss: newData})
     });
@@ -1227,7 +1233,7 @@ function showNarrativeAlignmentEditor(sid, btn) {
     };
     glosses[s] = newData;
     updateBadge(s, editGlosses);
-    await fetch(`/api/transcription/${encodeURIComponent(glossKey)}/glosses`, {
+    await fetch(glossUrl(), {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({sentence_id: s, gloss: newData})
     });
@@ -1268,7 +1274,7 @@ function bindNarrGlossInputs() {
         const newData = {...(typeof stored==='object'?stored:{}), tokens:toks, glosses:cg, confirmed:false};
         glosses[sid] = newData;
         updateBadge(sid, cg);
-        fetch(`/api/transcription/${encodeURIComponent(glossKey)}/glosses`, {
+        fetch(glossUrl(), {
           method:'POST', headers:{'Content-Type':'application/json'},
           body: JSON.stringify({sentence_id: sid, gloss: newData})
         }).catch(console.error);
@@ -1399,7 +1405,7 @@ async function toggleConfirmation(sid) {
   }
   // Save to server
   try {
-    await fetch(`/api/transcription/${encodeURIComponent(glossKey)}/glosses`, {
+    await fetch(glossUrl(), {
       method: 'POST', headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({sentence_id: sid, gloss: glosses[sid]})
     });
@@ -1429,7 +1435,7 @@ async function saveColGloss(sid, colIdx, value, statusEl) {
   }
 
   try {
-    await fetch(`/api/transcription/${encodeURIComponent(glossKey)}/glosses`, {
+    await fetch(glossUrl(), {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({sentence_id: sid, gloss: newData})
     });
@@ -1520,7 +1526,7 @@ function bindColGlossFull() {
 // ── Gloss auto-save ───────────────────────────────────────────
 async function saveGloss(sentenceId, value, statusEl) {
   try {
-    const r = await fetch(`/api/transcription/${encodeURIComponent(glossKey)}/glosses`, {
+    const r = await fetch(glossUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sentence_id: sentenceId, gloss: value })
@@ -1729,13 +1735,19 @@ async function init() {
     const txEndpoint = isFieldnotes
       ? `/api/fieldnotes/tx/${fnIndex}`
       : `/api/transcription/${encodeURIComponent(textKey)}`;
-    const glEndpoint = `/api/transcription/${encodeURIComponent(glossKey)}/glosses`;
+    const glEndpoint = glossUrl();
 
     const [txResp, glResp] = await Promise.all([
-      fetch(txEndpoint), fetch(glEndpoint)
+      fetch(txEndpoint), fetch(glossUrl())
     ]);
-    if (!txResp.ok) throw new Error(`HTTP ${txResp.status}`);
-    const [txData, glData] = await Promise.all([txResp.json(), glResp.json()]);
+    if (!txResp.ok) {
+      const body = await txResp.text();
+      throw new Error(`HTTP ${txResp.status}: ${body.slice(0,200)}`);
+    }
+    const [txData, glData] = await Promise.all([
+      txResp.json(),
+      glResp.ok ? glResp.json() : Promise.resolve({})
+    ]);
     glosses = glData;
     buildConcordanceFromGlosses();
     render(txData);
