@@ -205,13 +205,19 @@ def build_fieldnotes_citation(group_index, sent_id, n):
         lang_rows += f'<tr><td class="cite-fn-abbr" style="color:{color};">{abbr}</td>{cells}</tr>'
     sep    = '<td></td>' + '<td></td>' * n_cols
     gcells = ''.join(f'<td class="cite-fn-gloss">{col_glosses[i] if i < len(col_glosses) else ""}</td>' for i in range(n_cols))
+    # Prefer author-stored translation; fall back to Bislama prompt
+    display_transl = (
+        stored.get('translation')
+        if stored and isinstance(stored, dict) and stored.get('translation') is not None
+        else prompt
+    )
     return (f'<div class="grammar-cite">'
             f'<span class="cite-n">({n})</span>'
             f'<div class="cite-body">'
             f'<div class="cite-ilg"><table class="cite-fn-table">{lang_rows}'
             f'<tr class="cite-fn-sep">{sep}</tr>'
             f'<tr><td class="cite-fn-label">gloss</td>{gcells}</tr></table></div>'
-            f'<div class="cite-transl">‘{prompt}’</div>'
+            f'<div class="cite-transl">‘{display_transl}’</div>'
             f'<div class="cite-ref">[Fieldnotes · {ti} · {sent_id}]</div>'
             f'</div></div>')
 
