@@ -62,6 +62,130 @@ def get_fieldnotes_xml():
     return _load_xml('fieldnotes.xml', 'AlexFrancois_Questionnaire_Gaua-languages.xml')
 
 # ══════════════════════════════════════════════════════════════
+# ISO / Pangloss lang-code → Gaua language name (for transcription metadata)
+_LANG_FROM_CODE = {
+    'wwo':'Dorig','drg':'Dorig','lkn':'Lakon',
+    'krf':'Koro', 'kro':'Koro', 'num':'Nume','olr':'Olrat',
+}
+
+# ── Citation builders ─────────────────────────────────────────
+
+def _load_stored_glosses(key):
+    p = _gloss_path(key)
+    if os.path.exists(p):
+        with open(p, encoding='utf-8') as f:
+            return json.load(f)
+    return {}
+
+def _cite_ilg_table(words, stored_gloss):
+    """Word-aligned interlinear table from _parse_tx words + stored gloss."""
+    if words and any(w.get('gloss') for w in words):
+        fc = ''.join(f'<td class="cite-form-cell">{w["form"]}</td>' for w in words)
+        gc = ''.join(f'<td class="cite-gloss-cell">{w["gloss"] or ""}</td>' for w in words)
+        return f'<table class="cite-ilg-table"><tr>{fc}</tr><tr class="cite-gloss-row">{gc}</tr></table>'
+    elif isinstance(stored_gloss, str) and stored_gloss:
+        form = words[0]['form'] if words else ''
+        return (f'<table class="cite-ilg-table">'
+                f'<tr><td class="cite-form-cell">{form}</td></tr>'
+                f'<tr class="cite-gloss-row"><td class="cite-gloss-cell">{stored_gloss}</td></tr>'
+                f'</table>')
+    else:
+        form = words[0]['form'] if words else ''
+        return f'<table class="cite-ilg-table"><tr><td class="cite-form-cell">{form}</td></tr></table>'
+
+def build_narrative_citation(filename, sent_id, n):
+    path = os.path.join(TRANSCRIPTIONS_FOLDER, filename)
+    if not os.path.exists(path):
+        return f'<span class="shortcode-error">Transcription not found: {filename}</span>'
+    try:
+        data = _parse_tx(path)
+    except Exception as e:
+        return f'<span class="shortcode-error">Parse error in {filename}: {e}</span>'
+    sent = next((s for s in data['sentences'] if s['id'] == sent_id), None)
+    if not sent:
+        return f'<span class="shortcode-error">Sentence {sent_id} not found in {filename}</span>'
+    stored_glosses = _load_stored_glosses(filename)
+    stored   = stored_glosses.get(sent_id)
+    lang_code = data.get('lang', '')
+    lang_name = _LANG_FROM_CODE.get(lang_code, lang_code)
+    color     = LANG_COLORS.get(lang_name, '#8a5f18')
+    ilg       = _cite_ilg_table(sent.get('words', []), stored)
+    ref       = f'{lang_name} · {filename[:-4]} · {sent_id} · A. François 2003'
+    return (f'<div class="grammar-cite">'
+            f'<span class="cite-n">({n})</span>'
+            f'<div class="cite-body">'
+            f'<div class="cite-ilg" style="--cite-color:{color};">{ilg}</div>'
+            f'<div class="cite-transl">‘{sent["transl"]}’</div>'
+            f'<div class="cite-ref">[{ref}]</div>'
+            f'</div></div>')
+
+def build_fieldnotes_citation(group_index, sent_id, n):
+    xml = get_fieldnotes_xml()
+    if xml is None:
+        return '<span class="shortcode-error">No fieldnotes XML loaded</span>'
+    tgs = xml.findall('.//tiGroup')
+    if group_index < 0 or group_index >= len(tgs):
+        return f'<span class="shortcode-error">Fieldnotes group {group_index} not found</span>'
+    tg  = tgs[group_index]
+    ti  = (tg.findtext('ti') or '').strip()
+    rfg = next((r for r in tg.findall('rfGroup')
+                if (r.findtext('rf') or '').strip() == sent_id), None)
+    if rfg is None:
+        return f'<span class="shortcode-error">{sent_id} not found in fieldnotes group {group_index}</span>'
+    grp    = rfg.find('bslGroup') or rfg.find('frGroup')
+    prompt = (grp.findtext('bsl') or grp.findtext('fr') or '').strip() if grp else ''
+    raw = {}
+    for code, abbr, name in _FN_LANGS:
+        nodes = grp.findall(code) if grp else []
+        vals  = [nd.text.strip() for nd in nodes if nd.text and nd.text.strip()]
+        raw[code] = ' '.join(vals) if vals else '—'
+    stored_glosses = _load_stored_glosses(f'fieldnotes_{group_index}')
+    stored         = stored_glosses.get(sent_id)
+    if stored and isinstance(stored, dict) and stored.get('tokens'):
+        tokens      = stored['tokens']
+        col_glosses = stored.get('glosses', [])
+        n_cols      = max((len(tokens.get(c, [])) for c, _, _ in _FN_LANGS), default=0)
+    else:
+        tokens = {}; n_cols = 0
+        for code, _, _ in _FN_LANGS:
+            toks = raw[code].split() if raw[code] != '—' else []
+            tokens[code] = toks; n_cols = max(n_cols, len(toks))
+        col_glosses = [''] * n_cols
+        for code, _, _ in _FN_LANGS:
+            while len(tokens[code]) < n_cols: tokens[code].append('')
+    lang_rows = ''
+    for code, abbr, name in _FN_LANGS:
+        color = LANG_COLORS.get(name, '#888')
+        cells = ''.join(
+            f'<td class="cite-fn-form" style="color:{color};">{tokens[code][i] if i < len(tokens[code]) else "—"}</td>'
+            for i in range(n_cols))
+        lang_rows += f'<tr><td class="cite-fn-abbr" style="color:{color};">{abbr}</td>{cells}</tr>'
+    sep    = '<td></td>' + '<td></td>' * n_cols
+    gcells = ''.join(f'<td class="cite-fn-gloss">{col_glosses[i] if i < len(col_glosses) else ""}</td>' for i in range(n_cols))
+    return (f'<div class="grammar-cite">'
+            f'<span class="cite-n">({n})</span>'
+            f'<div class="cite-body">'
+            f'<div class="cite-ilg"><table class="cite-fn-table">{lang_rows}'
+            f'<tr class="cite-fn-sep">{sep}</tr>'
+            f'<tr><td class="cite-fn-label">gloss</td>{gcells}</tr></table></div>'
+            f'<div class="cite-transl">‘{prompt}’</div>'
+            f'<div class="cite-ref">[Fieldnotes · {ti} · {sent_id}]</div>'
+            f'</div></div>')
+
+def build_citation(spec, n):
+    if spec.startswith('fieldnotes#'):
+        parts = spec.split('#', 2)
+        if len(parts) < 3:
+            return f'<span class="shortcode-error">Invalid fieldnotes cite: {spec}</span>'
+        try: idx = int(parts[1])
+        except ValueError:
+            return f'<span class="shortcode-error">Bad group index: {parts[1]}</span>'
+        return build_fieldnotes_citation(idx, parts[2].strip(), n)
+    elif '#' in spec:
+        filename, sent_id = spec.split('#', 1)
+        return build_narrative_citation(filename.strip(), sent_id.strip(), n)
+    return f'<span class="shortcode-error">Invalid cite spec: {spec}</span>'
+
 #  SHORTCODE RESOLVERS
 # ══════════════════════════════════════════════════════════════
 
@@ -200,6 +324,12 @@ def render_grammar(md_text):
         lambda m: build_entry_chip(m.group(1).strip()),
         html
     )
+    # {{cite:}} — numbered automatically within each section
+    _counter = [0]
+    def _resolve_cite(m):
+        _counter[0] += 1
+        return build_citation(m.group(1).strip(), _counter[0])
+    html = re.sub(r'\{\{\s*cite\s*:\s*([^\}]+)\}\}', _resolve_cite, html)
     return html
 
 
@@ -462,6 +592,64 @@ def upload_image():
 def serve_image(filename):
     return send_from_directory(IMAGES_FOLDER, filename)
 
+
+# ── Dictionary entries (compact JSON for client-side gloss lookup) ────────────
+_ABBREV_LINKS_PATH = os.path.join(TRANSCRIPTIONS_FOLDER, 'abbrev_links.json')
+
+@app.route('/api/abbrev_links')
+def get_abbrev_links():
+    if os.path.exists(_ABBREV_LINKS_PATH):
+        with open(_ABBREV_LINKS_PATH, encoding='utf-8') as f:
+            return jsonify(json.load(f))
+    return jsonify({})
+
+@app.route('/api/abbrev_links', methods=['POST'])
+def save_abbrev_link():
+    if not session.get('author'):
+        return jsonify({'error': 'Unauthorized'}), 401
+    data  = request.get_json(silent=True) or {}
+    abbr  = data.get('abbr', '').strip()
+    link  = data.get('link', '').strip()
+    if not abbr:
+        return jsonify({'error': 'No abbreviation provided'}), 400
+    links = {}
+    if os.path.exists(_ABBREV_LINKS_PATH):
+        with open(_ABBREV_LINKS_PATH, encoding='utf-8') as f:
+            links = json.load(f)
+    if link:
+        links[abbr] = link
+    else:
+        links.pop(abbr, None)   # empty link = remove
+    with open(_ABBREV_LINKS_PATH, 'w', encoding='utf-8') as f:
+        json.dump(links, f, ensure_ascii=False, indent=2)
+    return jsonify({'ok': True})
+
+@app.route('/api/dictionary/entries')
+def dictionary_entries():
+    """Return all entries with their 5-language forms and English gloss.
+    Used by the transcription viewer to suggest dictionary glosses for columns."""
+    d = get_dict_xml()
+    if d is None:
+        return jsonify({'entries': []})
+    entries = []
+    for el in d.findall('.//EntréeLexicale'):
+        # Prefer <gloss> (short interlinear label) over <Glose> (full definition)
+        gloss = (el.findtext('Sens/gloss')
+                 or el.findtext('Sens/Glose[@langue="eng"]')
+                 or '').strip()
+        if not gloss:
+            continue
+        forms = {}
+        for node in el.findall('Lemme/ReprésentationDeForme'):
+            lang = node.get('langue', '')
+            if lang and node.text:
+                forms[lang] = node.text.strip()
+        entries.append({
+            'id':    el.get('identifiant', ''),
+            'gloss': gloss,
+            'forms': forms,
+        })
+    return jsonify({'entries': entries})
 
 # ── List available sections ───────────────────────────────────
 
