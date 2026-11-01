@@ -284,6 +284,18 @@ body { overflow: hidden; }
 #lex-tooltip .tt-eq.tt-eq-hl b { color: #fdeec8; }
 
 
+
+/* ── Text-derived examples (confirmed sentences) ── */
+.ex-table tr.ex-other { display: none; }
+.ex-table.ex-expanded tr.ex-other { display: table-row; }
+.ex-table .ex-gloss.txt { text-transform: none; font-size: 0.72rem; letter-spacing: 0.02em; }
+.ex-ref { font-family: 'Crimson Pro', serif; font-size: 0.8rem; color: var(--ink-light); margin-top: 4px; }
+.ex-ref a { color: var(--ink-light); text-decoration: none; border-bottom: 1px solid var(--border-lt); }
+.ex-ref a:hover { color: var(--gold); border-bottom-color: var(--gold); }
+.ex-more-btn { font-family: 'Crimson Pro', serif; font-size: 0.8rem; color: var(--gold);
+  background: none; border: none; cursor: pointer; padding: 6px 0 0; }
+.ex-more-btn:hover { color: #b84c10; }
+
 /* ── Proposed (ghost) dictionary entries ── */
 .proposed-section-hdr {
   font-family: 'Crimson Pro', serif;
@@ -539,6 +551,8 @@ function toggleExampleExpand(exId) {
 }
 
 function exampleHTML(entryId) {
+  // The grammar's negation sentence is only an example for the words it contains
+  if (!NEGATION_EXAMPLE.cols.some(c => c.dictId === entryId)) return '';
   const ex     = NEGATION_EXAMPLE;
   const cols   = ex.cols;
   const ownCol = cols.findIndex(c => c.dictId === entryId);
@@ -573,6 +587,114 @@ function exampleHTML(entryId) {
   </div>`;
 }
 
+
+// ── Examples drawn from confirmed sentences in the texts ─────────────────────
+let dictExamples = {};   // entry id -> [example, ...]  (from /api/dictionary/examples)
+let dictFormIndex = {};  // "code:cleanform" -> entry id (to link words inside examples)
+const CODE2LANG = { num:'Nume', drg:'Dorig', kro:'Koro', olr:'Olrat', lkn:'Lakon' };
+const EX_VISIBLE = 3;    // examples shown before "show more"
+
+function escHTML(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function cleanForm(s) { return (s || '').trim().replace(/^[-=]+|[-=.,;!?]+$/g, '').toLowerCase(); }
+
+function buildFormIndex() {
+  dictFormIndex = {};
+  DICTIONARY.forEach(e => LANGS5.forEach(lang => {
+    const c = cleanForm(e.langs[lang]);
+    if (c && c !== '\u2014') dictFormIndex[LANG_CODE[lang] + ':' + c] = e.id;
+  }));
+}
+
+async function loadDictExamples() {
+  try {
+    const r = await fetch('/api/dictionary/examples');
+    const d = r.ok ? await r.json() : {};
+    dictExamples = d.error ? {} : d;
+  } catch (e) { dictExamples = {}; }
+}
+
+function exTokenCell(code, tok, isMatch, ownId) {
+  if (!tok) return '<td class="ex-cell ex-dash">\u2014</td>';
+  const lang = CODE2LANG[code], color = COLORS5[lang], t = escHTML(tok);
+  if (isMatch) return `<td class="ex-cell ex-own"><strong style="color:${color};">${t}</strong></td>`;
+  const id = dictFormIndex[code + ':' + cleanForm(tok)];
+  if (id && id !== ownId)
+    return `<td class="ex-cell"><a class="lexlink" href="#${id}" data-dict-id="${id}" data-lang="${lang}">${t}</a></td>`;
+  return `<td class="ex-cell">${t}</td>`;
+}
+
+function oneTextExample(entry, ex, uid, extra) {
+  const isFN   = ex.type === 'fieldnotes';
+  const codes  = isFN ? ['num','drg','kro','olr','lkn'] : [ex.lang];
+  const byCode = isFN ? ex.tokens : { [ex.lang]: ex.tokens };
+  const nCols  = Math.max(...codes.map(c => (byCode[c] || []).length), 0);
+  const match  = new Set(ex.match_cols || []);
+  const active = LANG_CODE[activeLang];
+
+  const rows = codes.map(code => {
+    const lang = CODE2LANG[code], color = COLORS5[lang];
+    const cells = Array.from({ length: nCols }, (_, i) =>
+      exTokenCell(code, (byCode[code] || [])[i] || '', match.has(i), entry.id)).join('');
+    const other = (codes.length > 1 && code !== active) ? ' class="ex-other"' : '';
+    return `<tr${other}><td class="ex-abbr" style="color:${color};">${ABBR5[lang]}</td>${cells}</tr>`;
+  }).join('');
+
+  const sep   = '<td></td>'.repeat(nCols + 1);
+  const gloss = Array.from({ length: nCols }, (_, i) =>
+    `<td class="ex-gloss txt">${escHTML((ex.glosses || [])[i] || '')}</td>`).join('');
+
+  const anchor = '#' + encodeURIComponent(ex.sentence_id);
+  const href = isFN
+    ? `transcription.html?fieldnotes=1&index=${ex.index}&title=${encodeURIComponent(ex.title)}${anchor}`
+    : `transcription.html?key=${encodeURIComponent(ex.file)}&title=${encodeURIComponent(ex.title)}&lang=${ex.lang}${anchor}`;
+  const refText = isFN ? `Fieldnotes \u00b7 ${ex.title} \u00b7 ${ex.sentence_id}` : `${ex.title} \u00b7 ${ex.sentence_id}`;
+
+  const expandBtn = codes.length > 1
+    ? `<button class="ex-expand-btn" onclick="toggleTextExample('${uid}', this)">\u25bc Show all languages</button>` : '';
+
+  return `<div class="entry-example-block${extra ? ' ex-extra' : ''}" ${extra ? 'style="display:none;"' : ''}>
+    <div class="example-label">Example \u00b7 ${isFN ? 'fieldnotes' : 'text'}</div>
+    <div class="example-wrap">
+      <table class="ex-table" id="${uid}">
+        ${rows}
+        <tr class="ex-sep">${sep}</tr>
+        <tr><td class="ex-gloss-empty"></td>${gloss}</tr>
+      </table>
+      <div class="ex-transl">\u2018${escHTML(ex.translation)}\u2019</div>
+      ${expandBtn}
+      <div class="ex-ref">[<a href="${href}">${escHTML(refText)}</a>]</div>
+    </div>
+  </div>`;
+}
+
+function textExamplesHTML(entry) {
+  const list = dictExamples[entry.id] || [];
+  if (!list.length) return '';
+  const safe = entry.id.replace(/[^\w-]/g, '_');
+  const blocks = list.map((ex, i) => oneTextExample(entry, ex, `tx-${safe}-${i}`, i >= EX_VISIBLE)).join('');
+  const more = list.length > EX_VISIBLE
+    ? `<button class="ex-more-btn" onclick="toggleMoreExamples(this)">\u25bc Show ${list.length - EX_VISIBLE} more example${list.length - EX_VISIBLE > 1 ? 's' : ''}</button>` : '';
+  return `<div class="text-examples">${blocks}${more}</div>`;
+}
+
+function toggleTextExample(uid, btn) {
+  const t = document.getElementById(uid);
+  if (!t) return;
+  const open = t.classList.toggle('ex-expanded');
+  btn.textContent = open ? '\u25b2 Hide other languages' : '\u25bc Show all languages';
+}
+
+function toggleMoreExamples(btn) {
+  const wrap = btn.closest('.text-examples');
+  const extras = wrap.querySelectorAll('.ex-extra');
+  const hide = extras[0] && extras[0].style.display !== 'none';
+  extras.forEach(e => e.style.display = hide ? 'none' : '');
+  const n = extras.length;
+  btn.textContent = hide ? `\u25bc Show ${n} more example${n > 1 ? 's' : ''}` : '\u25b2 Show fewer examples';
+}
+
 function entryHTML(entry) {
   const hw    = entry.langs[activeLang] || entry.hw;
   const color = COLORS5[activeLang];
@@ -593,6 +715,7 @@ function entryHTML(entry) {
     <div class="entry-gloss">${entry.glossRich}</div>
     <div class="entry-notes">${entry.notes}</div>
     ${exampleHTML(entry.id)}
+    ${textExamplesHTML(entry)}
   </div>`;
 }
 
@@ -914,10 +1037,8 @@ async function addProposedToDict(colKey) {
   if (d.ok) {
     delete proposedEntries[colKey];
     renderProposedEntries();
-    // Reload dictionary to show new entry
-    DICTIONARY = await parseLexicaXML('dbt_dictionary.xml');
-    DICTIONARY.forEach(e => { DICT_MAP[e.id] = e; });
-    render();
+    // Reload dictionary (and its text examples) to show the new entry
+    await reloadDictionary();
   } else {
     alert(d.error || 'Could not add entry.');
   }
@@ -943,6 +1064,8 @@ async function reloadDictionary() {
     DICTIONARY = await parseLexicaXML('dbt_dictionary.xml');
   }
   DICTIONARY.forEach(e => { DICT_MAP[e.id] = e; });
+  buildFormIndex();
+  await loadDictExamples();
   render();
   renderProposedEntries();
 }
@@ -1102,7 +1225,8 @@ async function init() {
   try {
     DICTIONARY = await parseLexicaXML('dbt_dictionary.xml');
     DICTIONARY.forEach(e => { DICT_MAP[e.id] = e; });
-    await loadProposedEntries();
+    buildFormIndex();
+    await Promise.all([loadProposedEntries(), loadDictExamples()]);
     buildPills();
     bindSearch();
     render();
