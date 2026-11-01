@@ -366,11 +366,13 @@ body { overflow: hidden; }
       <button class="edit-tab" id="dict-edit-tab" title="Upload new dictionary XML">⬆ Upload XML</button>
     </div>
     <div class="result-bar" id="result-bar">Loading dictionary…</div>
-    <div class="dict-content" id="dict-content">
-    <div id="proposed-section" style="display:none;">
-      <div class="proposed-section-hdr">Proposed entries from confirmed texts</div>
-      <div id="proposed-entries"></div>
+    <div class="dict-content" style="padding-bottom:0;">
+      <div id="proposed-section" style="display:none;">
+        <div class="proposed-section-hdr">Proposed entries from confirmed texts</div>
+        <div id="proposed-entries"></div>
+      </div>
     </div>
+    <div class="dict-content" id="dict-content">
       <p class="dict-status">Loading <code>dbt_dictionary.xml</code>…</p>
     </div>
   </main>
@@ -378,6 +380,7 @@ body { overflow: hidden; }
 
 <!-- data.js is still needed for NEGATION_EXAMPLE, LANG_COLORS, LANG_ABBR -->
 <script src="data.js"></script>
+<script src="auth.js"></script>
 <script>
 'use strict';
 
@@ -851,7 +854,6 @@ function bindBadgeClicks() {
 
 // ── Proposed dictionary entries ──────────────────────────────
 let proposedEntries = {}; // colKey → {gloss, forms, examples}
-let isLoggedIn = false;
 
 async function loadProposedEntries() {
   try {
@@ -863,6 +865,7 @@ async function loadProposedEntries() {
 function renderProposedEntries() {
   const section = document.getElementById('proposed-section');
   const container = document.getElementById('proposed-entries');
+  if (!section || !container) return;
   const entries = Object.entries(proposedEntries);
   if (!entries.length) { section.style.display = 'none'; return; }
   section.style.display = '';
@@ -1109,6 +1112,7 @@ async function init() {
     bindBadgeClicks();
     bindLexlinkClicks();
     bindTooltip();
+    _bindEntryModal();
 
     // ── Scroll to hash entry after render ───────────────────────
     const hash = window.location.hash.slice(1);
@@ -1125,12 +1129,14 @@ async function init() {
       });
     }
   } catch (err) {
-    document.getElementById('result-bar').textContent = '⚠ ' + err.message;
+    const isNet = /Cannot fetch|Failed to fetch|NetworkError|XML parse/i.test(err.message);
+    document.getElementById('result-bar').textContent = '\u26a0 ' + err.message;
     document.getElementById('dict-content').innerHTML =
       `<p class="dict-status error">Could not load dictionary.<br>
        <small>${err.message}</small><br><br>
-       Make sure <code>dbt_dictionary.xml</code> is in the same folder and the page
-       is served over HTTP (not opened as a local file).</p>`;
+       ${isNet
+         ? 'Make sure <code>dbt_dictionary.xml</code> is in the same folder and the page is served over HTTP (not opened as a local file).'
+         : 'This looks like a script error, not a missing file \u2014 open the browser console (F12) for details.'}</p>`;
     console.error(err);
   }
 }
@@ -1231,9 +1237,12 @@ init();
     </div>
   </div>
 </div>
-<script src="auth.js"></script>
 <script>
-function onAuthChange(loggedIn) { /* updateAuthUI handles edit-tab visibility */ }
+function onAuthChange(loggedIn) {
+  document.querySelectorAll('.entry-actions').forEach(el =>
+    el.classList.toggle('visible', loggedIn));
+  if (typeof renderProposedEntries === 'function') renderProposedEntries();
+}
 
 // Scripts at bottom of body — DOM already ready, no DOMContentLoaded needed
 bindLoginModal();
