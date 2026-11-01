@@ -120,10 +120,10 @@ def _load_stored_glosses(key):
             pass
         return {}
 
-def _cite_ilg_table(words, stored_gloss):
+def _cite_ilg_table(words, stored_gloss, lang_code=''):
     """Word-aligned interlinear table from _parse_tx words + stored gloss."""
     if words and any(w.get('gloss') for w in words):
-        fc = ''.join(f'<td class="cite-form-cell">{w["form"]}</td>' for w in words)
+        fc = ''.join(f'<td class="cite-form-cell" data-lang="{lang_code}" data-form="{w["form"]}">{w["form"]}</td>' for w in words)
         gc = ''.join(f'<td class="cite-gloss-cell">{w["gloss"] or ""}</td>' for w in words)
         return f'<table class="cite-ilg-table"><tr>{fc}</tr><tr class="cite-gloss-row">{gc}</tr></table>'
     elif isinstance(stored_gloss, str) and stored_gloss:
@@ -152,7 +152,7 @@ def build_narrative_citation(filename, sent_id, n):
     lang_code = data.get('lang', '')
     lang_name = _LANG_FROM_CODE.get(lang_code, lang_code)
     color     = LANG_COLORS.get(lang_name, '#8a5f18')
-    ilg       = _cite_ilg_table(sent.get('words', []), stored)
+    ilg       = _cite_ilg_table(sent.get('words', []), stored, lang_code)
     ref       = f'{lang_name} · {filename[:-4]} · {sent_id} · A. François 2003'
     return (f'<div class="grammar-cite">'
             f'<span class="cite-n">({n})</span>'
@@ -200,7 +200,7 @@ def build_fieldnotes_citation(group_index, sent_id, n):
     for code, abbr, name in _FN_LANGS:
         color = LANG_COLORS.get(name, '#888')
         cells = ''.join(
-            f'<td class="cite-fn-form" style="color:{color};">{tokens[code][i] if i < len(tokens[code]) else "—"}</td>'
+            f'<td class="cite-fn-form" style="color:{color};" data-lang="{code}" data-form="{tokens[code][i] if i < len(tokens[code]) else chr(8212)}">{tokens[code][i] if i < len(tokens[code]) else "—"}</td>'
             for i in range(n_cols))
         lang_rows += f'<tr><td class="cite-fn-abbr" style="color:{color};">{abbr}</td>{cells}</tr>'
     sep    = '<td></td>' + '<td></td>' * n_cols
@@ -216,7 +216,7 @@ def build_fieldnotes_citation(group_index, sent_id, n):
             f'<div class="cite-body">'
             f'<div class="cite-ilg"><table class="cite-fn-table">{lang_rows}'
             f'<tr class="cite-fn-sep">{sep}</tr>'
-            f'<tr><td class="cite-fn-label">gloss</td>{gcells}</tr></table></div>'
+            f'<tr><td></td>{gcells}</tr></table></div>'
             f'<div class="cite-transl">‘{display_transl}’</div>'
             f'<div class="cite-ref">[Fieldnotes · {ti} · {sent_id}]</div>'
             f'</div></div>')
@@ -701,6 +701,149 @@ def _load_confirmed_glosses():
                     pass
     return {}
 
+_PROPOSED_ENTRIES_PATH = os.path.join(TRANSCRIPTIONS_FOLDER, 'proposed_entries.json')
+
+def _load_proposed_entries():
+    if os.path.exists(_PROPOSED_ENTRIES_PATH):
+        with open(_PROPOSED_ENTRIES_PATH, encoding='utf-8') as f:
+            content = f.read().strip()
+        if content:
+            try:
+                return json.loads(content)
+            except json.JSONDecodeError:
+                try:
+                    obj, _ = json.JSONDecoder().raw_decode(content)
+                    return obj if isinstance(obj, dict) else {}
+                except Exception:
+                    pass
+    return {}
+
+def _save_proposed_entries(data):
+    tmp = _PROPOSED_ENTRIES_PATH + '.tmp'
+    with open(tmp, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    os.replace(tmp, _PROPOSED_ENTRIES_PATH)
+
+def _existing_dict_forms():
+    """Return a set of lowercase forms already in the dictionary."""
+    d = get_dict_xml()
+    if d is None:
+        return set()
+    forms = set()
+    for el in d.findall('.//EntréeLexicale'):
+        for node in el.findall('Lemme/ReprésentationDeForme'):
+            if node.text:
+                forms.add(node.text.strip().lower())
+    return forms
+
+@app.route('/api/dictionary/proposed')
+def get_proposed_entries():
+    return jsonify(_load_proposed_entries())
+
+@app.route('/api/dictionary/proposed', methods=['POST'])
+def save_proposed_entries():
+    """Receive {colKey: {gloss, examples}} from confirmed sentences.
+    Skip any entry whose forms are already in the dictionary."""
+    if not session.get('author'):
+        return jsonify({'error': 'Unauthorized'}), 401
+    data       = request.get_json(silent=True) or {}
+    stored     = _load_proposed_entries()
+    existing   = _existing_dict_forms()
+    fn_codes   = [c for c, _, _ in _FN_LANGS]
+
+    for col_key, entry_data in data.items():
+        gloss    = entry_data.get('gloss', '').strip()
+        examples = entry_data.get('examples', [])
+        if not gloss:
+            continue
+        # Decode forms from col_key (positional: num|drg|kro|olr|lkn)
+        parts = col_key.split('|')
+        forms = {fn_codes[i]: parts[i] for i in range(min(len(fn_codes), len(parts)))}
+        # Skip if any form already in dictionary
+        if any(f.strip().lower() in existing for f in forms.values() if f and f != '—'):
+            continue
+        if col_key not in stored:
+            stored[col_key] = {'gloss': gloss, 'forms': forms, 'examples': []}
+        # Merge examples (deduplicate by sentence_id)
+        known = {e['sentence_id'] for e in stored[col_key]['examples']}
+        for ex in examples:
+            if ex.get('sentence_id') not in known:
+                stored[col_key]['examples'].append(ex)
+                known.add(ex.get('sentence_id'))
+
+    _save_proposed_entries(stored)
+    return jsonify({'ok': True})
+
+@app.route('/api/dictionary/proposed/add', methods=['POST'])
+def add_proposed_to_dictionary():
+    """Add a proposed entry to the dictionary XML and remove it from proposed."""
+    if not session.get('author'):
+        return jsonify({'error': 'Unauthorized'}), 401
+    data    = request.get_json(silent=True) or {}
+    col_key = data.get('col_key', '')
+    stored  = _load_proposed_entries()
+    if col_key not in stored:
+        return jsonify({'error': 'Entry not found'}), 404
+    entry = stored[col_key]
+    gloss = entry.get('gloss', '')
+    forms = entry.get('forms', {})
+
+    # Find the active dictionary file
+    dict_path = os.path.join(UPLOAD_FOLDER, 'dictionary.xml')
+    if not os.path.exists(dict_path):
+        dict_path = 'dbt_dictionary.xml'
+    if not os.path.exists(dict_path):
+        return jsonify({'error': 'Dictionary XML not found'}), 404
+
+    tree = etree.parse(dict_path, _XML_PARSER)
+    root = tree.getroot()
+
+    # Generate a unique identifiant
+    base_id   = re.sub(r'[^a-zA-Z0-9]', '_', gloss.lower())[:20]
+    entry_id  = f'proposed_{base_id}'
+    taken     = {el.get('identifiant', '') for el in root.findall('.//EntréeLexicale')}
+    counter   = 1
+    while entry_id in taken:
+        entry_id = f'proposed_{base_id}_{counter}'; counter += 1
+
+    dictionnaire = root.find('Dictionnaire')
+    if dictionnaire is None:
+        return jsonify({'error': 'No <Dictionnaire> element in XML'}), 500
+
+    # Build new entry element
+    el    = etree.SubElement(dictionnaire, 'EntréeLexicale', identifiant=entry_id)
+    lemme = etree.SubElement(el, 'Lemme')
+    for code in [c for c, _, _ in _FN_LANGS]:
+        form = forms.get(code, '').strip()
+        if form and form != '—':
+            etree.SubElement(lemme, 'ReprésentationDeForme', langue=code).text = form
+    etree.SubElement(el, 'ClasseGrammaticale')
+    etree.SubElement(el, 'DomaineSémantique')
+    sens = etree.SubElement(el, 'Sens', identifiant=f'{entry_id}\u24a2{1}')
+    etree.SubElement(sens, 'NuméroDeSens').text = '1'
+    glose = etree.SubElement(sens, 'Glose'); glose.set('langue', 'eng'); glose.text = gloss
+    etree.SubElement(sens, 'gloss').text = gloss
+
+    # Write back atomically
+    tmp = dict_path + '.tmp'
+    tree.write(tmp, pretty_print=True, encoding='UTF-8', xml_declaration=True)
+    os.replace(tmp, dict_path)
+
+    # Remove from proposed
+    del stored[col_key]
+    _save_proposed_entries(stored)
+    return jsonify({'ok': True, 'id': entry_id})
+
+@app.route('/api/dictionary/proposed/dismiss', methods=['POST'])
+def dismiss_proposed_entry():
+    if not session.get('author'):
+        return jsonify({'error': 'Unauthorized'}), 401
+    col_key = (request.get_json(silent=True) or {}).get('col_key', '')
+    stored  = _load_proposed_entries()
+    stored.pop(col_key, None)
+    _save_proposed_entries(stored)
+    return jsonify({'ok': True})
+
 @app.route('/api/confirmed_glosses')
 def get_confirmed_glosses():
     return jsonify(_load_confirmed_glosses())
@@ -752,6 +895,128 @@ def save_abbrev_link():
         json.dump(links, f, ensure_ascii=False, indent=2)
     return jsonify({'ok': True})
 
+def _dict_path():
+    """Return path of the currently active dictionary XML."""
+    p = os.path.join(UPLOAD_FOLDER, 'dictionary.xml')
+    return p if os.path.exists(p) else 'dbt_dictionary.xml'
+
+def _read_dict():
+    return etree.parse(_dict_path(), _XML_PARSER)
+
+def _write_dict(tree):
+    p   = _dict_path()
+    tmp = p + '.tmp'
+    tree.write(tmp, pretty_print=True, encoding='UTF-8', xml_declaration=True)
+    os.replace(tmp, p)
+
+def _build_entry_el(data, existing_ids=None, force_id=None):
+    """Build an <EntréeLexicale> lxml element from a dict of field values."""
+    LANG_CODES_5 = ['num','drg','kro','olr','lkn']
+    forms  = data.get('forms', {})
+    pos    = data.get('pos', '')
+    domain = data.get('domain', '')
+    gloss  = data.get('gloss', '')
+    short  = data.get('shortGloss', '') or gloss
+    notes  = data.get('notes', '')
+    etym   = data.get('etym', {})  # {lang, form, gloss, tlopo, etymograph}
+
+    # Generate or validate ID
+    if force_id:
+        eid = force_id
+    else:
+        base = re.sub(r'[^a-zA-Z0-9]', '_',
+                      (forms.get('kro') or forms.get('num') or gloss or 'new').lower())[:20]
+        eid  = base; n = 1
+        while existing_ids and eid in existing_ids:
+            eid = f'{base}_{n}'; n += 1
+
+    el    = etree.Element('EntréeLexicale', identifiant=eid)
+    lemme = etree.SubElement(el, 'Lemme')
+    for code in LANG_CODES_5:
+        form = (forms.get(code) or '').strip()
+        if form:
+            etree.SubElement(lemme, 'ReprésentationDeForme', langue=code).text = form
+    etree.SubElement(el, 'ClasseGrammaticale').text   = pos
+    etree.SubElement(el, 'DomaineSémantique').text    = domain
+
+    if etym and etym.get('form'):
+        etym_el = etree.SubElement(el, 'Étymologie')
+        ety     = etree.SubElement(etym_el, 'Étymon')
+        etree.SubElement(ety, 'Langue').text     = etym.get('lang', 'POc')
+        etree.SubElement(ety, 'Forme').text      = etym.get('form', '')
+        etree.SubElement(ety, 'Glose', langue='eng').text = etym.get('gloss', '')
+        if etym.get('tlopo'):
+            etree.SubElement(ety, 'LienTLOPO').text      = etym['tlopo']
+        if etym.get('etymograph'):
+            etree.SubElement(ety, 'LienEtymograph').text = etym['etymograph']
+
+    sens = etree.SubElement(el, 'Sens', identifiant=f'{eid}\u24a2{1}')
+    etree.SubElement(sens, 'NuméroDeSens').text = '1'
+    glose = etree.SubElement(sens, 'Glose'); glose.set('langue','eng'); glose.text = gloss
+    etree.SubElement(sens, 'gloss').text = short
+    if notes:
+        n_el = etree.SubElement(sens, 'Notes')
+        etree.SubElement(n_el, 'ReprésentationDeTexte', langue='eng').text = notes
+    return el, eid
+
+# ── Dictionary CRUD ───────────────────────────────────────────
+
+@app.route('/api/dictionary/entry', methods=['POST'])
+def add_dict_entry():
+    if not session.get('author'):
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json(silent=True) or {}
+    try:
+        tree = _read_dict()
+        root = tree.getroot()
+        existing = {el.get('identifiant','') for el in root.findall('.//EntréeLexicale')}
+        dictionnaire = root.find('Dictionnaire')
+        if dictionnaire is None:
+            return jsonify({'error': 'No <Dictionnaire> element'}), 500
+        el, eid = _build_entry_el(data, existing_ids=existing)
+        dictionnaire.append(el)
+        _write_dict(tree)
+        return jsonify({'ok': True, 'id': eid})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/dictionary/entry/<entry_id>', methods=['PUT'])
+def update_dict_entry(entry_id):
+    if not session.get('author'):
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json(silent=True) or {}
+    try:
+        tree = _read_dict()
+        root = tree.getroot()
+        old  = root.find(f'.//EntréeLexicale[@identifiant="{entry_id}"]')
+        if old is None:
+            return jsonify({'error': 'Entry not found'}), 404
+        parent = old.getparent()
+        idx    = list(parent).index(old)
+        new_el, _ = _build_entry_el(data, force_id=entry_id)
+        parent.remove(old)
+        parent.insert(idx, new_el)
+        _write_dict(tree)
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/dictionary/entry/<entry_id>', methods=['DELETE'])
+def delete_dict_entry(entry_id):
+    if not session.get('author'):
+        return jsonify({'error': 'Unauthorized'}), 401
+    try:
+        tree = _read_dict()
+        root = tree.getroot()
+        el   = root.find(f'.//EntréeLexicale[@identifiant="{entry_id}"]')
+        if el is None:
+            return jsonify({'error': 'Entry not found'}), 404
+        el.getparent().remove(el)
+        _write_dict(tree)
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/dictionary/entries')
 def dictionary_entries():
     """Return all entries with their 5-language forms and English gloss.
@@ -778,6 +1043,305 @@ def dictionary_entries():
             'forms': forms,
         })
     return jsonify({'entries': entries})
+
+# ══════════════════════════════════════════════════════════════
+#  LATEX EXPORT
+# ══════════════════════════════════════════════════════════════
+
+# Characters that must be escaped in LaTeX prose (not in math/verbatim)
+_LATEX_ESC = str.maketrans({
+    '&': r'\&', '%': r'\%', '$': r'\$', '#': r'\#',
+    '_': r'\_', '{': r'\{', '}': r'\}',
+    '~': r'\textasciitilde{}', '^': r'\textasciicircum{}',
+    '\\': r'\textbackslash{}',
+})
+
+def _le(s):
+    """Escape a plain-text string for LaTeX."""
+    return str(s).translate(_LATEX_ESC)
+
+# ── Shortcode → LaTeX ─────────────────────────────────────────
+
+def _example_latex(ex_id, n):
+    corpus = get_corpus_xml()
+    if corpus is None:
+        return f'\\textit{{[Example {_le(ex_id)} not found]}}' 
+    ex = corpus.find(f'.//Example[@id="{ex_id}"]')
+    if ex is None:
+        return f'\\textit{{[Example {_le(ex_id)} not found]}}'
+    glosses_raw = (ex.findtext('Glosses') or '').split()
+    translation = (ex.findtext('Translation[@lang="eng"]') or '').strip()
+    cols = [_le(g) for g in glosses_raw]
+    rows = []
+    for code in LANG_CODES:
+        lang = LANG_MAP[code]
+        abbr = LANG_ABBR[lang]
+        tier = ex.find(f'Tier[@lang="{code}"]')
+        if tier is None or not tier.text:
+            continue
+        forms = [_le(f) for f in tier.text.strip().split()]
+        rows.append(f'\\textit{{{_le(abbr)}}} & ' + ' & '.join(forms) + r' \\')
+    sep = 'l' * (len(cols) + 1)
+    gloss_row = ' & '.join([''] + cols) + r' \\'
+    tabular = (
+        f'\\begin{{tabular}}[t]{{@{{}}{sep}@{{}}}}\n'
+        + '\n'.join(rows) + '\n'
+        + r'\midrule' + '\n'
+        + gloss_row + '\n'
+        + r'\end{tabular}'
+    )
+    transl = _le(translation)
+    return (f'\\begin{{exe}}\n\\ex\\label{{ex:{_le(ex_id)}}}\n'
+            f'{tabular}\\\\\n'
+            f'\\trans `{transl}\'\n'
+            f'\\end{{exe}}')
+
+def _entry_latex(entry_id):
+    d = get_dict_xml()
+    if d is None:
+        return f'\\textit{{{_le(entry_id)}}}'
+    el = d.find(f'.//EntréeLexicale[@identifiant="{entry_id}"]')
+    if el is None:
+        return f'\\textit{{{_le(entry_id)}}}'
+    gloss = (el.findtext('Sens/Glose[@langue="eng"]') or entry_id).strip()
+    parts = []
+    for code in LANG_CODES:
+        lang = LANG_MAP[code]
+        abbr = LANG_ABBR[lang]
+        node = el.find(f'Lemme/ReprésentationDeForme[@langue="{code}"]')
+        form = (node.text or '').strip() if node is not None else ''
+        if form:
+            parts.append(f'{_le(abbr)}.~\\textit{{{_le(form)}}}')
+    forms_str = ', '.join(parts)
+    return f'\\textit{{{_le(gloss)}}} [{forms_str}]'
+
+def _cite_fieldnotes_latex(group_index, sent_id, n):
+    xml = get_fieldnotes_xml()
+    if xml is None:
+        return f'\\textit{{[Fieldnotes not loaded]}}'
+    tgs = xml.findall('.//tiGroup')
+    if group_index >= len(tgs):
+        return f'\\textit{{[Group {group_index} not found]}}'
+    tg  = tgs[group_index]
+    rfg = next((r for r in tg.findall('rfGroup')
+                if (r.findtext('rf') or '').strip() == sent_id), None)
+    if rfg is None:
+        return f'\\textit{{[{_le(sent_id)} not found]}}'
+    grp    = rfg.find('bslGroup') or rfg.find('frGroup')
+    prompt = (grp.findtext('bsl') or grp.findtext('fr') or '').strip() if grp else ''
+    stored = _load_stored_glosses(f'fieldnotes_{group_index}').get(sent_id)
+    display_transl = (stored.get('translation') if stored and isinstance(stored, dict)
+                      and stored.get('translation') is not None else prompt)
+    if stored and isinstance(stored, dict) and stored.get('tokens'):
+        tokens     = stored['tokens']
+        col_glosses = stored.get('glosses', [])
+        n_cols = max((len(tokens.get(c, [])) for c, _, _ in _FN_LANGS), default=0)
+    else:
+        tokens = {}; n_cols = 0
+        for code, _, _ in _FN_LANGS:
+            toks = _tokenize_form((grp.findall(code)[0].text or '') if grp and grp.findall(code) else '')
+            tokens[code] = toks; n_cols = max(n_cols, len(toks))
+        col_glosses = [''] * n_cols
+        for code, _, _ in _FN_LANGS:
+            while len(tokens[code]) < n_cols: tokens[code].append('')
+    rows = []
+    for code, abbr, _ in _FN_LANGS:
+        cells = [_le(tokens[code][i] if i < len(tokens[code]) else '---') for i in range(n_cols)]
+        rows.append(f'\\textit{{{_le(abbr)}}} & ' + ' & '.join(cells) + r' \\')
+    gloss_cells = [_le(col_glosses[i] if i < len(col_glosses) else '') for i in range(n_cols)]
+    sep      = 'l' * (n_cols + 1)
+    gloss_row = ' & '.join([''] + gloss_cells) + r' \\'
+    tabular = (f'\\begin{{tabular}}[t]{{@{{}}{sep}@{{}}}}\n'
+               + '\n'.join(rows) + '\n'
+               + r'\midrule' + '\n'
+               + gloss_row + '\n'
+               + r'\end{tabular}')
+    return (f'\\begin{{exe}}\n\\ex\\label{{ex:{n}}}\n'
+            f'{tabular}\\\\\n'
+            f'\\trans `{_le(display_transl)}\'\n'
+            f'\\end{{exe}}')
+
+def _cite_narrative_latex(filename, sent_id, n):
+    path = os.path.join(TRANSCRIPTIONS_FOLDER, filename)
+    if not os.path.exists(path):
+        return f'\\textit{{[{_le(filename)} not found]}}'
+    try:
+        data = _parse_tx(path)
+    except Exception:
+        return f'\\textit{{[Parse error in {_le(filename)}]}}'
+    sent = next((s for s in data['sentences'] if s['id'] == sent_id), None)
+    if not sent:
+        return f'\\textit{{[{_le(sent_id)} not found]}}'
+    stored = _load_stored_glosses(filename).get(sent_id)
+    transl = (stored.get('translation') if stored and isinstance(stored, dict)
+              and stored.get('translation') is not None else sent['transl'])
+    if sent['has_gloss'] and sent['words']:
+        form_cells  = ' & '.join(_le(w['form'])  for w in sent['words'])
+        gloss_cells = ' & '.join(_le(w['gloss'] or '') for w in sent['words'])
+        sep = 'l' * len(sent['words'])
+        body = (f'\\begin{{tabular}}[t]{{@{{}}{sep}@{{}}}}\n'
+                f'{form_cells}\\\\\n{gloss_cells}\\\\\n\\end{{tabular}}')
+    else:
+        manual = (stored if isinstance(stored, str) else '')
+        body = f'\\gll {_le(sent["form"])} \\\\\n     {_le(manual)} \\\\'
+    return (f'\\begin{{exe}}\n\\ex\\label{{ex:{n}}}\n'
+            f'{body}\\\\\n'
+            f'\\trans `{_le(transl)}\'\n'
+            f'\\end{{exe}}')
+
+# ── Markdown → LaTeX ──────────────────────────────────────────
+
+def _md_to_latex_body(source):
+    """Convert grammar Markdown (with shortcodes) to a LaTeX body string."""
+    counter = [0]
+
+    def resolve_cite(m):
+        counter[0] += 1; spec = m.group(1).strip(); n = counter[0]
+        try:
+            if spec.startswith('fieldnotes#'):
+                parts = spec.split('#', 2)
+                return _cite_fieldnotes_latex(int(parts[1]), parts[2].strip(), n)
+            elif '#' in spec:
+                fn, sid = spec.split('#', 1)
+                return _cite_narrative_latex(fn.strip(), sid.strip(), n)
+        except Exception as e:
+            return f'\\textit{{[cite error: {_le(str(e))}]}}'
+        return f'\\textit{{[invalid cite]}}'
+
+    def resolve_example(m):
+        counter[0] += 1
+        return _example_latex(m.group(1).strip(), counter[0])
+
+    # 1. Resolve shortcodes
+    src = re.sub(r'\{\{\s*cite\s*:\s*([^\}]+)\}\}',    resolve_cite,    source)
+    src = re.sub(r'\{\{\s*example\s*:\s*([^\}]+)\}\}', resolve_example, src)
+    src = re.sub(r'\{\{\s*entry\s*:\s*([^\}]+)\}\}',
+                 lambda m: _entry_latex(m.group(1).strip()), src)
+
+    lines = src.split('\n')
+    out   = []
+    in_table = False
+    table_rows = []
+
+    def flush_table():
+        nonlocal in_table, table_rows
+        if not table_rows:
+            in_table = False; return
+        # Find separator row (--|--|--)
+        header = table_rows[0] if table_rows else []
+        data   = [r for r in table_rows[1:] if not all(c.strip().replace('-','') == '' for c in r)]
+        ncols  = max(len(header), max((len(r) for r in data), default=0))
+        sep    = 'l' * ncols
+        hcells = ' & '.join(_le(c) for c in header) + r' \\'
+        rows   = '\n'.join(' & '.join(_le(c) for c in row) + r' \\' for row in data)
+        out.append(f'\\begin{{tabular}}{{@{{}}{sep}@{{}}}}\n\\toprule\n{hcells}\n\\midrule\n{rows}\n\\bottomrule\n\\end{{tabular}}\n')
+        in_table = False; table_rows.clear()
+
+    for line in lines:
+        # Table row
+        if line.strip().startswith('|'):
+            cells = [c.strip() for c in line.strip().strip('|').split('|')]
+            # Skip separator rows
+            if not all(c.replace('-','').replace(':','').strip() == '' for c in cells):
+                if not in_table: in_table = True
+                table_rows.append(cells)
+            continue
+        else:
+            if in_table: flush_table()
+
+        # ATX headings
+        m = re.match(r'^(#{1,4})\s+(.*)', line)
+        if m:
+            depth = len(m.group(1))
+            title = _apply_inline(m.group(2))
+            cmd   = {1:'section',2:'section',3:'subsection',4:'subsubsection'}[depth]
+            out.append(f'\\{cmd}{{{title}}}'); continue
+
+        # Horizontal rule
+        if re.match(r'^---+$', line.strip()):
+            out.append(r'\medskip\noindent\rule{\linewidth}{0.4pt}\medskip'); continue
+
+        # Blank line
+        if not line.strip():
+            out.append(''); continue
+
+        # Already a LaTeX block (shortcode output)
+        if line.strip().startswith('\\begin{') or line.strip().startswith('\\end{'):
+            out.append(line); continue
+
+        # Normal prose line
+        out.append(_apply_inline(line))
+
+    if in_table: flush_table()
+
+    # Merge consecutive prose lines into paragraphs
+    result = '\n'.join(out)
+    result = re.sub(r'\n{3,}', '\n\n', result)
+    return result
+
+def _apply_inline(text):
+    """Apply inline Markdown formatting and escape for LaTeX."""
+    # Bold before italic to handle **...**
+    text = re.sub(r'\*\*(.+?)\*\*', lambda m: f'\\textbf{{{_le(m.group(1))}}}', text)
+    text = re.sub(r'\*(.+?)\*',     lambda m: f'\\textit{{{_le(m.group(1))}}}', text)
+    text = re.sub(r'`(.+?)`',       lambda m: f'\\texttt{{{_le(m.group(1))}}}', text)
+    # Escape remaining plain text (not already inside \command{})
+    # Simple heuristic: escape & % $ # _ outside braces — already done by _le above
+    # for the portions not inside LaTeX commands. For inline-converted text we just
+    # escape the literal parts between commands.
+    return text
+
+_LATEX_DOC = r"""\documentclass[12pt, a4paper]{{article}}
+\usepackage[utf8]{{inputenc}}
+\usepackage[T1]{{fontenc}}
+\usepackage{{gb4e}}\noautomath
+\usepackage{{booktabs}}
+\usepackage{{microtype}}
+\usepackage{{hyperref}}
+\usepackage{{xcolor}}
+\definecolor{{NumeColor}}{{HTML}}{{2e5c8a}}
+\definecolor{{DorigColor}}{{HTML}}{{c07820}}
+\definecolor{{KoroColor}}{{HTML}}{{922810}}
+\definecolor{{OlratColor}}{{HTML}}{{267040}}
+\definecolor{{LakonColor}}{{HTML}}{{5c2878}}
+\title{{Comparative Grammar of the Gaua Languages\\
+\large Banks Islands, Vanuatu}}
+\author{{Alexandre Fran\c{{c}}ois \& Fabio Meroni}}
+\date{{\today}}
+\begin{{document}}
+\maketitle
+\tableofcontents
+\newpage
+
+{body}
+
+\end{{document}}
+"""
+
+@app.route('/api/grammar/export/latex')
+def export_grammar_latex():
+    """Render all grammar sections as a single downloadable .tex file."""
+    sections_latex = []
+    for fname in sorted(os.listdir(GRAMMAR_FOLDER)):
+        if not fname.endswith('.md'):
+            continue
+        path = os.path.join(GRAMMAR_FOLDER, fname)
+        with open(path, encoding='utf-8') as f:
+            source = f.read()
+        try:
+            sections_latex.append(_md_to_latex_body(source))
+        except Exception as e:
+            sections_latex.append(f'% ERROR in {fname}: {e}')
+
+    body = '\n\n'.join(sections_latex)
+    tex  = _LATEX_DOC.format(body=body)
+
+    from flask import Response
+    return Response(
+        tex,
+        mimetype='text/plain; charset=utf-8',
+        headers={'Content-Disposition': 'attachment; filename="grammar.tex"'}
+    )
 
 # ── List available sections ───────────────────────────────────
 
