@@ -232,9 +232,9 @@
 #tx-tooltip .tt-eq { font-family: 'Source Code Pro', monospace; font-size: 0.7rem; background: rgba(255,255,255,.09); border-radius: 2px; padding: 1px 5px; }
 #tx-tooltip .tt-eq b { font-weight: 600; }
 
-/* Hoverable form cells and gloss cells */
+/* Hoverable form cells — cursor set by JS only when dict entry found */
 .fn-form-cell[data-form]:not(.missing) { cursor: default; }
-.fn-form-cell[data-form]:not(.missing):hover { text-decoration: underline dotted currentColor; }
+.fn-form-cell.dict-linked { cursor: pointer; text-decoration: underline dotted currentColor; }
 .fn-gloss-cell { cursor: default; }
 
 /* ── Gloss status badge (? / ✓) ── */
@@ -898,6 +898,30 @@ async function saveToTextsConcordance(sid) {
       body: JSON.stringify(toSave),
       keepalive: true
     }).catch(console.error);
+
+    // Also propose these as dictionary entries (server checks against existing dict)
+    const proposed = {};
+    for (let i = 0; i < nCols; i++) {
+      const g = colGlosses[i] || '';
+      if (!g) continue;
+      const key = FN_CODES.map(c => (tokens[c]?.[i] || '')).join('|');
+      const stored2 = glosses[sid];
+      const transl  = stored2?.translation || sentences.find(x => x.id === sid)?.transl || '';
+      proposed[key] = proposed[key] || {gloss: g, examples: []};
+      proposed[key].examples.push({
+        sentence_id: sid,
+        translation: transl,
+        title: textTitle
+      });
+    }
+    if (Object.keys(proposed).length) {
+      fetch('/api/dictionary/proposed', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(proposed),
+        keepalive: true
+      }).catch(console.error);
+    }
   }
 }
 
@@ -1130,6 +1154,26 @@ function bindHoverTooltips() {
   document.querySelectorAll('.fn-form-cell[data-form]').forEach(cell => {
     cell.addEventListener('mouseenter', () => { clearTimeout(_hideTimer); showFormTooltip(cell); });
     cell.addEventListener('mouseleave', hideTooltip);
+    // Click navigates to the matching dictionary entry
+    // Mark as clickable if it has a dict entry
+    const _form0 = cell.dataset.form || '';
+    const _lang0 = cell.dataset.lang || '';
+    const _clean0 = _form0.replace(/^[-=]+|[-=.,;]+$/g,'').toLowerCase();
+    if (dictByForm[`${_lang0}:${_form0.toLowerCase()}`] || dictByForm[`${_lang0}:${_clean0}`]) {
+      cell.classList.add('dict-linked');
+    }
+    cell.addEventListener('click', () => {
+      const lang  = cell.dataset.lang;
+      const form  = cell.dataset.form;
+      if (!form || form === '—' || form === '\u2014') return;
+      const clean = form.replace(/^[-=]+|[-=.,;]+$/g,'').toLowerCase();
+      const entry = dictByForm[`${lang}:${form.toLowerCase()}`]
+                 || dictByForm[`${lang}:${clean}`];
+      if (!entry) return;
+      const langName = LANG_FROM_CODE[lang] || lang;
+      window.location.href =
+        `dictionary.html?lang=${encodeURIComponent(langName)}#${entry.id}`;
+    });
   });
   // Gloss cells (gloss row)
   document.querySelectorAll('.fn-gloss-cell').forEach(cell => {
