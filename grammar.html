@@ -274,6 +274,18 @@ tr[data-lang].lang-hidden { display: none; }
     </ul>
     <button class="sidebar-add-btn" id="add-section-btn">＋ Add section</button>
 
+    <a href="/api/grammar/export/latex" download="grammar.tex"
+       style="display:block;margin:0.6rem 1rem 0;
+              font-family:'Crimson Pro',serif;font-size:0.78rem;
+              color:var(--ink-light);text-align:center;
+              border:1px solid var(--border);border-radius:3px;
+              padding:4px 0 5px;text-decoration:none;
+              transition:color 0.12s,border-color 0.12s,background 0.12s;"
+       onmouseover="this.style.color='var(--gold)';this.style.borderColor='var(--gold)'"
+       onmouseout="this.style.color='';this.style.borderColor=''">
+      ⬇ Export LaTeX
+    </a>
+
     <div class="sidebar-lang-head">
       <span class="sidebar-section-label">Show languages</span>
     </div>
@@ -465,6 +477,8 @@ async function loadSection(id) {
     const data = await resp.json();
     document.getElementById('content-' + id).innerHTML = data.html;
     applyLangFilter();
+    bindDictLinksInSection(document.getElementById('content-' + id));
+    bindDictLinksInSection(document.getElementById('content-' + id));
   } catch(e) {
     document.getElementById('content-' + id).innerHTML =
       '<p class="section-error">Could not load section ' + id + ': ' + e.message + '</p>';
@@ -633,7 +647,7 @@ function bindScrollspy() {
 document.addEventListener('DOMContentLoaded', async () => {
   buildLangPills();
   bindLoginModal();
-  await checkAuth();
+  await Promise.all([checkAuth(), loadGrammarDict()]);
 
   const secResp = await fetch('/api/grammar')
     .then(r => r.json())
@@ -648,6 +662,104 @@ document.addEventListener('DOMContentLoaded', async () => {
   bindScrollspy();
   bindAddSection();
 });
+
+// ── Dictionary lookup for cited examples ─────────────────────
+const G_LANG_COLORS = {Nume:'#2e5c8a',Dorig:'#c07820',Koro:'#922810',Olrat:'#267040',Lakon:'#5c2878'};
+const G_ABBR5 = {Nume:'Num',Dorig:'Drg',Koro:'Kro',Olrat:'Olr',Lakon:'Lkn'};
+const G_CODE2LANG = {num:'Nume',drg:'Dorig',kro:'Koro',olr:'Olrat',lkn:'Lakon',wwo:'Dorig',krf:'Koro'};
+const G_LANGS5 = ['Nume','Dorig','Koro','Olrat','Lakon'];
+const G_CODES5 = {Nume:'num',Dorig:'drg',Koro:'kro',Olrat:'olr',Lakon:'lkn'};
+let gDictById = {}, gDictByForm = {}, gHideTimer = null;
+
+async function loadGrammarDict() {
+  try {
+    const r = await fetch('/api/dictionary/entries');
+    if (!r.ok) return;
+    const d = await r.json();
+    (d.entries||[]).forEach(e => {
+      gDictById[e.id] = e;
+      Object.entries(e.forms||{}).forEach(([lang, form]) => {
+        if (!form || form==='—') return;
+        gDictByForm[`${lang}:${form.toLowerCase()}`] = e;
+        const clean = form.replace(/^[-=]+|[-=.,;]+$/g,'').toLowerCase();
+        if (clean !== form.toLowerCase()) gDictByForm[`${lang}:${clean}`] = e;
+      });
+    });
+  } catch(e) {}
+}
+
+function showGrammarTooltip(anchor, entry) {
+  if (!entry) return;
+  const tt = document.getElementById('grammar-tooltip');
+  document.getElementById('gtt-hw').textContent  = entry.gloss || entry.id;
+  document.getElementById('gtt-def').textContent = entry.gloss || '';
+  document.getElementById('gtt-equivs').innerHTML = G_LANGS5.map(lang => {
+    const col = G_LANG_COLORS[lang]||'#888', form = entry.forms?.[G_CODES5[lang]]||'—';
+    return `<span style="font-family:'Source Code Pro',monospace;font-size:.7rem;
+      background:rgba(255,255,255,.09);border-radius:2px;padding:1px 5px;">
+      <b style="color:${col};">${G_ABBR5[lang]}</b> ${form}</span>`;
+  }).join('');
+  tt.style.opacity = '1';
+  const rect = anchor.getBoundingClientRect(), tw = 280;
+  let left = rect.left + rect.width/2 - 20;
+  if (left + tw > window.innerWidth-8) left = window.innerWidth-tw-8;
+  if (left < 8) left = 8;
+  const ttH = tt.offsetHeight||90;
+  tt.style.left = left + 'px';
+  tt.style.top  = (rect.top-ttH-8 < 8)
+    ? (rect.bottom+8+window.scrollY)+'px'
+    : (rect.top-ttH-8+window.scrollY)+'px';
+}
+function hideGrammarTooltip() {
+  clearTimeout(gHideTimer);
+  gHideTimer = setTimeout(() => {
+    const tt = document.getElementById('grammar-tooltip');
+    if (tt) tt.style.opacity = '0';
+  }, 80);
+}
+
+function bindDictLinksInSection(container) {
+  if (!container) return;
+  // lexlinks from {{example:}} already have href — just add hover preview
+  container.querySelectorAll('a.lexlink[data-dict-id]').forEach(el => {
+    const entry = gDictById[el.dataset.dictId];
+    if (!entry) return;
+    el.addEventListener('mouseenter', () => { clearTimeout(gHideTimer); showGrammarTooltip(el, entry); });
+    el.addEventListener('mouseleave', hideGrammarTooltip);
+  });
+  // Form cells from {{cite:}} — data-lang + data-form
+  container.querySelectorAll('[data-lang][data-form]').forEach(el => {
+    const lang = el.dataset.lang, form = el.dataset.form;
+    if (!form || form==='—' || form==='—') return;
+    const clean = form.replace(/^[-=]+|[-=.,;]+$/g,'').toLowerCase();
+    const entry = gDictByForm[`${lang}:${form.toLowerCase()}`]||gDictByForm[`${lang}:${clean}`];
+    if (!entry) return;
+    el.style.cursor = 'pointer';
+    el.style.textDecorationLine = 'underline';
+    el.style.textDecorationStyle = 'dotted';
+    el.addEventListener('mouseenter', () => { clearTimeout(gHideTimer); showGrammarTooltip(el, entry); });
+    el.addEventListener('mouseleave', hideGrammarTooltip);
+    el.addEventListener('click', () => {
+      const langName = G_CODE2LANG[lang]||lang;
+      window.location.href = `dictionary.html?lang=${encodeURIComponent(langName)}#${entry.id}`;
+    });
+  });
+}
+
 </script>
+
+<!-- ── Dictionary hover tooltip (for cited examples) ── -->
+<div id="grammar-tooltip" role="tooltip" aria-hidden="true" style="
+  position:fixed;z-index:9999;pointer-events:none;
+  opacity:0;transition:opacity 0.08s ease;max-width:300px;">
+  <div style="background:#1c0f06;color:#f0dfc0;border-radius:5px;
+              padding:9px 14px 10px;
+              box-shadow:0 4px 18px rgba(0,0,0,.38),0 0 0 1px rgba(201,164,88,.25);
+              font-family:'Crimson Pro',serif;font-size:0.9rem;line-height:1.5;">
+    <div id="gtt-hw"     style="font-family:'EB Garamond',serif;font-size:1.1rem;font-weight:500;color:#fdeec8;"></div>
+    <div id="gtt-def"    style="color:#e8d0a8;margin-top:3px;font-size:0.86rem;"></div>
+    <div id="gtt-equivs" style="margin-top:5px;display:flex;flex-wrap:wrap;gap:4px;"></div>
+  </div>
+</div>
 </body>
 </html>
