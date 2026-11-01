@@ -1683,6 +1683,8 @@ function bindColGlossFull() {
 
   // Confirmation badges — clickable only when logged in
   document.querySelectorAll('.gloss-badge:not(.no-click)').forEach(badge => {
+    if (badge.dataset.bound) return;          // already has its handler
+    badge.dataset.bound = '1';
     badge.addEventListener('click', () => toggleConfirmation(badge.dataset.sid));
   });
 
@@ -1856,13 +1858,14 @@ function onAuthChange(loggedIn) {
     display.innerHTML = renderAlignedTable(s.words, tokens, colGlosses, nCols, sid, loggedIn);
     const editBtn = phrase.querySelector('.fn-edit-btn');
     if (editBtn) editBtn.style.display = loggedIn ? '' : 'none';
-    // Update badge clickability
-    document.querySelectorAll('.gloss-badge').forEach(b => {
-      b.classList.toggle('no-click', !loggedIn);
-    });
-    document.getElementById('tx-tooltip').classList.toggle('interactive', loggedIn);
-    if (loggedIn) { buildConcordanceFromGlosses(); bindColGlossFull(); bindNarrGlossInputs(); bindTranslationInputs(); }
   });
+
+  // Global work, once (not once per phrase)
+  document.querySelectorAll('.gloss-badge').forEach(b => {
+    b.classList.toggle('no-click', !loggedIn);
+  });
+  document.getElementById('tx-tooltip').classList.toggle('interactive', loggedIn);
+  if (loggedIn) { buildConcordanceFromGlosses(); bindColGlossFull(); bindNarrGlossInputs(); bindTranslationInputs(); }
 
   // Re-render editable gloss inputs for Case B phrases (single-line)
   document.querySelectorAll('.tx-phrase[data-has-gloss="0"]').forEach(phrase => {
@@ -1941,6 +1944,11 @@ async function init() {
     glosses = glData;
     buildConcordanceFromGlosses();
     render(txData);
+    // Land on the phrase named in the URL hash (e.g. from a dictionary example)
+    if (location.hash.length > 1) {
+      const target = document.getElementById(decodeURIComponent(location.hash.slice(1)));
+      if (target) setTimeout(() => target.scrollIntoView({ block: 'start' }), 60);
+    }
     bindNarrGlossInputs();
     bindTranslationInputs();
     bindHoverTooltips();
