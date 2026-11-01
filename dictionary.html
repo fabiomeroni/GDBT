@@ -158,6 +158,29 @@ body { overflow: hidden; }
 .etymograph-link img { width: 13px; height: 13px; object-fit: contain; opacity: 0.6; transition: opacity 0.12s, filter 0.12s; }
 .etymograph-link:hover img { opacity: 1; filter: brightness(10); }
 
+
+/* Entry modal form */
+.em-label { font-family:'Crimson Pro',serif; font-size:0.8rem; color:var(--ink-light); align-self:center; }
+.em-input {
+  font-family:'EB Garamond',serif; font-size:1rem;
+  border:none; border-bottom:1.5px solid var(--border);
+  background:transparent; outline:none; padding:2px 0;
+  color:var(--ink); transition:border-color 0.15s; width:100%;
+}
+.em-input:focus { border-bottom-color:var(--gold); }
+/* Edit / Delete per-entry buttons */
+.entry-actions { display:none; gap:0.4rem; margin-top:0.4rem; }
+.entry-actions.visible { display:flex; }
+.entry-action-btn {
+  font-family:'Crimson Pro',serif; font-size:0.75rem;
+  padding:2px 10px 3px; border-radius:3px; cursor:pointer;
+  border:1px solid var(--border); background:white; color:var(--ink-mid);
+  transition:background 0.12s, border-color 0.12s;
+}
+.entry-action-btn:hover { background:#f0e8d8; border-color:var(--gold); }
+.entry-action-btn.danger { border-color:#f0c0b0; color:#922810; }
+.entry-action-btn.danger:hover { background:#922810; color:white; }
+
 /* ── Teanu-style language equivalents ── */
 .entry-equivs {
   display: flex; align-items: baseline; flex-wrap: wrap;
@@ -234,6 +257,16 @@ body { overflow: hidden; }
 .ex-table .ex-gloss-empty { border: none; padding: 5px 14px 3px 0; vertical-align: baseline; }
 .ex-table .ex-gloss { font-family: 'Source Code Pro', monospace; font-size: 0.64rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-light); padding: 5px 16px 3px 0; vertical-align: baseline; border: none; white-space: nowrap; }
 .ex-transl  { font-family: 'Crimson Pro', serif; font-style: italic; font-size: 1rem; color: var(--ink-mid); margin-top: 5px; }
+
+/* ── Example expand button ── */
+.ex-expand-btn {
+  font-family: 'Crimson Pro', serif; font-size: 0.78rem;
+  color: var(--gold); background: none; border: none;
+  cursor: pointer; padding: 4px 0 2px; display: block;
+  transition: color 0.12s; letter-spacing: 0.04em;
+}
+.ex-expand-btn:hover { color: #b84c10; }
+
 .grammar-ref { display: inline-flex; align-items: center; gap: 5px; font-family: 'Crimson Pro', serif; font-size: 0.8rem; color: #2a4a6a; border: 1px solid #a0bcd0; border-radius: 3px; padding: 2px 10px 3px; text-decoration: none; margin-top: 7px; transition: background 0.12s, color 0.12s; }
 .grammar-ref:hover { background: #2a4a6a; color: white; border-color: #2a4a6a; }
 
@@ -249,6 +282,44 @@ body { overflow: hidden; }
 #lex-tooltip .tt-eq b { color: #c9a458; font-weight: 500; }
 #lex-tooltip .tt-eq.tt-eq-hl { background: rgba(255,255,255,.22); outline: 1px solid rgba(255,255,255,.18); }
 #lex-tooltip .tt-eq.tt-eq-hl b { color: #fdeec8; }
+
+
+/* ── Proposed (ghost) dictionary entries ── */
+.proposed-section-hdr {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.72rem; letter-spacing: 0.13em; text-transform: uppercase;
+  color: var(--ink-light); padding: 1.6rem 0 0.4rem;
+  border-bottom: 1px dashed var(--border); margin-bottom: 0.8rem;
+}
+.entry.proposed {
+  opacity: 0.55; border-left: 2px dashed var(--border);
+  padding-left: 0.6rem; transition: opacity 0.15s;
+}
+.entry.proposed:hover { opacity: 0.85; }
+.proposed-badge {
+  font-family: 'Source Code Pro', monospace; font-size: 0.65rem;
+  letter-spacing: 0.09em; text-transform: uppercase;
+  background: #f5f0e8; border: 1px dashed var(--gold);
+  border-radius: 3px; padding: 1px 7px 2px; color: var(--gold);
+  vertical-align: middle; margin-right: 6px;
+}
+.proposed-actions { margin-top: 0.6rem; display: flex; gap: 0.5rem; }
+.proposed-btn {
+  font-family: 'Crimson Pro', serif; font-size: 0.8rem;
+  padding: 2px 12px 3px; border-radius: 3px; cursor: pointer;
+  border: 1px solid var(--border); background: white; color: var(--ink-mid);
+  transition: background 0.12s, border-color 0.12s;
+}
+.proposed-btn:hover { background: #f0e8d8; border-color: var(--gold); }
+.proposed-btn.add { border-color: #267040; color: #267040; }
+.proposed-btn.add:hover { background: #267040; color: white; }
+.proposed-btn.dismiss { border-color: #c06060; color: #c06060; }
+.proposed-btn.dismiss:hover { background: #c06060; color: white; }
+.proposed-example {
+  font-family: 'Crimson Pro', serif; font-size: 0.88rem;
+  font-style: italic; color: var(--ink-light);
+  margin-top: 0.3rem; line-height: 1.5;
+}
 
 </style>
 </head>
@@ -290,11 +361,16 @@ body { overflow: hidden; }
   </aside>
 
   <main class="dict-main" id="dict-main">
-    <div style="display:flex;align-items:center;justify-content:flex-end;padding:0.25rem 3.5rem 0;background:#f0e8d8;border-bottom:1px solid var(--border);">
-      <button class="edit-tab" id="dict-edit-tab" title="Upload new dictionary XML">✏ Edit</button>
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:0.5rem;padding:0.25rem 3.5rem 0;background:#f0e8d8;border-bottom:1px solid var(--border);">
+      <button class="edit-tab" id="add-entry-btn" title="Add a new dictionary entry">＋ Add entry</button>
+      <button class="edit-tab" id="dict-edit-tab" title="Upload new dictionary XML">⬆ Upload XML</button>
     </div>
     <div class="result-bar" id="result-bar">Loading dictionary…</div>
     <div class="dict-content" id="dict-content">
+    <div id="proposed-section" style="display:none;">
+      <div class="proposed-section-hdr">Proposed entries from confirmed texts</div>
+      <div id="proposed-entries"></div>
+    </div>
       <p class="dict-status">Loading <code>dbt_dictionary.xml</code>…</p>
     </div>
   </main>
@@ -382,7 +458,9 @@ async function parseLexicaXML(url) {
       etym = { label: `${lang} ${forme} '${glose}'`, tlopo, etymograph };
     }
 
-    return { id, hw, langs, pos, domain, gloss, glossRich, notes, etym };
+    const shortGlossEl = el.querySelector('Sens > gloss');
+    const shortGloss   = shortGlossEl ? shortGlossEl.textContent.trim() : '';
+    return { id, hw, langs, pos, domain, gloss, glossRich, notes, etym, shortGloss };
   });
 }
 
@@ -435,36 +513,58 @@ function equivsHTML(entry) {
   return `<div class="entry-equivs">${items}</div>`;
 }
 
+function buildExRow(row, cols, ownCol) {
+  const color = LANG_COLORS[row.lang] || '#888';
+  const abbr  = LANG_ABBR[row.lang]  || row.lang;
+  const cells = cols.map((col, i) => {
+    const f = row.forms[i] ?? '';
+    if (!f) return `<td class="ex-cell ex-dash">—</td>`;
+    if (i === ownCol)
+      return `<td class="ex-cell ex-own"><strong style="color:${color};">${f}</strong></td>`;
+    return `<td class="ex-cell"><a class="lexlink" href="#${col.dictId}" data-dict-id="${col.dictId}" data-lang="${row.lang}">${f}</a></td>`;
+  }).join('');
+  return `<tr><td class="ex-abbr" style="color:${color};">${abbr}</td>${cells}</tr>`;
+}
+
+function toggleExampleExpand(exId) {
+  const tbody = document.getElementById(exId + '-others');
+  const btn   = document.getElementById(exId + '-btn');
+  if (!tbody) return;
+  const collapsed = tbody.style.display === 'none';
+  tbody.style.display = collapsed ? '' : 'none';
+  btn.textContent = collapsed ? '▲ Hide other languages' : '▼ Show all languages';
+}
+
 function exampleHTML(entryId) {
   const ex     = NEGATION_EXAMPLE;
   const cols   = ex.cols;
   const ownCol = cols.findIndex(c => c.dictId === entryId);
+  // Unique ID so multiple entries can each have their own expand state
+  const exId   = 'ex-' + entryId;
 
-  const rowsHTML = ex.rows.map(row => {
-    const color = LANG_COLORS[row.lang] || '#888';
-    const abbr  = LANG_ABBR[row.lang]  || row.lang;
-    const cells = cols.map((col, i) => {
-      const f = row.forms[i] ?? '';
-      if (!f) return `<td class="ex-cell ex-dash">—</td>`;
-      if (i === ownCol)
-        return `<td class="ex-cell ex-own"><strong style="color:${color};">${f}</strong></td>`;
-      return `<td class="ex-cell"><a class="lexlink" href="#${col.dictId}" data-dict-id="${col.dictId}" data-lang="${row.lang}">${f}</a></td>`;
-    }).join('');
-    return `<tr><td class="ex-abbr" style="color:${color};">${abbr}</td>${cells}</tr>`;
-  }).join('');
+  // Active language row shown by default
+  const activeRow   = ex.rows.find(r => r.lang === activeLang);
+  const otherRows   = ex.rows.filter(r => r.lang !== activeLang);
+  const activeHTML  = activeRow ? buildExRow(activeRow, cols, ownCol) : '';
+  const othersHTML  = otherRows.map(r => buildExRow(r, cols, ownCol)).join('');
 
   const sepCells   = '<td></td>' + cols.map(() => '<td></td>').join('');
   const glossCells = cols.map(c => `<td class="ex-gloss">${c.gl}</td>`).join('');
 
   return `<div class="entry-example-block">
-    <div class="example-label">Example</div>
+    <div class="example-label">Example · fieldnotes</div>
     <div class="example-wrap">
       <table class="ex-table">
-        ${rowsHTML}
-        <tr class="ex-sep">${sepCells}</tr>
-        <tr><td class="ex-gloss-empty"></td>${glossCells}</tr>
+        ${activeHTML}
+        <tbody id="${exId}-others" style="display:none;">
+          ${othersHTML}
+          <tr class="ex-sep">${sepCells}</tr>
+          <tr><td class="ex-gloss-empty"></td>${glossCells}</tr>
+        </tbody>
       </table>
       <div class="ex-transl">${ex.translation}</div>
+      <button class="ex-expand-btn" id="${exId}-btn"
+              onclick="toggleExampleExpand('${exId}')">▼ Show all languages</button>
       <a class="grammar-ref" href="grammar.html#s1">📐 See in Comparative Grammar →</a>
     </div>
   </div>`;
@@ -480,6 +580,10 @@ function entryHTML(entry) {
       <span class="entry-headword" style="color:${color};">${hw}</span>
       <span class="entry-pos">${entry.pos}</span>
       <span class="entry-domain">${entry.domain}</span>
+    </div>
+    <div class="entry-actions${isLoggedIn ? ' visible' : ''}" id="ea-${entry.id}">
+      <button class="entry-action-btn" onclick="openEditEntry('${entry.id}')">✏ Edit</button>
+      <button class="entry-action-btn danger" onclick="deleteEntry('${entry.id}')">🗑 Delete</button>
     </div>
     ${etymRow}
     ${equivsHTML(entry)}
@@ -744,18 +848,262 @@ function bindBadgeClicks() {
   });
 }
 
+
+// ── Proposed dictionary entries ──────────────────────────────
+let proposedEntries = {}; // colKey → {gloss, forms, examples}
+let isLoggedIn = false;
+
+async function loadProposedEntries() {
+  try {
+    const r = await fetch('/api/dictionary/proposed');
+    if (r.ok) proposedEntries = await r.json();
+  } catch(e) {}
+}
+
+function renderProposedEntries() {
+  const section = document.getElementById('proposed-section');
+  const container = document.getElementById('proposed-entries');
+  const entries = Object.entries(proposedEntries);
+  if (!entries.length) { section.style.display = 'none'; return; }
+  section.style.display = '';
+  const LANG_FROM_CODE = {num:'Nume',drg:'Dorig',kro:'Koro',olr:'Olrat',lkn:'Lakon'};
+  container.innerHTML = entries.map(([key, e]) => {
+    const hwLang = activeLang;
+    const hwCode = {Nume:'num',Dorig:'drg',Koro:'kro',Olrat:'olr',Lakon:'lkn'}[hwLang];
+    const hw = e.forms?.[hwCode] || e.gloss;
+    const equivs = Object.entries(e.forms||{}).map(([code, form]) => {
+      const lang = LANG_FROM_CODE[code] || code;
+      const col = COLORS5[lang] || '#888';
+      return `<span class="equiv-item">
+        <span class="equiv-lang-abbr" style="color:${col};">${ABBR5[lang]||code}</span>
+        <span class="equiv-form" style="color:${col};">${form}</span>
+      </span>`;
+    }).join('');
+    const examples = (e.examples||[]).map(ex =>
+      `<div class="proposed-example">
+        "${ex.translation}" <span style="color:var(--ink-light);font-style:normal;font-size:0.8rem;">[${ex.title||ex.sentence_id}]</span>
+      </div>`
+    ).join('');
+    const actions = isLoggedIn ? `
+      <div class="proposed-actions">
+        <button class="proposed-btn add" onclick="addProposedToDict('${key.replace(/'/g,"\'")}')">＋ Add to dictionary</button>
+        <button class="proposed-btn dismiss" onclick="dismissProposed('${key.replace(/'/g,"\'")}')">✕ Dismiss</button>
+      </div>` : '';
+    return `<div class="entry proposed" data-col-key="${key}">
+      <div class="entry-header">
+        <span class="entry-headword" style="color:var(--ink-mid);">${hw}</span>
+        <span class="proposed-badge">proposed</span>
+      </div>
+      <div class="entry-equivs">${equivs}</div>
+      <div class="entry-gloss">${e.gloss}</div>
+      ${examples}
+      ${actions}
+    </div>`;
+  }).join('');
+}
+
+async function addProposedToDict(colKey) {
+  const r = await fetch('/api/dictionary/proposed/add', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({col_key: colKey})
+  });
+  const d = await r.json();
+  if (d.ok) {
+    delete proposedEntries[colKey];
+    renderProposedEntries();
+    // Reload dictionary to show new entry
+    DICTIONARY = await parseLexicaXML('dbt_dictionary.xml');
+    DICTIONARY.forEach(e => { DICT_MAP[e.id] = e; });
+    render();
+  } else {
+    alert(d.error || 'Could not add entry.');
+  }
+}
+
+async function dismissProposed(colKey) {
+  await fetch('/api/dictionary/proposed/dismiss', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({col_key: colKey})
+  });
+  delete proposedEntries[colKey];
+  renderProposedEntries();
+}
+
+
+// ── Dictionary CRUD ───────────────────────────────────────────
+
+// Reload dictionary XML after any modification
+async function reloadDictionary() {
+  try {
+    DICTIONARY = await parseLexicaXML('uploads/dictionary.xml');
+  } catch(e) {
+    DICTIONARY = await parseLexicaXML('dbt_dictionary.xml');
+  }
+  DICTIONARY.forEach(e => { DICT_MAP[e.id] = e; });
+  render();
+  renderProposedEntries();
+}
+
+// ── Entry modal helpers ───────────────────────────────────────
+let _editingId = null; // null = adding, string = editing existing
+
+function _openEntryModal(title, entry) {
+  _editingId = entry ? entry.id : null;
+  document.getElementById('em-title').textContent = title;
+  document.getElementById('em-msg').textContent = '';
+
+  const codes = {Nume:'num',Dorig:'drg',Koro:'kro',Olrat:'olr',Lakon:'lkn'};
+  // Clear all inputs first
+  ['num','drg','kro','olr','lkn','pos','domain','gloss','short','notes',
+   'el','ef','eg','et','ee'].forEach(id => {
+    const el = document.getElementById('ef-'+id);
+    if (el) el.value = '';
+  });
+
+  if (entry) {
+    // Pre-fill language forms
+    LANGS5.forEach(lang => {
+      const el = document.getElementById('ef-' + codes[lang]);
+      if (el) el.value = entry.langs[lang] || '';
+    });
+    document.getElementById('ef-pos').value    = entry.pos    || '';
+    document.getElementById('ef-domain').value = entry.domain || '';
+    document.getElementById('ef-gloss').value  = entry.gloss  || '';
+    document.getElementById('ef-short').value  = entry.shortGloss || entry.gloss || '';
+    document.getElementById('ef-notes').value  = entry.notes  || '';
+    if (entry.etym) {
+      document.getElementById('ef-el').value = entry.etym.label?.split(' ')[0] || 'POc';
+      // label = "POc *form 'gloss'" — best effort parse
+      const m = entry.etym.label?.match(/^(\S+)\s+(\S+)\s+'(.+)'$/);
+      if (m) {
+        document.getElementById('ef-ef').value = m[2];
+        document.getElementById('ef-eg').value = m[3];
+      }
+      document.getElementById('ef-et').value = entry.etym.tlopo       || '';
+      document.getElementById('ef-ee').value = entry.etym.etymograph  || '';
+    }
+  }
+  document.getElementById('entry-modal').classList.add('visible');
+  document.getElementById('ef-num').focus();
+}
+
+function _collectEntryData() {
+  const codes = ['num','drg','kro','olr','lkn'];
+  const forms = {};
+  codes.forEach(c => { forms[c] = document.getElementById('ef-'+c)?.value.trim() || ''; });
+  const etymForm = document.getElementById('ef-ef')?.value.trim();
+  const etym = etymForm ? {
+    lang:       document.getElementById('ef-el')?.value.trim() || 'POc',
+    form:       etymForm,
+    gloss:      document.getElementById('ef-eg')?.value.trim() || '',
+    tlopo:      document.getElementById('ef-et')?.value.trim() || '',
+    etymograph: document.getElementById('ef-ee')?.value.trim() || '',
+  } : null;
+  return {
+    forms,
+    pos:        document.getElementById('ef-pos')?.value.trim()    || '',
+    domain:     document.getElementById('ef-domain')?.value.trim() || '',
+    gloss:      document.getElementById('ef-gloss')?.value.trim()  || '',
+    shortGloss: document.getElementById('ef-short')?.value.trim()  || '',
+    notes:      document.getElementById('ef-notes')?.value.trim()  || '',
+    etym,
+  };
+}
+
+function openAddEntry() {
+  if (!isLoggedIn) { showLoginModal(); return; }
+  _openEntryModal('Add entry', null);
+}
+
+function openEditEntry(entryId) {
+  if (!isLoggedIn) { showLoginModal(); return; }
+  const entry = DICT_MAP[entryId];
+  if (!entry) return;
+  _openEntryModal('Edit entry', entry);
+}
+
+async function deleteEntry(entryId) {
+  if (!isLoggedIn) { showLoginModal(); return; }
+  const entry = DICT_MAP[entryId];
+  const hw = entry ? (entry.langs[activeLang] || entry.hw) : entryId;
+  if (!confirm(`Delete "${hw}"?\n\nThis removes it from the dictionary XML and cannot be undone.`)) return;
+  try {
+    const r = await fetch(`/api/dictionary/entry/${encodeURIComponent(entryId)}`,
+                         { method: 'DELETE' });
+    const d = await r.json();
+    if (d.ok) { await reloadDictionary(); }
+    else { alert(d.error || 'Delete failed.'); }
+  } catch(e) { alert('Network error.'); }
+}
+
+async function _submitEntry() {
+  const msg  = document.getElementById('em-msg');
+  const data = _collectEntryData();
+  if (!Object.values(data.forms).some(v => v)) {
+    msg.textContent = 'Please fill in at least one language form.';
+    msg.className = 'dbt-modal-msg error'; return;
+  }
+  msg.textContent = 'Saving…'; msg.className = 'dbt-modal-msg';
+  try {
+    const url    = _editingId
+      ? `/api/dictionary/entry/${encodeURIComponent(_editingId)}`
+      : '/api/dictionary/entry';
+    const method = _editingId ? 'PUT' : 'POST';
+    const r = await fetch(url, {
+      method, headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(data)
+    });
+    const d = await r.json();
+    if (d.ok) {
+      document.getElementById('entry-modal').classList.remove('visible');
+      await reloadDictionary();
+      // Scroll to the new/updated entry
+      const targetId = d.id || _editingId;
+      if (targetId) setTimeout(() => {
+        document.getElementById(targetId)?.scrollIntoView({behavior:'smooth',block:'start'});
+      }, 300);
+    } else {
+      msg.textContent = d.error || 'Save failed.';
+      msg.className = 'dbt-modal-msg error';
+    }
+  } catch(e) {
+    msg.textContent = 'Network error.';
+    msg.className = 'dbt-modal-msg error';
+  }
+}
+
+function _bindEntryModal() {
+  document.getElementById('em-cancel').addEventListener('click', () =>
+    document.getElementById('entry-modal').classList.remove('visible'));
+  document.getElementById('entry-modal').addEventListener('click', e => {
+    if (e.target === e.currentTarget)
+      document.getElementById('entry-modal').classList.remove('visible');
+  });
+  document.getElementById('em-submit').addEventListener('click', _submitEntry);
+  document.getElementById('add-entry-btn')?.addEventListener('click', openAddEntry);
+}
+
+
 async function init() {
   // ── Read URL params: ?lang=Nume#speech ──────────────────────
   const params   = new URLSearchParams(window.location.search);
   const langParam = params.get('lang');
   if (langParam && LANGS5.includes(langParam)) activeLang = langParam;
 
+  // Check auth for proposed entry actions
+  try {
+    const authR = await fetch('/api/auth/status');
+    if (authR.ok) { const ad = await authR.json(); isLoggedIn = ad.logged_in; }
+  } catch(e) {}
+
   try {
     DICTIONARY = await parseLexicaXML('dbt_dictionary.xml');
     DICTIONARY.forEach(e => { DICT_MAP[e.id] = e; });
+    await loadProposedEntries();
     buildPills();
     bindSearch();
     render();
+    renderProposedEntries();
     bindScrollspy();
     bindSidebarNav();
     bindBadgeClicks();
@@ -789,6 +1137,74 @@ async function init() {
 
 init();
 </script>
+<!-- ── Add / Edit entry modal ── -->
+<div class="dbt-modal-backdrop" id="entry-modal">
+  <div class="dbt-modal" style="max-width:560px;width:94vw;max-height:90vh;overflow-y:auto;">
+    <h3 id="em-title">Add entry</h3>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem 1rem;margin-bottom:0.9rem;">
+      <label style="font-family:'Crimson Pro',serif;font-size:0.8rem;
+                       font-weight:600;color:#2e5c8a;align-self:center;">Nume</label>
+      <input id="ef-num" class="em-input" style="border-bottom-color:#2e5c8a;"
+             placeholder="Nume form…" spellcheck="false">
+      <label style="font-family:'Crimson Pro',serif;font-size:0.8rem;
+                       font-weight:600;color:#c07820;align-self:center;">Dorig</label>
+      <input id="ef-drg" class="em-input" style="border-bottom-color:#c07820;"
+             placeholder="Dorig form…" spellcheck="false">
+      <label style="font-family:'Crimson Pro',serif;font-size:0.8rem;
+                       font-weight:600;color:#922810;align-self:center;">Koro</label>
+      <input id="ef-kro" class="em-input" style="border-bottom-color:#922810;"
+             placeholder="Koro form…" spellcheck="false">
+      <label style="font-family:'Crimson Pro',serif;font-size:0.8rem;
+                       font-weight:600;color:#267040;align-self:center;">Olrat</label>
+      <input id="ef-olr" class="em-input" style="border-bottom-color:#267040;"
+             placeholder="Olrat form…" spellcheck="false">
+      <label style="font-family:'Crimson Pro',serif;font-size:0.8rem;
+                       font-weight:600;color:#5c2878;align-self:center;">Lakon</label>
+      <input id="ef-lkn" class="em-input" style="border-bottom-color:#5c2878;"
+             placeholder="Lakon form…" spellcheck="false">
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem 1rem;margin-bottom:0.9rem;">
+      <label class="em-label">Part of speech</label>
+      <input id="ef-pos" class="em-input" placeholder="n., v.tr., part.…">
+      <label class="em-label">Semantic domain</label>
+      <input id="ef-domain" class="em-input" placeholder="Language, Nature…">
+    </div>
+
+    <div style="margin-bottom:0.9rem;">
+      <label class="em-label" style="display:block;margin-bottom:0.3rem;">Definition (English)</label>
+      <input id="ef-gloss" class="em-input" style="width:100%;box-sizing:border-box;"
+             placeholder="e.g. speech, language, word">
+      <label class="em-label" style="display:block;margin:0.4rem 0 0.2rem;">Short gloss for interlinear</label>
+      <input id="ef-short" class="em-input" style="width:100%;box-sizing:border-box;"
+             placeholder="e.g. speech">
+      <label class="em-label" style="display:block;margin:0.4rem 0 0.2rem;">Notes</label>
+      <textarea id="ef-notes" class="em-input"
+                style="width:100%;box-sizing:border-box;height:4rem;resize:vertical;"
+                placeholder="Usage notes, cognate information…"></textarea>
+    </div>
+
+    <details style="margin-bottom:0.9rem;">
+      <summary style="font-family:'Crimson Pro',serif;font-size:0.82rem;color:var(--ink-light);
+                      cursor:pointer;letter-spacing:0.05em;">Etymology (optional)</summary>
+      <div style="display:grid;grid-template-columns:1fr 2fr;gap:0.4rem 0.8rem;margin-top:0.5rem;">
+        <label class="em-label">Proto-language</label><input id="ef-el" class="em-input" placeholder="POc">
+        <label class="em-label">Form</label><input id="ef-ef" class="em-input" placeholder="*qaliŋa-">
+        <label class="em-label">Meaning</label><input id="ef-eg" class="em-input" placeholder="voice">
+        <label class="em-label">TLOPO link</label><input id="ef-et" class="em-input" placeholder="https://tlopo…">
+        <label class="em-label">Etymograph</label><input id="ef-ee" class="em-input" placeholder="https://evosem…">
+      </div>
+    </details>
+
+    <div class="dbt-modal-msg" id="em-msg"></div>
+    <div class="dbt-modal-row">
+      <button class="modal-btn" id="em-cancel">Cancel</button>
+      <button class="modal-btn primary" id="em-submit">Save entry</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── Login modal ── -->
 <div class="dbt-modal-backdrop" id="login-modal">
   <div class="dbt-modal">
