@@ -1017,6 +1017,119 @@ def delete_dict_entry(entry_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# ── Text examples for dictionary entries ─────────────────────────────────────
+# An entry's examples are the sentences, in texts whose glosses the author has
+# CONFIRMED, that contain one of its forms. Computed on the fly, so they stay in
+# sync with confirmations and also work for entries added earlier.
+
+_DBT_CODES = ['num', 'drg', 'kro', 'olr', 'lkn']
+# Language code used in a transcription XML (xml:lang) -> DBT language code.
+# Languages that are not Gaua languages (e.g. Lo-Toga, Mwotlap) are simply absent.
+_TX_LANG_TO_CODE = {'wwo': 'drg', 'drg': 'drg', 'lkn': 'lkn', 'krf': 'kro',
+                    'kro': 'kro', 'num': 'num', 'olr': 'olr'}
+
+def _clean_form(s):
+    """Lower-case a form and strip morpheme-boundary and punctuation marks."""
+    return re.sub(r'^[-=]+|[-=.,;!?]+$', '', (s or '').strip()).lower()
+
+@app.route('/api/dictionary/examples')
+def dictionary_examples():
+    try:
+        d = get_dict_xml()
+        if d is None:
+            return jsonify({})
+        entry_forms = {}
+        for el in d.findall('.//EntréeLexicale'):
+            forms = {}
+            for node in el.findall('Lemme/ReprésentationDeForme'):
+                code = node.get('langue', '')
+                c = _clean_form(node.text)
+                if code in _DBT_CODES and c and c != '\u2014':
+                    forms[code] = c
+            if forms:
+                entry_forms[el.get('identifiant', '')] = forms
+        result = {eid: [] for eid in entry_forms}
+
+        # ---- fieldnotes: five parallel languages per column ----
+        fx = get_fieldnotes_xml()
+        groups = fx.findall('.//tiGroup') if fx is not None else []
+        for fname in sorted(os.listdir(GLOSSES_FOLDER)):
+            m = re.fullmatch(r'fieldnotes_(\d+)\.json', fname)
+            if not m:
+                continue
+            idx = int(m.group(1))
+            stored = _load_stored_glosses(f'fieldnotes_{idx}')
+            title, prompts = '', {}
+            if idx < len(groups):
+                title = (groups[idx].findtext('ti') or '').strip()
+                for rfg in groups[idx].findall('rfGroup'):
+                    grp = rfg.find('bslGroup')
+                    if grp is None:
+                        grp = rfg.find('frGroup')
+                    if grp is not None:
+                        prompts[(rfg.findtext('rf') or '').strip()] = (
+                            grp.findtext('bsl') or grp.findtext('fr') or '').strip()
+            for sid, g in stored.items():
+                if not (isinstance(g, dict) and g.get('confirmed') is True
+                        and isinstance(g.get('tokens'), dict)):
+                    continue
+                tokens = g['tokens']
+                n_cols = max((len(tokens.get(c, [])) for c in _DBT_CODES), default=0)
+                matched = {}   # entry id -> [column indexes]
+                for ci in range(n_cols):
+                    col = {c: _clean_form(tokens.get(c, [])[ci]
+                                          if ci < len(tokens.get(c, [])) else '')
+                           for c in _DBT_CODES}
+                    for eid, ef in entry_forms.items():
+                        hits = sum(1 for c, v in ef.items() if col.get(c) == v)
+                        if hits >= min(2, len(ef)):
+                            matched.setdefault(eid, []).append(ci)
+                for eid, cols in matched.items():
+                    transl = (g.get('translation') if g.get('translation') is not None
+                              else prompts.get(sid, ''))
+                    result[eid].append({
+                        'type': 'fieldnotes', 'index': idx, 'title': title,
+                        'sentence_id': sid, 'tokens': tokens,
+                        'glosses': g.get('glosses', []),
+                        'translation': transl, 'match_cols': cols})
+
+        # ---- transcribed narratives: a single language per sentence ----
+        for fn in sorted(os.listdir(TRANSCRIPTIONS_FOLDER)):
+            if not fn.endswith('.xml'):
+                continue
+            stored = _load_stored_glosses(fn)
+            confirmed = {sid: g for sid, g in stored.items()
+                         if isinstance(g, dict) and g.get('confirmed') is True
+                         and isinstance(g.get('tokens'), list)}
+            if not confirmed:
+                continue
+            try:
+                data = _parse_tx(os.path.join(TRANSCRIPTIONS_FOLDER, fn))
+            except Exception:
+                continue
+            code = _TX_LANG_TO_CODE.get((data.get('lang') or '').strip())
+            if not code:
+                continue
+            sent_transl = {s['id']: s['transl'] for s in data['sentences']}
+            for sid, g in confirmed.items():
+                toks = [_clean_form(t) for t in g['tokens']]
+                for eid, ef in entry_forms.items():
+                    if code not in ef:
+                        continue
+                    cols = [i for i, t in enumerate(toks) if t == ef[code]]
+                    if cols:
+                        transl = (g.get('translation') if g.get('translation') is not None
+                                  else sent_transl.get(sid, ''))
+                        result[eid].append({
+                            'type': 'narrative', 'file': fn, 'title': data['title'],
+                            'lang': code, 'sentence_id': sid,
+                            'tokens': g['tokens'], 'glosses': g.get('glosses', []),
+                            'translation': transl, 'match_cols': cols})
+        return jsonify({k: v for k, v in result.items() if v})
+    except Exception as e:
+        import traceback
+        return jsonify({'error': str(e), 'traceback': traceback.format_exc()}), 500
+
 @app.route('/api/dictionary/entries')
 def dictionary_entries():
     """Return all entries with their 5-language forms and English gloss.
