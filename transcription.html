@@ -744,7 +744,9 @@ function showAlignmentEditor(sid, btn) {
 }
 
 // ── Dictionary entries (loaded once for gloss lookup) ────────
-let dictEntries = []; // [{id, gloss, forms: {num, drg, kro, olr, lkn}}]
+let dictEntries = []; // [{id, gloss, glosses, senses, forms: {num, drg, kro, olr, lkn}}]
+// every sense of an entry has its own gloss
+const entryGlosses = e => (e.glosses && e.glosses.length) ? e.glosses : (e.gloss ? [e.gloss] : []);
 
 async function loadDictionary() {
   try {
@@ -771,15 +773,16 @@ function getDictionaryGlosses(words, tokens, colIdx) {
       const dictRaw   = (entry.forms[langCode] || '').trim();
       if (!dictRaw) return;
       const dictClean = dictRaw.replace(/^[-=]+|[-=.,;]+$/g, '').toLowerCase();
-      if (!dictClean || !entry.gloss) return;
+      const gs = entryGlosses(entry);          // one per sense: each is a possible gloss
+      if (!dictClean || !gs.length) return;
 
       if (dictClean === clean || dictRaw.toLowerCase() === raw.toLowerCase()) {
-        full.add(entry.gloss);
+        gs.forEach(g => full.add(g));
       } else if (
         clean.length >= 2 && dictClean.length >= 2 &&
         (clean.includes(dictClean) || dictClean.includes(clean))
       ) {
-        partial.add(entry.gloss);
+        gs.forEach(g => partial.add(g));
       }
     });
   });
@@ -1009,7 +1012,7 @@ function buildDictLookups() {
   dictByGloss = {};
   dictByForm  = {};
   dictEntries.forEach(entry => {
-    if (entry.gloss) dictByGloss[entry.gloss.toLowerCase()] = entry;
+    entryGlosses(entry).forEach(g => { dictByGloss[g.toLowerCase()] = entry; });
     Object.entries(entry.forms || {}).forEach(([lang, form]) => {
       if (!form || form === '—') return;
       const key   = `${lang}:${form.toLowerCase()}`;
@@ -1028,7 +1031,9 @@ function _dictTooltipHTML(entry) {
   const equivs = FN_CODES.map(c =>
     `<span class="tt-eq"><b style="color:${_COLORS5[c]};">${_ABBRS5[c]}</b> ${entry.forms?.[c] || '—'}</span>`
   ).join('');
-  return `<span class="tt-hw">${entry.gloss}</span>
+  const line = (entry.senses || []).length > 1
+    ? entry.senses.map(s => `${s.n}. ${s.gloss}`).join('   ') : entry.gloss;
+  return `<span class="tt-hw">${line}</span>
     <div class="tt-equivs">${equivs}</div>`;
 }
 
