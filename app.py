@@ -961,6 +961,20 @@ def _build_entry_el(data, existing_ids=None, force_id=None):
 
 # ── Dictionary CRUD ───────────────────────────────────────────
 
+@app.route('/api/dictionary/xml')
+def dictionary_xml():
+    """Serve the ACTIVE dictionary XML - the very file the add/edit/delete routes write to
+    (an uploaded dictionary if there is one, otherwise dbt_dictionary.xml). The pages load
+    the dictionary from here instead of guessing which file is current."""
+    from flask import Response
+    p = _dict_path()
+    if not os.path.exists(p):
+        return jsonify({'error': 'Dictionary XML not found'}), 404
+    with open(p, 'rb') as f:
+        data = f.read()
+    return Response(data, mimetype='application/xml',
+                    headers={'Cache-Control': 'no-store'})
+
 @app.route('/api/dictionary/entry', methods=['POST'])
 def add_dict_entry():
     if not session.get('author'):
