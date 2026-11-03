@@ -56,9 +56,6 @@ def _load_xml(upload_name, fallback):
 def get_dict_xml():
     return _load_xml('dictionary.xml', 'dbt_dictionary.xml')
 
-def get_corpus_xml():
-    return _load_xml('corpus.xml', 'dbt_corpus.xml')
-
 def get_fieldnotes_xml():
     return _load_xml('fieldnotes.xml', 'AlexFrancois_Questionnaire_Gaua-languages.xml')
 
@@ -212,9 +209,34 @@ def build_fieldnotes_citation(group_index, sent_id, n):
 # but with its own gloss store (glosses/papers_0.json) so fieldnotes glosses are never touched.
 PAPERS_TITLE = 'Examples from papers'
 
+def _root_tag(path):
+    """Root element name, read without parsing the whole file (or fetching its DTD)."""
+    try:
+        for _ev, el in etree.iterparse(path, events=('start',), load_dtd=False,
+                                       no_network=True, resolve_entities=False):
+            return el.tag
+    except Exception:
+        return None
+
+def _is_examples_file(path):
+    return _root_tag(path) == 'Examples'
+
 def _paper_examples():
-    corpus = get_corpus_xml()
-    return corpus.findall('.//Example') if corpus is not None else []
+    """Every <Example> of the files in transcribed_narratives/ whose root is <Examples>."""
+    out, seen = [], set()
+    for fn in sorted(os.listdir(TRANSCRIPTIONS_FOLDER)):
+        path = os.path.join(TRANSCRIPTIONS_FOLDER, fn)
+        if not fn.endswith('.xml') or not _is_examples_file(path):
+            continue
+        try:
+            root = etree.parse(path, _XML_PARSER).getroot()
+        except Exception:
+            continue
+        for ex in root.findall('.//Example'):
+            if ex.get('id') not in seen:          # ids are unique; the first one wins
+                seen.add(ex.get('id'))
+                out.append(ex)
+    return out
 
 def _paper_example(example_id):
     return next((e for e in _paper_examples() if e.get('id') == example_id), None)
@@ -341,13 +363,9 @@ def build_example_table(ex_id, n=None):
     data-gloss, so the page can link them to the dictionary - but only where the
     gloss agrees with the dictionary entry (so a homophone is not linked wrongly).
     """
-    corpus = get_corpus_xml()
-    if corpus is None:
-        return f'<p class="shortcode-error">Corpus XML not found (looking for uploads/corpus.xml or dbt_corpus.xml)</p>'
-
-    ex = corpus.find(f'.//Example[@id="{ex_id}"]')
+    ex = _paper_example(ex_id)
     if ex is None:
-        return f'<p class="shortcode-error">Example not found in corpus: <code>{_esc(ex_id)}</code></p>'
+        return f'<p class="shortcode-error">Example not found in "Examples from papers": <code>{_esc(ex_id)}</code></p>'
 
     translation  = ex.findtext('Translation[@lang="eng"]', '').strip()
     glosses_raw  = ex.findtext('Glosses', '').strip()
@@ -546,10 +564,6 @@ def upload_dictionary():
     return _handle_upload('dictionary.xml')
 
 
-@app.route('/api/upload/corpus', methods=['POST'])
-def upload_corpus():
-    return _handle_upload('corpus.xml')
-
 @app.route('/api/upload/fieldnotes', methods=['POST'])
 def upload_fieldnotes():
     return _handle_upload('fieldnotes.xml')
@@ -736,8 +750,6 @@ def upload_status():
     return jsonify({
         'dictionary': os.path.exists(os.path.join(UPLOAD_FOLDER, 'dictionary.xml'))
                       or os.path.exists('dbt_dictionary.xml'),
-        'corpus':     os.path.exists(os.path.join(UPLOAD_FOLDER, 'corpus.xml'))
-                      or os.path.exists('dbt_corpus.xml'),
     })
 
 
@@ -1349,10 +1361,7 @@ def _le(s):
 # ── Shortcode → LaTeX ─────────────────────────────────────────
 
 def _example_latex(ex_id, n):
-    corpus = get_corpus_xml()
-    if corpus is None:
-        return f'\\textit{{[Example {_le(ex_id)} not found]}}' 
-    ex = corpus.find(f'.//Example[@id="{ex_id}"]')
+    ex = _paper_example(ex_id)
     if ex is None:
         return f'\\textit{{[Example {_le(ex_id)} not found]}}'
     glosses_raw = (ex.findtext('Glosses') or '').split()
@@ -1779,6 +1788,8 @@ def tx_list():
         if not fn.endswith('.xml'):
             continue
         path = os.path.join(TRANSCRIPTIONS_FOLDER, fn)
+        if _is_examples_file(path):          # examples from papers, not a recording
+            continue
         try:
             xml  = etree.parse(path, _XML_PARSER)
             root = xml.getroot()
