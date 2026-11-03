@@ -639,7 +639,7 @@ function exTokenCell(code, tok, isMatch, ownId) {
 }
 
 function oneTextExample(entry, ex, uid, extra) {
-  const isFN   = ex.type === 'fieldnotes';
+  const isFN   = ex.type === 'fieldnotes' || ex.type === 'papers';   // five parallel languages
   const codes  = isFN ? ['num','drg','kro','olr','lkn'] : [ex.lang];
   const byCode = isFN ? ex.tokens : { [ex.lang]: ex.tokens };
   const nCols  = Math.max(...codes.map(c => (byCode[c] || []).length), 0);
@@ -660,15 +660,15 @@ function oneTextExample(entry, ex, uid, extra) {
 
   const anchor = '#' + encodeURIComponent(ex.sentence_id);
   const href = isFN
-    ? `transcription.html?fieldnotes=1&index=${ex.index}&title=${encodeURIComponent(ex.title)}${anchor}`
+    ? `transcription.html?${ex.type === 'papers' ? 'papers' : 'fieldnotes'}=1&index=${ex.index}&title=${encodeURIComponent(ex.title)}${anchor}`
     : `transcription.html?key=${encodeURIComponent(ex.file)}&title=${encodeURIComponent(ex.title)}&lang=${ex.lang}${anchor}`;
-  const refText = isFN ? `Fieldnotes \u00b7 ${ex.title} \u00b7 ${ex.sentence_id}` : `${ex.title} \u00b7 ${ex.sentence_id}`;
+  const refText = ex.type === 'fieldnotes' ? `Fieldnotes \u00b7 ${ex.title} \u00b7 ${ex.sentence_id}` : `${ex.title} \u00b7 ${ex.sentence_id}`;
 
   const expandBtn = codes.length > 1
     ? `<button class="ex-expand-btn" onclick="toggleTextExample('${uid}', this)">\u25bc Show all languages</button>` : '';
 
   return `<div class="entry-example-block${extra ? ' ex-extra' : ''}" ${extra ? 'style="display:none;"' : ''}>
-    <div class="example-label">Example \u00b7 ${isFN ? 'fieldnotes' : 'text'}</div>
+    <div class="example-label">Example \u00b7 ${ex.type === 'fieldnotes' ? 'fieldnotes' : ex.type === 'papers' ? 'paper' : 'text'}</div>
     <div class="example-wrap">
       <table class="ex-table" id="${uid}">
         ${rows}
