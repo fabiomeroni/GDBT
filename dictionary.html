@@ -296,6 +296,39 @@ body { overflow: hidden; }
   background: none; border: none; cursor: pointer; padding: 6px 0 0; }
 .ex-more-btn:hover { color: #b84c10; }
 
+
+/* ── Homonyms and senses ── */
+sup.hom-num { font-family: 'Crimson Pro', serif; font-size: 0.55em; font-weight: 600; margin-left: 1px;
+  color: var(--ink-light); vertical-align: super; letter-spacing: 0; }
+.hw-index a sup.hom-num { font-size: 0.7em; }
+.senses { margin-top: 0.3rem; }
+.sense { position: relative; padding: 0.55rem 0 0.35rem 2rem; border-top: 1px dotted var(--border); }
+.sense:first-child { border-top: none; }
+.sense-head { display: flex; align-items: baseline; gap: 0.6rem; }
+.sense-n { position: absolute; left: 0; top: 0.55rem; font-family: 'EB Garamond', serif; font-weight: 600;
+  font-size: 1.05rem; color: var(--gold); min-width: 1.4rem; }
+.sense-gloss { font-family: 'Source Code Pro', monospace; font-size: 0.7rem; letter-spacing: 0.04em;
+  color: var(--ink-light); background: #f0e8d8; border-radius: 2px; padding: 1px 7px 2px; }
+.sense .entry-gloss { margin-top: 0.2rem; }
+.other-examples-label { font-family: 'Crimson Pro', serif; font-size: 0.7rem; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-light); margin: 0.9rem 0 0.2rem; }
+
+/* Sense cards in the entry editor */
+.em-senses-head { display: flex; align-items: center; justify-content: space-between; margin: 0.2rem 0 0.4rem;
+  font-family: 'Crimson Pro', serif; font-size: 0.82rem; letter-spacing: 0.06em; color: var(--ink-light); }
+.em-sense { border: 1px solid var(--border); border-left: 3px solid var(--gold); border-radius: 0 4px 4px 0;
+  background: #fffdf8; padding: 0.5rem 0.8rem 0.7rem; margin-bottom: 0.6rem; }
+.em-sense-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.3rem;
+  font-family: 'EB Garamond', serif; font-size: 1rem; color: var(--ink); }
+.em-sense-btns button { font-size: 0.7rem; color: var(--ink-light); background: none; border: 1px solid var(--border);
+  border-radius: 3px; padding: 0 6px 1px; margin-left: 3px; cursor: pointer; }
+.em-sense-btns button:hover { color: var(--gold); border-color: var(--gold); }
+.em-sense-btns button.del:hover { color: #922810; border-color: #922810; }
+.em-sense label { display: block; font-family: 'Crimson Pro', serif; font-size: 0.78rem; color: var(--ink-light); margin: 0.35rem 0 0.1rem; }
+.em-hint { grid-column: 1 / -1; font-family: 'Crimson Pro', serif; font-size: 0.8rem; color: #8a5f18;
+  background: #f7efdc; border-radius: 3px; padding: 3px 8px 4px; display: none; }
+.em-hint.visible { display: block; }
+
 /* ── Proposed (ghost) dictionary entries ── */
 .proposed-section-hdr {
   font-family: 'Crimson Pro', serif;
@@ -445,20 +478,24 @@ async function parseLexicaXML(url) {
     // ── Semantic domain ────────────────────────────────────────
     const domain = el.querySelector('DomaineSémantique')?.textContent.trim() ?? '';
 
-    // ── Gloss (plain text) ─────────────────────────────────────
-    // First Sens > Glose[@langue="eng"]
-    const gloss = el.querySelector('Sens > Glose[langue="eng"]')?.textContent.trim() ?? '';
+    // ── Homonym number (entries with the same lemma are told apart by <NuméroDHomonyme>) ──
+    const homonym = el.querySelector(':scope > NuméroDHomonyme')?.textContent.trim() ?? '';
 
-    // ── GlossRich (may contain inline HTML like <em>) ──────────
-    // Définition > ReprésentationDeTexte[@langue="eng"]
-    // DOMParser gives us the unescaped text: &lt;em&gt; → <em>
-    // That is then safe to set as innerHTML for italic rendering.
-    const richNode  = el.querySelector('Sens > Définition > ReprésentationDeTexte[langue="eng"]');
-    const glossRich = richNode ? richNode.textContent.trim() : gloss;
-
-    // ── Notes ──────────────────────────────────────────────────
-    const notesNode = el.querySelector('Notes > ReprésentationDeTexte[langue="eng"]');
-    const notes     = notesNode ? notesNode.textContent.trim() : '';
+    // ── Senses: each <Sens> has its own definition, short gloss, notes … ──
+    // Definition: Définition/ReprésentationDeTexte[eng] if there is one, else Glose[eng]. The text
+    // can hold inline HTML such as <em> (DOMParser unescapes &lt;em&gt;), so it is shown as innerHTML.
+    const senses = [...el.querySelectorAll(':scope > Sens')].map((sn, ref) => {
+      const gloss      = sn.querySelector(':scope > Glose[langue="eng"]')?.textContent.trim() ?? '';
+      const dfNode     = sn.querySelector(':scope > Définition > ReprésentationDeTexte[langue="eng"]');
+      const definition = (dfNode ? dfNode.textContent.trim() : '') || gloss;
+      const shortGloss = sn.querySelector(':scope > gloss')?.textContent.trim() ?? '';
+      const notes      = sn.querySelector(':scope > Notes > ReprésentationDeTexte[langue="eng"]')?.textContent.trim() ?? '';
+      const num        = sn.querySelector(':scope > NuméroDeSens')?.textContent.trim();
+      return { ref, n: /^\d+$/.test(num || '') ? num : String(ref + 1), gloss, definition, shortGloss, notes };
+    });
+    // the first sense is mirrored on the entry, for code that only needs "the" gloss
+    const first = senses[0] || { gloss: '', definition: '', shortGloss: '', notes: '' };
+    const gloss = first.gloss, glossRich = first.definition, notes = first.notes, shortGloss = first.shortGloss;
 
     // ── Etymology ──────────────────────────────────────────────
     let etym = null;
@@ -473,9 +510,7 @@ async function parseLexicaXML(url) {
       etym = { label: `${lang} ${forme} '${glose}'`, tlopo, etymograph };
     }
 
-    const shortGlossEl = el.querySelector('Sens > gloss');
-    const shortGloss   = shortGlossEl ? shortGlossEl.textContent.trim() : '';
-    return { id, hw, langs, pos, domain, gloss, glossRich, notes, etym, shortGloss };
+    return { id, hw, langs, pos, domain, homonym, senses, gloss, glossRich, notes, etym, shortGloss };
   });
 }
 
@@ -682,10 +717,10 @@ function oneTextExample(entry, ex, uid, extra) {
   </div>`;
 }
 
-function textExamplesHTML(entry) {
-  const list = dictExamples[entry.id] || [];
+function textExamplesHTML(entry, list, tag) {
+  list = list || dictExamples[entry.id] || [];
   if (!list.length) return '';
-  const safe = entry.id.replace(/[^\w-]/g, '_');
+  const safe = entry.id.replace(/[^\w-]/g, '_') + '-' + (tag || 's');
   const blocks = list.map((ex, i) => oneTextExample(entry, ex, `tx-${safe}-${i}`, i >= EX_VISIBLE)).join('');
   const more = list.length > EX_VISIBLE
     ? `<button class="ex-more-btn" onclick="toggleMoreExamples(this)">\u25bc Show ${list.length - EX_VISIBLE} more example${list.length - EX_VISIBLE > 1 ? 's' : ''}</button>` : '';
@@ -708,14 +743,59 @@ function toggleMoreExamples(btn) {
   btn.textContent = hide ? `\u25bc Show ${n} more example${n > 1 ? 's' : ''}` : '\u25b2 Show fewer examples';
 }
 
+// Short label for tooltips: the gloss, or every sense's gloss when there are several
+function senseLine(entry) {
+  const ss = entry.senses || [];
+  if (ss.length > 1)
+    return ss.map(s => `${s.n}. ${s.shortGloss || s.gloss || s.definition}`).join('   ');
+  return entry.gloss;
+}
+
+function headwordHTML(entry) {
+  const hw = entry.langs[activeLang] || entry.hw;
+  return hw + (entry.homonym ? `<sup class="hom-num">${entry.homonym}</sup>` : '');
+}
+
+// The attested examples that belong to one sense, told apart by the gloss the word was given in the text
+function exampleGlossIs(ex, target) {
+  return !!target && (ex.match_cols || []).some(c => cleanForm((ex.glosses || [])[c]) === target);
+}
+function senseTarget(sn) { return cleanForm(sn.shortGloss || sn.gloss); }
+function examplesForSense(entry, sn) {
+  const all = dictExamples[entry.id] || [];
+  return entry.senses.length <= 1 ? all : all.filter(ex => exampleGlossIs(ex, senseTarget(sn)));
+}
+function otherExamples(entry) {          // attestations that match none of several senses
+  if ((entry.senses || []).length <= 1) return [];
+  const targets = entry.senses.map(senseTarget);
+  return (dictExamples[entry.id] || []).filter(ex => !targets.some(t => exampleGlossIs(ex, t)));
+}
+
+function senseHTML(entry, sn, multi) {
+  const head = multi
+    ? `<span class="sense-n">${sn.n}</span>` +
+      (sn.shortGloss ? `<div class="sense-head"><span class="sense-gloss">${escHTML(sn.shortGloss)}</span></div>` : '')
+    : '';
+  return `<div class="${multi ? 'sense' : ''}">
+    ${head}
+    <div class="entry-gloss">${sn.definition}</div>
+    <div class="entry-notes">${sn.notes}</div>
+    ${textExamplesHTML(entry, examplesForSense(entry, sn), 's' + sn.ref)}
+  </div>`;
+}
+
 function entryHTML(entry) {
-  const hw    = entry.langs[activeLang] || entry.hw;
   const color = COLORS5[activeLang];
   const etymRow = entry.etym
     ? `<div style="margin-bottom:0.45rem;">${etymHTML(entry.etym)}</div>` : '';
+  const multi   = entry.senses.length > 1;
+  const sensesHTML = entry.senses.map(sn => senseHTML(entry, sn, multi)).join('');
+  const other = otherExamples(entry);
+  const otherHTML = other.length
+    ? `<div class="other-examples-label">Other examples</div>${textExamplesHTML(entry, other, 'o')}` : '';
   return `<div class="entry" id="${entry.id}">
     <div class="entry-header">
-      <span class="entry-headword" style="color:${color};">${hw}</span>
+      <span class="entry-headword" style="color:${color};">${headwordHTML(entry)}</span>
       <span class="entry-pos">${entry.pos}</span>
       <span class="entry-domain">${entry.domain}</span>
     </div>
@@ -725,10 +805,9 @@ function entryHTML(entry) {
     </div>
     ${etymRow}
     ${equivsHTML(entry)}
-    <div class="entry-gloss">${entry.glossRich}</div>
-    <div class="entry-notes">${entry.notes}</div>
+    <div class="${multi ? 'senses' : ''}">${sensesHTML}</div>
+    ${otherHTML}
     ${exampleHTML(entry.id)}
-    ${textExamplesHTML(entry)}
   </div>`;
 }
 
@@ -736,7 +815,7 @@ function filtered() {
   if (!searchQ) return DICTIONARY.slice();
   return DICTIONARY.filter(e => {
     return (e.langs[activeLang] || '').toLowerCase().includes(searchQ)
-      || e.gloss.toLowerCase().includes(searchQ)
+      || e.senses.some(s => [s.gloss, s.definition, s.shortGloss].some(t => (t || '').toLowerCase().includes(searchQ)))
       || Object.values(e.langs).some(v => v.toLowerCase().includes(searchQ));
   });
 }
@@ -760,6 +839,7 @@ function render() {
   letters.forEach(l =>
     groups[l].sort((a, b) =>
       (a.langs[activeLang] || a.hw).localeCompare(b.langs[activeLang] || b.hw)
+      || (parseInt(a.homonym) || 0) - (parseInt(b.homonym) || 0)
     )
   );
 
@@ -771,7 +851,7 @@ function render() {
 
   document.getElementById('hw-index').innerHTML = letters.map(l => {
     const links = groups[l].map(e =>
-      `<a href="#${e.id}" data-id="${e.id}">${e.langs[activeLang] || e.hw}</a>`
+      `<a href="#${e.id}" data-id="${e.id}">${headwordHTML(e)}</a>`
     ).join('');
     return `<div class="hw-letter-divider">${l}</div>${links}`;
   }).join('');
@@ -881,7 +961,7 @@ function bindTooltip() {
     ttHw.textContent  = entry.langs[hoverLang] || entry.hw;
     ttHw.style.color  = hoverColor;
     ttPos.textContent = '  ' + entry.pos;
-    ttGloss.textContent = entry.gloss;
+    ttGloss.textContent = senseLine(entry);
     // Highlight the hovered language's chip in the equivalents row
     ttEquivs.innerHTML = LANGS5.map(lang => {
       const isHover = lang === hoverLang;
@@ -1082,31 +1162,83 @@ async function reloadDictionary() {
 
 // ── Entry modal helpers ───────────────────────────────────────
 let _editingId = null; // null = adding, string = editing existing
+let _senses = [];      // the sense cards of the open editor: {ref, definition, shortGloss, notes}
+let _etymDirty = false;
+let _homTouched = false;
+
+const _blankSense = () => ({ ref: null, definition: '', shortGloss: '', notes: '' });
+
+function renderSenseCards() {
+  const box = document.getElementById('em-senses');
+  box.innerHTML = _senses.map((s, i) => `
+    <div class="em-sense" data-i="${i}">
+      <div class="em-sense-bar">
+        <b>Sense ${i + 1}</b>
+        <span class="em-sense-btns">
+          ${_senses.length > 1 ? `<button type="button" data-act="up" title="Move up"${i === 0 ? ' disabled' : ''}>▲</button>
+          <button type="button" data-act="down" title="Move down"${i === _senses.length - 1 ? ' disabled' : ''}>▼</button>` : ''}
+          <button type="button" data-act="del" class="del" title="Remove this sense">✕</button>
+        </span>
+      </div>
+      <label>Definition (English)</label>
+      <textarea class="em-input" data-f="definition" style="width:100%;box-sizing:border-box;height:3rem;resize:vertical;"
+                placeholder="e.g. speech, language, word">${escHTML(s.definition)}</textarea>
+      <label>Short gloss for interlinear</label>
+      <input class="em-input" data-f="shortGloss" style="width:100%;box-sizing:border-box;"
+             value="${escHTML(s.shortGloss)}" placeholder="e.g. speech">
+      <label>Notes</label>
+      <textarea class="em-input" data-f="notes" style="width:100%;box-sizing:border-box;height:3rem;resize:vertical;"
+                placeholder="Usage notes, cognate information…">${escHTML(s.notes)}</textarea>
+    </div>`).join('');
+}
+
+// Homonyms: entries that share a form with the one being edited
+function homonymSharers() {
+  const mine = new Set();
+  LANGS5.forEach(lang => {
+    const c = cleanForm(document.getElementById('ef-' + LANG_CODE[lang])?.value);
+    if (c) mine.add(LANG_CODE[lang] + ':' + c);
+  });
+  return DICTIONARY.filter(e => e.id !== _editingId &&
+    LANGS5.some(lang => { const c = cleanForm(e.langs[lang]); return c && mine.has(LANG_CODE[lang] + ':' + c); }));
+}
+function updateHomHint() {
+  const hint = document.getElementById('em-hom-hint'), homEl = document.getElementById('ef-hom');
+  const sharers = homonymSharers();
+  if (!sharers.length) { hint.classList.remove('visible'); hint.innerHTML = ''; return; }
+  const list = sharers.map(e => `<b>${escHTML(e.langs[activeLang] || e.hw)}</b>${e.homonym ? '<sup>' + e.homonym + '</sup>' : ''} (${escHTML(e.pos || 'no PoS')})`).join(', ');
+  const unnumbered = sharers.some(e => !e.homonym);
+  hint.innerHTML = `Same form as ${list}. Give each homonym its own number` +
+    (unnumbered ? ' — the entries without a number will be numbered for you.' : '.');
+  hint.classList.add('visible');
+  if (!_editingId && !homEl.value && !_homTouched) {      // suggest the next number for a new entry
+    const used = sharers.map(e => parseInt(e.homonym)).filter(n => n > 0);
+    homEl.value = used.length ? Math.max(...used) + 1 : 2;
+  }
+}
 
 function _openEntryModal(title, entry) {
   _editingId = entry ? entry.id : null;
+  _etymDirty = false; _homTouched = false;
   document.getElementById('em-title').textContent = title;
   document.getElementById('em-msg').textContent = '';
 
-  const codes = {Nume:'num',Dorig:'drg',Koro:'kro',Olrat:'olr',Lakon:'lkn'};
   // Clear all inputs first
-  ['num','drg','kro','olr','lkn','pos','domain','gloss','short','notes',
-   'el','ef','eg','et','ee'].forEach(id => {
+  ['num','drg','kro','olr','lkn','pos','domain','hom','el','ef','eg','et','ee'].forEach(id => {
     const el = document.getElementById('ef-'+id);
     if (el) el.value = '';
   });
 
   if (entry) {
-    // Pre-fill language forms
     LANGS5.forEach(lang => {
-      const el = document.getElementById('ef-' + codes[lang]);
+      const el = document.getElementById('ef-' + LANG_CODE[lang]);
       if (el) el.value = entry.langs[lang] || '';
     });
     document.getElementById('ef-pos').value    = entry.pos    || '';
     document.getElementById('ef-domain').value = entry.domain || '';
-    document.getElementById('ef-gloss').value  = entry.gloss  || '';
-    document.getElementById('ef-short').value  = entry.shortGloss || entry.gloss || '';
-    document.getElementById('ef-notes').value  = entry.notes  || '';
+    document.getElementById('ef-hom').value    = entry.homonym || '';
+    _senses = entry.senses.map(s => ({ ref: s.ref, definition: s.definition || '',
+                                       shortGloss: s.shortGloss || '', notes: s.notes || '' }));
     if (entry.etym) {
       document.getElementById('ef-el').value = entry.etym.label?.split(' ')[0] || 'POc';
       // label = "POc *form 'gloss'" — best effort parse
@@ -1118,30 +1250,35 @@ function _openEntryModal(title, entry) {
       document.getElementById('ef-et').value = entry.etym.tlopo       || '';
       document.getElementById('ef-ee').value = entry.etym.etymograph  || '';
     }
+  } else {
+    _senses = [_blankSense()];
   }
+  renderSenseCards();
+  updateHomHint();
   document.getElementById('entry-modal').classList.add('visible');
   document.getElementById('ef-num').focus();
 }
 
 function _collectEntryData() {
-  const codes = ['num','drg','kro','olr','lkn'];
   const forms = {};
-  codes.forEach(c => { forms[c] = document.getElementById('ef-'+c)?.value.trim() || ''; });
+  LANGS5.forEach(lang => { const c = LANG_CODE[lang]; forms[c] = document.getElementById('ef-'+c)?.value.trim() || ''; });
+  // Etymology: untouched -> null (left exactly as it is); edited -> written; emptied -> removed
   const etymForm = document.getElementById('ef-ef')?.value.trim();
-  const etym = etymForm ? {
+  const hadEtym  = !!(_editingId && DICT_MAP[_editingId]?.etym);
+  const etym = !_etymDirty ? null : etymForm ? {
     lang:       document.getElementById('ef-el')?.value.trim() || 'POc',
     form:       etymForm,
     gloss:      document.getElementById('ef-eg')?.value.trim() || '',
     tlopo:      document.getElementById('ef-et')?.value.trim() || '',
     etymograph: document.getElementById('ef-ee')?.value.trim() || '',
-  } : null;
+  } : (hadEtym ? {} : null);
   return {
     forms,
-    pos:        document.getElementById('ef-pos')?.value.trim()    || '',
-    domain:     document.getElementById('ef-domain')?.value.trim() || '',
-    gloss:      document.getElementById('ef-gloss')?.value.trim()  || '',
-    shortGloss: document.getElementById('ef-short')?.value.trim()  || '',
-    notes:      document.getElementById('ef-notes')?.value.trim()  || '',
+    pos:     document.getElementById('ef-pos')?.value.trim()    || '',
+    domain:  document.getElementById('ef-domain')?.value.trim() || '',
+    homonym: document.getElementById('ef-hom')?.value.trim()    || '',
+    senses:  _senses.map(s => ({ ref: s.ref, definition: s.definition.trim(),
+                                 shortGloss: s.shortGloss.trim(), notes: s.notes.trim() })),
     etym,
   };
 }
@@ -1217,6 +1354,39 @@ function _bindEntryModal() {
   });
   document.getElementById('em-submit').addEventListener('click', _submitEntry);
   document.getElementById('add-entry-btn')?.addEventListener('click', openAddEntry);
+
+  // senses: typing updates the card's data; ▲ ▼ ✕ and "Add sense" change the list
+  const box = document.getElementById('em-senses');
+  box.addEventListener('input', e => {
+    const card = e.target.closest('.em-sense'), fld = e.target.dataset.f;
+    if (card && fld) _senses[+card.dataset.i][fld] = e.target.value;
+  });
+  box.addEventListener('click', e => {
+    const b = e.target.closest('button[data-act]');
+    if (!b) return;
+    const i = +b.closest('.em-sense').dataset.i, act = b.dataset.act;
+    if (act === 'del') {
+      const s = _senses[i], filled = s.definition || s.shortGloss || s.notes;
+      if (s.ref !== null && !confirm(`Remove sense ${i + 1}? Its examples and relations in the XML are deleted with it.`)) return;
+      if (s.ref === null && filled && !confirm(`Remove sense ${i + 1}?`)) return;
+      _senses.splice(i, 1);
+    } else {
+      const j = act === 'up' ? i - 1 : i + 1;
+      if (j < 0 || j >= _senses.length) return;
+      [_senses[i], _senses[j]] = [_senses[j], _senses[i]];
+    }
+    renderSenseCards();
+  });
+  document.getElementById('em-add-sense').addEventListener('click', () => {
+    _senses.push(_blankSense()); renderSenseCards();
+    box.lastElementChild?.querySelector('textarea')?.focus();
+  });
+
+  // homonym hint follows the forms; etymology edits are tracked so an untouched one is never rewritten
+  LANGS5.forEach(lang => document.getElementById('ef-' + LANG_CODE[lang]).addEventListener('input', updateHomHint));
+  document.getElementById('ef-hom').addEventListener('input', () => { _homTouched = true; });
+  ['el','ef','eg','et','ee'].forEach(id =>
+    document.getElementById('ef-' + id).addEventListener('input', () => { _etymDirty = true; }));
 }
 
 
@@ -1310,20 +1480,16 @@ init();
       <input id="ef-pos" class="em-input" placeholder="n., v.tr., part.…">
       <label class="em-label">Semantic domain</label>
       <input id="ef-domain" class="em-input" placeholder="Language, Nature…">
+      <label class="em-label" title="Entries with the same form are told apart by a number">Homonym no.</label>
+      <input id="ef-hom" class="em-input" type="number" min="1" placeholder="(none)">
+      <div class="em-hint" id="em-hom-hint"></div>
     </div>
 
-    <div style="margin-bottom:0.9rem;">
-      <label class="em-label" style="display:block;margin-bottom:0.3rem;">Definition (English)</label>
-      <input id="ef-gloss" class="em-input" style="width:100%;box-sizing:border-box;"
-             placeholder="e.g. speech, language, word">
-      <label class="em-label" style="display:block;margin:0.4rem 0 0.2rem;">Short gloss for interlinear</label>
-      <input id="ef-short" class="em-input" style="width:100%;box-sizing:border-box;"
-             placeholder="e.g. speech">
-      <label class="em-label" style="display:block;margin:0.4rem 0 0.2rem;">Notes</label>
-      <textarea id="ef-notes" class="em-input"
-                style="width:100%;box-sizing:border-box;height:4rem;resize:vertical;"
-                placeholder="Usage notes, cognate information…"></textarea>
+    <div class="em-senses-head">
+      <span>Senses</span>
+      <button type="button" class="fn-col-add" id="em-add-sense">＋ Add sense</button>
     </div>
+    <div id="em-senses"></div>
 
     <details style="margin-bottom:0.9rem;">
       <summary style="font-family:'Crimson Pro',serif;font-size:0.82rem;color:var(--ink-light);
