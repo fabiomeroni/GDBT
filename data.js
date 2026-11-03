@@ -61,11 +61,11 @@ const NEGATION_EXAMPLE = {
     { gl:"POSS:1INCL.PL",dictId:"poss"    },
   ],
   rows: [
-    { lang:"Nume",  abbr:"Num", forms:["nir",  "βitis",  "ɣil",    "liŋliŋi","mi",        "u",  "luwluw",   "namɣin"]  },
-    { lang:"Dorig", abbr:"Drg", forms:["nɪr",  "sɔwsɛ",  "βrɪɣɪl", "taβul",  "tɛ",        "na", "lŋa",      "‑ɣɪn"]   },
-    { lang:"Koro",  abbr:"Kro", forms:["nɪr",  "tɪ",     "rɔŋ",    "taβul",  "wʊsmɛlɛ",   "ɔ",  "βalβalaw", "namɪɣɪn"] },
-    { lang:"Olrat", abbr:"Olr", forms:["nɪj",  "tɪ",     "rɔŋ",    "βɪlɪː",  "wʊsmɛlɛ",   "",   "ususraː",  "mʊʧ"]    },
-    { lang:"Lakon", abbr:"Lkn", forms:["ɣɪː",  "atɪ",    "rɔŋ",    "kɛrɛ",   "aβʊh.malɛ", "",   "ɛlŋa",     "‑nɣɪʧ"]  },
+    { lang:"Nume",  abbr:"Num", forms:["nir",  "vitis",  "gil",    "lin̄lin̄i","mi",        "u",  "luwluw",   "namgin"]  },
+    { lang:"Dorig", abbr:"Drg", forms:["nēr",  "sowse",  "vrēgēl", "tavul",  "te",        "na", "ln̄a",      "-gēn"]   },
+    { lang:"Koro",  abbr:"Kro", forms:["nēr",  "tē",     "ron̄",    "tavul",  "wōsmele",   "o",  "valvalaw", "namēgēn"] },
+    { lang:"Olrat", abbr:"Olr", forms:["nēy",  "tē",     "ron̄",    "vēlēē",  "wōsmele",   "",   "ususraa",  "mōj"]    },
+    { lang:"Lakon", abbr:"Lkn", forms:["gēē",  "atē",    "ron̄",    "kere",   "avōh.male", "",   "eln̄a",     "-ngēj"]  },
   ],
   translation: "'They don't know our language very well yet.'",
 };
