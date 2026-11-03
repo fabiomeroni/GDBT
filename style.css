@@ -360,3 +360,26 @@ footer a { color: #9a8060; }
 .grammar-section .cite-fn-sep td {
   border-top: 1px solid var(--border);
 }
+
+
+/* ── {{example:}} blocks in the grammar: number + source tag, no cell outlines ── */
+.grammar-cite .cite-body { min-width: 0; }
+.ex-source {
+  font-family: 'Crimson Pro', serif; font-size: 0.8rem; letter-spacing: 0.04em;
+  color: var(--ink-light); margin: 0 0 0.25rem;
+}
+/* The generic ".grammar-section table td" rule (more specific than .ex-cell) draws a box
+   around every cell; cancel it for example tables, keeping the rule above the gloss line. */
+.grammar-section .ex-table td,
+.grammar-section .ex-table th { border: none; }
+.grammar-section .ex-table .ex-sep td { border-top: 1px solid var(--border); }
+
+/* Gloss lines in grammar examples: show exactly what the author typed
+   (lexical glosses lower-case, grammatical glosses in capitals). */
+.grammar-section .ex-table .ex-gloss { text-transform: none; font-size: 0.74rem; letter-spacing: 0.02em; }
+
+/* Example tables: the generic ".grammar-section table td" padding (4px 14px 5px) makes wide
+   examples overflow the page; restore the compact column spacing the example styles intend. */
+.grammar-section .ex-table td        { padding: 2px 16px 2px 0; }
+.grammar-section .ex-table .ex-abbr  { padding: 2px 14px 2px 0; }
+.grammar-section .ex-table .ex-gloss { padding: 5px 16px 3px 0; }
