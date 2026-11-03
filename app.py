@@ -7,6 +7,7 @@ Run: python app.py   (then open http://localhost:5000)
 import os
 import re
 import json
+import unicodedata
 from html import escape as _esc
 from flask import Flask, request, jsonify, session, send_from_directory
 from lxml import etree
@@ -975,19 +976,12 @@ def add_proposed_to_dictionary():
     if dictionnaire is None:
         return jsonify({'error': 'No <Dictionnaire> element in XML'}), 500
 
-    # Build new entry element
-    el    = etree.SubElement(dictionnaire, 'EntréeLexicale', identifiant=entry_id)
-    lemme = etree.SubElement(el, 'Lemme')
-    for code in [c for c, _, _ in _FN_LANGS]:
-        form = forms.get(code, '').strip()
-        if form and form != '—':
-            etree.SubElement(lemme, 'ReprésentationDeForme', langue=code).text = form
-    etree.SubElement(el, 'ClasseGrammaticale')
-    etree.SubElement(el, 'DomaineSémantique')
-    sens = etree.SubElement(el, 'Sens', identifiant=f'{entry_id}\u24a2{1}')
-    etree.SubElement(sens, 'NuméroDeSens').text = '1'
-    glose = etree.SubElement(sens, 'Glose'); glose.set('langue', 'eng'); glose.text = gloss
-    etree.SubElement(sens, 'gloss').text = gloss
+    # Build new entry element (one sense: the confirmed gloss)
+    el, _ = _build_entry_el(
+        {'forms': {c: f for c, f in forms.items() if f and f != '\u2014'},
+         'senses': [{'ref': None, 'definition': gloss, 'shortGloss': gloss}]},
+        force_id=entry_id)
+    dictionnaire.append(el)
 
     # Write back atomically
     tmp = dict_path + '.tmp'
@@ -1074,55 +1068,246 @@ def _write_dict(tree):
     tree.write(tmp, pretty_print=True, encoding='UTF-8', xml_declaration=True)
     os.replace(tmp, p)
 
-def _build_entry_el(data, existing_ids=None, force_id=None):
-    """Build an <EntréeLexicale> lxml element from a dict of field values."""
-    LANG_CODES_5 = ['num','drg','kro','olr','lkn']
-    forms  = data.get('forms', {})
-    pos    = data.get('pos', '')
-    domain = data.get('domain', '')
-    gloss  = data.get('gloss', '')
-    short  = data.get('shortGloss', '') or gloss
-    notes  = data.get('notes', '')
-    etym   = data.get('etym', {})  # {lang, form, gloss, tlopo, etymograph}
+# ── Entry editing: multiple senses, homonym numbers, edits made in place ─────────────────
+#
+# Model (the same as the Mwotlap / LEXICA dictionaries):
+#   <EntréeLexicale>  one per homonym; homonyms share a lemma form and carry <NuméroDHomonyme>
+#     <Lemme> … <NuméroDHomonyme> <ClasseGrammaticale> <DomaineSémantique> <Étymologie> …
+#     <Sens identifiant="…ⓢN">  one per sense, numbered by <NuméroDeSens>
+#       <Glose langue="eng">definition</Glose>  <gloss>short gloss</gloss>  <Notes>…</Notes>
+#
+# An existing entry is edited IN PLACE, so whatever else it contains (examples, semantic
+# relations, images … in a LEXICA-style entry) is left alone; a field is only rewritten when
+# the author actually changed it.
 
-    # Generate or validate ID
+_ENTRY_ORDER = ['Lemme', 'NuméroDHomonyme', 'ClasseGrammaticale', 'DomaineSémantique',
+                'Étymologie', 'Sens']
+_LANG5 = ['num', 'drg', 'kro', 'olr', 'lkn']
+
+def _text_of(el):
+    return ''.join(el.itertext()).strip() if el is not None else ''
+
+def _set_text(el, text):
+    """Set an element's text, but leave it (and any markup inside) alone if it already reads so."""
+    text = (text or '').strip()
+    if _text_of(el) == text:
+        return
+    for ch in list(el):
+        el.remove(ch)
+    el.text = text
+
+def _entry_child(el, tag, create=False):
+    """The entry's child <tag>; create it (in the conventional place) if asked and missing."""
+    c = el.find(tag)
+    if c is None and create:
+        c = etree.Element(tag)
+        pos, idx = _ENTRY_ORDER.index(tag), 0
+        for i, ch in enumerate(el):
+            if ch.tag in _ENTRY_ORDER and _ENTRY_ORDER.index(ch.tag) < pos:
+                idx = i + 1
+        el.insert(idx, c)
+    return c
+
+def _sense_current(s):
+    """The values the editor shows for an existing <Sens> (kept in step with the page's parser)."""
+    gl = s.find('Glose[@langue="eng"]')
+    df = s.find('Définition/ReprésentationDeTexte[@langue="eng"]')
+    definition = _text_of(df) or _text_of(gl)
+    short = _text_of(s.find('gloss'))          # the real short gloss only (blank if none)
+    notes = _text_of(s.find('Notes/ReprésentationDeTexte[@langue="eng"]'))
+    return {'definition': definition, 'short': short, 'notes': notes}
+
+def _fill_sense(node, sd, existing):
+    definition = (sd.get('definition') or '').strip()
+    short      = (sd.get('shortGloss') or '').strip()
+    notes      = (sd.get('notes') or '').strip()
+    cur = _sense_current(node) if existing else {'definition': '', 'short': '', 'notes': ''}
+    if node.find('NuméroDeSens') is None:
+        node.insert(0, etree.Element('NuméroDeSens'))
+    nsens = node.find('NuméroDeSens')
+
+    def place_after_number(new_el):
+        node.insert(list(node).index(nsens) + 1, new_el)
+
+    # definition: written wherever the page reads it from (Définition and/or Glose)
+    if definition != cur['definition']:
+        df = node.find('Définition/ReprésentationDeTexte[@langue="eng"]')
+        gl = node.find('Glose[@langue="eng"]')
+        if df is not None: _set_text(df, definition)
+        if gl is not None: _set_text(gl, definition)
+        if df is None and gl is None and definition:
+            gl = etree.Element('Glose', langue='eng'); gl.text = definition
+            place_after_number(gl)
+    # short (interlinear) gloss
+    want_short = short if existing else (short or definition)
+    if existing and want_short == cur['short']:
+        pass
+    else:
+        g = node.find('gloss')
+        if want_short:
+            if g is None:
+                g = etree.Element('gloss')
+                gl = node.find('Glose[@langue="eng"]')
+                anchor = gl if gl is not None else nsens
+                node.insert(list(node).index(anchor) + 1, g)
+            _set_text(g, want_short)
+        elif g is not None:
+            node.remove(g)
+    # notes
+    if notes != cur['notes']:
+        n_el = node.find('Notes')
+        if notes:
+            if n_el is None:
+                n_el = etree.SubElement(node, 'Notes')
+            rt = n_el.find('ReprésentationDeTexte[@langue="eng"]')
+            if rt is None:
+                rt = etree.SubElement(n_el, 'ReprésentationDeTexte', langue='eng')
+            _set_text(rt, notes)
+        elif n_el is not None:
+            node.remove(n_el)
+
+def _apply_senses(el, eid, payload):
+    existing = el.findall('Sens')
+    used, ordered = set(), []
+    taken = {s.get('identifiant') for s in existing}
+    for sd in payload:
+        ref, node = sd.get('ref'), None
+        if isinstance(ref, int) and 0 <= ref < len(existing) and ref not in used:
+            node = existing[ref]; used.add(ref)
+            _fill_sense(node, sd, existing=True)
+        else:
+            if not any((sd.get(k) or '').strip() for k in ('definition', 'shortGloss', 'notes')):
+                continue                       # an empty new sense card is simply dropped
+            k = 1
+            while f'{eid}\u24e2{k}' in taken: k += 1
+            sid = f'{eid}\u24e2{k}'; taken.add(sid)
+            node = etree.Element('Sens', identifiant=sid)
+            _fill_sense(node, sd, existing=False)
+        ordered.append(node)
+    # existing senses that were not referenced were removed by the author
+    insert_at = list(el).index(existing[0]) if existing else len(el)
+    for s in existing:
+        el.remove(s)
+    for i, node in enumerate(ordered):
+        el.insert(insert_at + i, node)
+        node.find('NuméroDeSens').text = str(i + 1)
+
+def _senses_payload(data):
+    """The senses sent by the editor; older callers send one flat sense."""
+    if isinstance(data.get('senses'), list):
+        return data['senses']
+    if any(data.get(k) for k in ('gloss', 'shortGloss', 'notes')):
+        return [{'ref': None, 'definition': data.get('gloss', ''),
+                 'shortGloss': data.get('shortGloss', ''), 'notes': data.get('notes', '')}]
+    return []
+
+def _apply_entry_data(el, eid, data):
+    forms = data.get('forms') or {}
+    lemme = _entry_child(el, 'Lemme', create=True)
+    for code in _LANG5:
+        form = (forms.get(code) or '').strip()
+        node = lemme.find(f'ReprésentationDeForme[@langue="{code}"]')
+        if form:
+            if node is None:
+                node = etree.SubElement(lemme, 'ReprésentationDeForme', langue=code)
+            _set_text(node, form)
+        elif node is not None:
+            lemme.remove(node)
+
+    hom = str(data.get('homonym') or '').strip()
+    h = _entry_child(el, 'NuméroDHomonyme')
+    if hom.isdigit():
+        h = _entry_child(el, 'NuméroDHomonyme', create=True)
+        _set_text(h, hom)
+    elif h is not None:
+        el.remove(h)
+
+    for tag, key in (('ClasseGrammaticale', 'pos'), ('DomaineSémantique', 'domain')):
+        val = (data.get(key) or '').strip()
+        c = _entry_child(el, tag)
+        if val:
+            _set_text(_entry_child(el, tag, create=True), val)
+        elif c is not None:
+            _set_text(c, '')
+
+    # etymology: absent/None = leave as it is; {} = remove it; {form: …} = write it
+    etym = data.get('etym', None)
+    if isinstance(etym, dict):
+        ety_el = _entry_child(el, 'Étymologie')
+        if not etym.get('form'):
+            if ety_el is not None:
+                el.remove(ety_el)
+        else:
+            ety_el = _entry_child(el, 'Étymologie', create=True)
+            ety = ety_el.find('Étymon')
+            if ety is None:
+                ety = etree.SubElement(ety_el, 'Étymon')
+            def put(tag, val, attrs=None, keep_blank=True):
+                sel = tag + (f'[@langue="{attrs["langue"]}"]' if attrs else '')
+                node = ety.find(sel)
+                if val:
+                    if node is None:
+                        node = etree.SubElement(ety, tag, **(attrs or {}))
+                    _set_text(node, val)
+                elif node is not None and not keep_blank:
+                    ety.remove(node)
+                elif node is not None:
+                    _set_text(node, '')
+            put('Langue', etym.get('lang', 'POc'))
+            put('Forme', etym.get('form', ''))
+            put('Glose', etym.get('gloss', ''), {'langue': 'eng'})
+            put('LienTLOPO', etym.get('tlopo', ''), keep_blank=False)
+            put('LienEtymograph', etym.get('etymograph', ''), keep_blank=False)
+
+    _apply_senses(el, eid, _senses_payload(data))
+
+def _build_entry_el(data, existing_ids=None, force_id=None):
+    """A new <EntréeLexicale> built from the editor's data. Returns (element, id)."""
+    forms = data.get('forms') or {}
     if force_id:
         eid = force_id
     else:
-        base = re.sub(r'[^a-zA-Z0-9]', '_',
-                      (forms.get('kro') or forms.get('num') or gloss or 'new').lower())[:20]
-        eid  = base; n = 1
+        base = (_slug_id(forms.get('kro') or forms.get('num') or forms.get('drg')
+                         or forms.get('olr') or forms.get('lkn') or '')
+                or _slug_id((_senses_payload(data) or [{}])[0].get('definition', '')) or 'new')
+        eid, n = base, 2                       # a second entry with the same form becomes …_2
         while existing_ids and eid in existing_ids:
             eid = f'{base}_{n}'; n += 1
-
-    el    = etree.Element('EntréeLexicale', identifiant=eid)
-    lemme = etree.SubElement(el, 'Lemme')
-    for code in LANG_CODES_5:
-        form = (forms.get(code) or '').strip()
-        if form:
-            etree.SubElement(lemme, 'ReprésentationDeForme', langue=code).text = form
-    etree.SubElement(el, 'ClasseGrammaticale').text   = pos
-    etree.SubElement(el, 'DomaineSémantique').text    = domain
-
-    if etym and etym.get('form'):
-        etym_el = etree.SubElement(el, 'Étymologie')
-        ety     = etree.SubElement(etym_el, 'Étymon')
-        etree.SubElement(ety, 'Langue').text     = etym.get('lang', 'POc')
-        etree.SubElement(ety, 'Forme').text      = etym.get('form', '')
-        etree.SubElement(ety, 'Glose', langue='eng').text = etym.get('gloss', '')
-        if etym.get('tlopo'):
-            etree.SubElement(ety, 'LienTLOPO').text      = etym['tlopo']
-        if etym.get('etymograph'):
-            etree.SubElement(ety, 'LienEtymograph').text = etym['etymograph']
-
-    sens = etree.SubElement(el, 'Sens', identifiant=f'{eid}\u24a2{1}')
-    etree.SubElement(sens, 'NuméroDeSens').text = '1'
-    glose = etree.SubElement(sens, 'Glose'); glose.set('langue','eng'); glose.text = gloss
-    etree.SubElement(sens, 'gloss').text = short
-    if notes:
-        n_el = etree.SubElement(sens, 'Notes')
-        etree.SubElement(n_el, 'ReprésentationDeTexte', langue='eng').text = notes
+    el = etree.Element('EntréeLexicale', identifiant=eid)
+    _apply_entry_data(el, eid, data)
     return el, eid
+
+def _slug_id(s):
+    """ASCII id from a form: diacritics dropped (mōrōs -> moros), anything else -> _."""
+    s = unicodedata.normalize('NFKD', s or '')
+    s = ''.join(c for c in s if not unicodedata.combining(c))
+    return re.sub(r'[^a-zA-Z0-9]+', '_', s).strip('_').lower()[:20]
+
+def _entry_form_set(e):
+    out = set()
+    for n in e.findall('Lemme/ReprésentationDeForme'):
+        c, code = _clean_form(n.text), n.get('langue', '')
+        if code in _LANG5 and c and c != '\u2014':
+            out.add((code, c))
+    return out
+
+def _number_homonyms(root, el):
+    """When an entry carries a homonym number, give the other entries that share one of its
+    forms (and have no number yet) the smallest free numbers, so the whole group is numbered."""
+    h = (el.findtext('NuméroDHomonyme') or '').strip()
+    if not h.isdigit():
+        return
+    mine = _entry_form_set(el)
+    sharers = [e for e in root.findall('.//EntréeLexicale') if e is not el and _entry_form_set(e) & mine]
+    used = {int(x.findtext('NuméroDHomonyme')) for x in sharers + [el]
+            if (x.findtext('NuméroDHomonyme') or '').strip().isdigit()}
+    for e in sharers:
+        if (e.findtext('NuméroDHomonyme') or '').strip():
+            continue
+        n = 1
+        while n in used: n += 1
+        used.add(n)
+        _set_text(_entry_child(e, 'NuméroDHomonyme', create=True), str(n))
 
 # ── Dictionary CRUD ───────────────────────────────────────────
 
@@ -1154,6 +1339,7 @@ def add_dict_entry():
             return jsonify({'error': 'No <Dictionnaire> element'}), 500
         el, eid = _build_entry_el(data, existing_ids=existing)
         dictionnaire.append(el)
+        _number_homonyms(root, el)
         _write_dict(tree)
         return jsonify({'ok': True, 'id': eid})
     except Exception as e:
@@ -1170,11 +1356,8 @@ def update_dict_entry(entry_id):
         old  = root.find(f'.//EntréeLexicale[@identifiant="{entry_id}"]')
         if old is None:
             return jsonify({'error': 'Entry not found'}), 404
-        parent = old.getparent()
-        idx    = list(parent).index(old)
-        new_el, _ = _build_entry_el(data, force_id=entry_id)
-        parent.remove(old)
-        parent.insert(idx, new_el)
+        _apply_entry_data(old, entry_id, data)      # in place: nothing else in the entry is lost
+        _number_homonyms(root, old)
         _write_dict(tree)
         return jsonify({'ok': True})
     except Exception as e:
@@ -1228,6 +1411,22 @@ def dictionary_examples():
             if forms:
                 entry_forms[el.get('identifiant', '')] = forms
         result = {eid: [] for eid in entry_forms}
+        # the glosses of each entry's senses: they decide WHICH homonym an attestation belongs to
+        entry_glosses = {}
+        for el in d.findall('.//EntréeLexicale'):
+            entry_glosses[el.get('identifiant', '')] = {
+                _clean_form(_text_of(sn.find('gloss')) or _text_of(sn.find('Glose[@langue="eng"]')))
+                for sn in el.findall('Sens')} - {''}
+
+        def narrow(cands, gloss):
+            """Several entries match one word: keep those that have a sense glossed like the word
+            was glossed in the text. If none does (or it is unglossed) the word stays ambiguous."""
+            g = _clean_form(gloss)
+            if len(cands) > 1 and g:
+                keep = [c for c in cands if g in entry_glosses.get(c, set())]
+                if keep:
+                    return keep
+            return cands
 
         # ---- fieldwork-style texts (fieldnotes + examples from papers): five parallel languages ----
         fx = get_fieldnotes_xml()
@@ -1265,10 +1464,11 @@ def dictionary_examples():
                     col = {c: _clean_form(tokens.get(c, [])[ci]
                                           if ci < len(tokens.get(c, [])) else '')
                            for c in _DBT_CODES}
-                    for eid, ef in entry_forms.items():
-                        hits = sum(1 for c, v in ef.items() if col.get(c) == v)
-                        if hits >= min(2, len(ef)):
-                            matched.setdefault(eid, []).append(ci)
+                    cands = [eid for eid, ef in entry_forms.items()
+                             if sum(1 for c, v in ef.items() if col.get(c) == v) >= min(2, len(ef))]
+                    col_gloss = g.get('glosses', [])[ci] if ci < len(g.get('glosses', [])) else ''
+                    for eid in narrow(cands, col_gloss):
+                        matched.setdefault(eid, []).append(ci)
                 for eid, cols in matched.items():
                     transl = (g.get('translation') if g.get('translation') is not None
                               else prompts.get(sid, ''))
@@ -1298,10 +1498,16 @@ def dictionary_examples():
             sent_transl = {s['id']: s['transl'] for s in data['sentences']}
             for sid, g in confirmed.items():
                 toks = [_clean_form(t) for t in g['tokens']]
-                for eid, ef in entry_forms.items():
-                    if code not in ef:
-                        continue
-                    cols = [i for i, t in enumerate(toks) if t == ef[code]]
+                col_glosses = g.get('glosses', [])
+                hit_cols = {eid: [i for i, t in enumerate(toks) if t == ef[code]]
+                            for eid, ef in entry_forms.items() if code in ef}
+                for i in sorted({i for v in hit_cols.values() for i in v}):
+                    owners = narrow([eid for eid, v in hit_cols.items() if i in v],
+                                    col_glosses[i] if i < len(col_glosses) else '')
+                    for eid in hit_cols:
+                        if eid not in owners and i in hit_cols[eid]:
+                            hit_cols[eid].remove(i)
+                for eid, cols in hit_cols.items():
                     if cols:
                         transl = (g.get('translation') if g.get('translation') is not None
                                   else sent_transl.get(sid, ''))
@@ -1317,28 +1523,35 @@ def dictionary_examples():
 
 @app.route('/api/dictionary/entries')
 def dictionary_entries():
-    """Return all entries with their 5-language forms and English gloss.
-    Used by the transcription viewer to suggest dictionary glosses for columns."""
+    """Return all entries with their 5-language forms and the glosses of ALL their senses.
+    Used by the viewer and the grammar page to suggest glosses, show previews and link words."""
     d = get_dict_xml()
     if d is None:
         return jsonify({'entries': []})
     entries = []
     for el in d.findall('.//EntréeLexicale'):
-        # Prefer <gloss> (short interlinear label) over <Glose> (full definition)
-        gloss = (el.findtext('Sens/gloss')
-                 or el.findtext('Sens/Glose[@langue="eng"]')
-                 or '').strip()
-        if not gloss:
+        senses = []
+        for i, sn in enumerate(el.findall('Sens'), 1):
+            cur = _sense_current(sn)
+            # <gloss> (short interlinear label) is preferred over the full definition
+            short = _text_of(sn.find('gloss')) or _text_of(sn.find('Glose[@langue="eng"]'))
+            if short:
+                senses.append({'n': i, 'gloss': short, 'definition': cur['definition']})
+        if not senses:
             continue
         forms = {}
         for node in el.findall('Lemme/ReprésentationDeForme'):
             lang = node.get('langue', '')
             if lang and node.text:
                 forms[lang] = node.text.strip()
+        hom = (el.findtext('NuméroDHomonyme') or '').strip()
         entries.append({
-            'id':    el.get('identifiant', ''),
-            'gloss': gloss,
-            'forms': forms,
+            'id':       el.get('identifiant', ''),
+            'gloss':    senses[0]['gloss'],                  # first sense (kept for older callers)
+            'glosses':  [s['gloss'] for s in senses],        # every sense
+            'senses':   senses,
+            'homonym':  hom if hom.isdigit() else '',
+            'forms':    forms,
         })
     return jsonify({'entries': entries})
 
