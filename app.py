@@ -197,34 +197,118 @@ def build_fieldnotes_citation(group_index, sent_id, n):
         col_glosses = [''] * n_cols
         for code, _, _ in _FN_LANGS:
             while len(tokens[code]) < n_cols: tokens[code].append('')
-    lang_rows = ''
-    for code, abbr, name in _FN_LANGS:
-        color = LANG_COLORS.get(name, '#888')
-        cells = ''.join(
-            f'<td class="cite-fn-form" style="color:{color};" data-lang="{code}" data-form="{tokens[code][i] if i < len(tokens[code]) else chr(8212)}">{tokens[code][i] if i < len(tokens[code]) else "—"}</td>'
-            for i in range(n_cols))
-        lang_rows += f'<tr><td class="cite-fn-abbr" style="color:{color};">{abbr}</td>{cells}</tr>'
-    sep    = '<td></td>' + '<td></td>' * n_cols
-    gcells = ''.join(f'<td class="cite-fn-gloss">{col_glosses[i] if i < len(col_glosses) else ""}</td>' for i in range(n_cols))
     # Prefer author-stored translation; fall back to Bislama prompt
     display_transl = (
         stored.get('translation')
         if stored and isinstance(stored, dict) and stored.get('translation') is not None
         else prompt
     )
+    return _cite_fn_table(tokens, col_glosses, n_cols, display_transl,
+                          f'Fieldnotes \u00b7 {ti} \u00b7 {sent_id}', n)
+
+
+# ── "Examples from papers": a text made of the <Example>s of the corpus XML ──────────
+# Shown and cited exactly like a fieldwork text (aligned columns, glosses, translation),
+# but with its own gloss store (glosses/papers_0.json) so fieldnotes glosses are never touched.
+PAPERS_TITLE = 'Examples from papers'
+
+def _paper_examples():
+    corpus = get_corpus_xml()
+    return corpus.findall('.//Example') if corpus is not None else []
+
+def _paper_example(example_id):
+    return next((e for e in _paper_examples() if e.get('id') == example_id), None)
+
+def _paper_tokens(ex):
+    """{lang code: [token, ...]} from an <Example>'s tiers ('—' = no word in that language)."""
+    out = {}
+    for code, _abbr, _name in _FN_LANGS:
+        tier = ex.find(f'Tier[@lang="{code}"]')
+        toks = tier.text.split() if tier is not None and tier.text else []
+        out[code] = ['' if t == '\u2014' else t for t in toks]
+    return out
+
+def _paper_defaults(ex):
+    """Alignment + glosses exactly as published; used until the author edits them."""
+    tokens  = _paper_tokens(ex)
+    glosses = (ex.findtext('Glosses') or '').split()
+    n = max([len(glosses)] + [len(v) for v in tokens.values()])
+    for c in tokens:
+        tokens[c] += [''] * (n - len(tokens[c]))
+    return {'tokens': tokens, 'glosses': glosses + [''] * (n - len(glosses))}
+
+def _paper_link_map(ex):
+    """(lang code, cleaned form) -> dictionary entry id, from the example's <TokenLinks>.
+    Keyed by form rather than column, so the links survive a re-alignment by the author."""
+    toks, links = _paper_tokens(ex), {}
+    for tk in ex.findall('TokenLinks/Token'):
+        idx, did = tk.get('index', ''), tk.get('dictId', '')
+        if idx.isdigit() and did:
+            for code in toks:
+                t = toks[code][int(idx)] if int(idx) < len(toks[code]) else ''
+                if t:
+                    links[(code, _clean_form(t))] = did
+    return links
+
+def _paper_state(ex):
+    """(tokens, column glosses, n columns, translation) to display for an example."""
+    stored = _load_stored_glosses('papers_0').get(ex.get('id'))
+    d = _paper_defaults(ex)
+    if isinstance(stored, dict) and isinstance(stored.get('tokens'), dict):
+        tokens, glosses = stored['tokens'], stored.get('glosses', [])
+    else:
+        tokens, glosses = d['tokens'], d['glosses']
+    n_cols = max((len(tokens.get(c, [])) for c, _, _ in _FN_LANGS), default=0)
+    transl = (stored.get('translation') if isinstance(stored, dict) and stored.get('translation') is not None
+              else (ex.findtext('Translation[@lang="eng"]') or '').strip())
+    return tokens, glosses, n_cols, transl
+
+def _cite_fn_table(tokens, col_glosses, n_cols, transl, ref, n, dict_links=None):
+    """Numbered five-language example: aligned forms, gloss line, translation, reference.
+    Each form carries data-lang / data-form / data-gloss so the page can link it to the
+    dictionary (only where the gloss agrees); words with a known entry also carry data-dict-id."""
+    dict_links = dict_links or {}
+    lang_rows = ''
+    for code, abbr, name in _FN_LANGS:
+        color = LANG_COLORS.get(name, '#888')
+        toks, cells = tokens.get(code, []), ''
+        for i in range(n_cols):
+            tok   = toks[i] if i < len(toks) else ''
+            gl    = col_glosses[i] if i < len(col_glosses) else ''
+            shown = tok or '\u2014'
+            link  = dict_links.get((code, _clean_form(tok))) if tok else None
+            attrs = (f' data-lang="{code}" data-form="{_esc(shown)}" data-gloss="{_esc(gl)}"'
+                     + (f' data-dict-id="{_esc(link)}"' if link else ''))
+            cells += f'<td class="cite-fn-form" style="color:{color};"{attrs}>{_esc(shown)}</td>'
+        lang_rows += f'<tr><td class="cite-fn-abbr" style="color:{color};">{abbr}</td>{cells}</tr>'
+    sep    = '<td></td>' * (n_cols + 1)
+    gcells = ''.join(f'<td class="cite-fn-gloss">{_esc(col_glosses[i]) if i < len(col_glosses) else ""}</td>'
+                     for i in range(n_cols))
     return (f'<div class="grammar-cite">'
             f'<span class="cite-n">({n})</span>'
             f'<div class="cite-body">'
             f'<div class="cite-ilg"><table class="cite-fn-table">{lang_rows}'
             f'<tr class="cite-fn-sep">{sep}</tr>'
             f'<tr><td></td>{gcells}</tr></table></div>'
-            f'<div class="cite-transl">‘{display_transl}’</div>'
-            f'<div class="cite-ref">[Fieldnotes · {ti} · {sent_id}]</div>'
+            f'<div class="cite-transl">\u2018{_esc(transl)}\u2019</div>'
+            f'<div class="cite-ref">[{_esc(ref)}]</div>'
             f'</div></div>')
+
+def build_papers_citation(example_id, n):
+    """{{cite: papers#ID}} - an example from the "Examples from papers" text."""
+    ex = _paper_example(example_id)
+    if ex is None:
+        return f'<span class="shortcode-error">Example not found in "{PAPERS_TITLE}": {_esc(example_id)}</span>'
+    tokens, glosses, n_cols, transl = _paper_state(ex)
+    label = (ex.findtext('Label') or '').strip()
+    ref   = f'{PAPERS_TITLE} \u00b7 {label}' if label else f'{PAPERS_TITLE} \u00b7 {example_id}'
+    return _cite_fn_table(tokens, glosses, n_cols, transl, ref, n, _paper_link_map(ex))
 
 def build_citation(spec, n):
     """Dispatch {{cite: spec}} — all exceptions become inline error spans, never HTML."""
     try:
+        if spec.startswith('papers#'):
+            return build_papers_citation(spec.split('#', 1)[1].strip(), n)
         if spec.startswith('fieldnotes#'):
             parts = spec.split('#', 2)
             if len(parts) < 3:
@@ -478,6 +562,57 @@ _FN_LANGS = [
     ('olr', 'Olr', 'Olrat'),
     ('lkn', 'Lkn', 'Lakon'),
 ]
+
+# ── "Examples from papers" text: same shape as a fieldnotes text, so the viewer reuses it ──
+@app.route('/api/papers/groups')
+def papers_groups():
+    n = len(_paper_examples())
+    return jsonify({'groups': [{'index': 0, 'title': PAPERS_TITLE, 'count': n}] if n else []})
+
+@app.route('/api/papers/tx/<int:index>')
+def papers_tx(index):
+    if index != 0:
+        return jsonify({'error': 'Group not found'}), 404
+    try:
+        sentences = []
+        for ex in _paper_examples():
+            toks = _paper_tokens(ex)
+            words = [{'form': ' '.join(t for t in toks[code] if t) or '\u2014',
+                      'gloss': abbr, 'lang': code, 'lang_name': name}
+                     for code, abbr, name in _FN_LANGS]
+            sentences.append({
+                'id': ex.get('id'), 'form': '', 'label': (ex.findtext('Label') or '').strip(),
+                'transl': (ex.findtext('Translation[@lang="eng"]') or '').strip(),
+                'transl_lang': 'eng', 'words': words, 'has_gloss': True,
+                'is_comparative': True, 'audio': None})
+        return jsonify({'title': PAPERS_TITLE, 'is_fieldnotes': True, 'is_papers': True,
+                        'lang': 'comparative', 'sentences': sentences})
+    except Exception as e:
+        import traceback
+        return jsonify({'error': str(e), 'traceback': traceback.format_exc()}), 500
+
+@app.route('/api/papers/tx/<int:index>/glosses', methods=['GET'])
+def get_papers_glosses(index):
+    # the alignment and glosses as published, overlaid with whatever the author has saved
+    merged = {e.get('id'): _paper_defaults(e) for e in _paper_examples()}
+    merged.update(_load_stored_glosses('papers_0'))
+    return jsonify(merged)
+
+@app.route('/api/papers/tx/<int:index>/glosses', methods=['POST'])
+def save_papers_gloss(index):
+    if not session.get('author'):
+        return jsonify({'error': 'Unauthorized'}), 401
+    data    = request.get_json(silent=True) or {}
+    sent_id = data.get('sentence_id', '')
+    if not sent_id:
+        return jsonify({'error': 'No sentence_id'}), 400
+    stored = _load_stored_glosses('papers_0')
+    stored[sent_id] = data.get('gloss', '')
+    p, tmp = _gloss_path('papers_0'), _gloss_path('papers_0') + '.tmp'
+    with open(tmp, 'w', encoding='utf-8') as f:
+        json.dump(stored, f, ensure_ascii=False, indent=2)
+    os.replace(tmp, p)
+    return jsonify({'ok': True})
 
 @app.route('/api/fieldnotes/tx/<int:index>/glosses', methods=['GET'])
 def get_fieldnotes_glosses(index):
@@ -1082,15 +1217,15 @@ def dictionary_examples():
                 entry_forms[el.get('identifiant', '')] = forms
         result = {eid: [] for eid in entry_forms}
 
-        # ---- fieldnotes: five parallel languages per column ----
+        # ---- fieldwork-style texts (fieldnotes + examples from papers): five parallel languages ----
         fx = get_fieldnotes_xml()
         groups = fx.findall('.//tiGroup') if fx is not None else []
+        sources = []   # (type, index, gloss-store key, title, {sentence id: default translation})
         for fname in sorted(os.listdir(GLOSSES_FOLDER)):
             m = re.fullmatch(r'fieldnotes_(\d+)\.json', fname)
             if not m:
                 continue
             idx = int(m.group(1))
-            stored = _load_stored_glosses(f'fieldnotes_{idx}')
             title, prompts = '', {}
             if idx < len(groups):
                 title = (groups[idx].findtext('ti') or '').strip()
@@ -1101,6 +1236,12 @@ def dictionary_examples():
                     if grp is not None:
                         prompts[(rfg.findtext('rf') or '').strip()] = (
                             grp.findtext('bsl') or grp.findtext('fr') or '').strip()
+            sources.append(('fieldnotes', idx, f'fieldnotes_{idx}', title, prompts))
+        sources.append(('papers', 0, 'papers_0', PAPERS_TITLE,
+                        {x.get('id'): (x.findtext('Translation[@lang="eng"]') or '').strip()
+                         for x in _paper_examples()}))
+        for typ, idx, key, title, prompts in sources:
+            stored = _load_stored_glosses(key)
             for sid, g in stored.items():
                 if not (isinstance(g, dict) and g.get('confirmed') is True
                         and isinstance(g.get('tokens'), dict)):
@@ -1120,7 +1261,7 @@ def dictionary_examples():
                     transl = (g.get('translation') if g.get('translation') is not None
                               else prompts.get(sid, ''))
                     result[eid].append({
-                        'type': 'fieldnotes', 'index': idx, 'title': title,
+                        'type': typ, 'index': idx, 'title': title,
                         'sentence_id': sid, 'tokens': tokens,
                         'glosses': g.get('glosses', []),
                         'translation': transl, 'match_cols': cols})
@@ -1338,6 +1479,24 @@ def _cite_narrative_latex(filename, sent_id, n):
 
 # ── Markdown → LaTeX ──────────────────────────────────────────
 
+def _cite_papers_latex(example_id, n):
+    ex = _paper_example(example_id)
+    if ex is None:
+        return f'\\textit{{[{_le(example_id)} not found]}}'
+    tokens, col_glosses, n_cols, transl = _paper_state(ex)
+    rows = []
+    for code, abbr, _ in _FN_LANGS:
+        cells = [_le((tokens.get(code, [])[i] if i < len(tokens.get(code, [])) else '') or '---')
+                 for i in range(n_cols)]
+        rows.append(f'\\textit{{{_le(abbr)}}} & ' + ' & '.join(cells) + r' \\')
+    gloss_row = ' & '.join([''] + [_le(col_glosses[i] if i < len(col_glosses) else '') for i in range(n_cols)]) + r' \\'
+    label = (ex.findtext('Label') or '').strip()
+    label_tex = f'\\textit{{{_le(label)}}}\\\\\n' if label else ''
+    tabular = (f'\\begin{{tabular}}[t]{{@{{}}{"l" * (n_cols + 1)}@{{}}}}\n'
+               + '\n'.join(rows) + '\n' + r'\midrule' + '\n' + gloss_row + '\n' + r'\end{tabular}')
+    return (f'\\begin{{exe}}\n\\ex\\label{{ex:{n}}}\n{label_tex}{tabular}\\\\\n'
+            f'\\trans `{_le(transl)}\'\n\\end{{exe}}')
+
 def _md_to_latex_body(source):
     """Convert grammar Markdown (with shortcodes) to a LaTeX body string."""
     counter = [0]
@@ -1345,6 +1504,8 @@ def _md_to_latex_body(source):
     def resolve_cite(m):
         counter[0] += 1; spec = m.group(1).strip(); n = counter[0]
         try:
+            if spec.startswith('papers#'):
+                return _cite_papers_latex(spec.split('#', 1)[1].strip(), n)
             if spec.startswith('fieldnotes#'):
                 parts = spec.split('#', 2)
                 return _cite_fieldnotes_latex(int(parts[1]), parts[2].strip(), n)
