@@ -7,6 +7,7 @@ Run: python app.py   (then open http://localhost:5000)
 import os
 import re
 import json
+from html import escape as _esc
 from flask import Flask, request, jsonify, session, send_from_directory
 from lxml import etree
 import markdown as md_lib
@@ -246,11 +247,15 @@ def build_citation(spec, n):
 #  SHORTCODE RESOLVERS
 # ══════════════════════════════════════════════════════════════
 
-def build_example_table(ex_id):
+def build_example_table(ex_id, n=None):
     """
-    Resolve {{example: ID}} — builds a full five-language interlinear table
-    from the corpus XML. Each language row carries data-lang="…" so the
-    client-side language-toggle pills can show/hide rows without a round-trip.
+    Resolve {{example: ID}} — builds a numbered five-language interlinear example
+    from the corpus XML: "(n)  <source label>", the aligned forms, the gloss line
+    and the translation. Each language row carries data-lang="…" so the client-side
+    language-toggle pills can show/hide rows without a round-trip.
+    Words that have no explicit <TokenLinks> entry still carry data-lang / data-form /
+    data-gloss, so the page can link them to the dictionary - but only where the
+    gloss agrees with the dictionary entry (so a homophone is not linked wrongly).
     """
     corpus = get_corpus_xml()
     if corpus is None:
@@ -258,11 +263,12 @@ def build_example_table(ex_id):
 
     ex = corpus.find(f'.//Example[@id="{ex_id}"]')
     if ex is None:
-        return f'<p class="shortcode-error">Example not found in corpus: <code>{ex_id}</code></p>'
+        return f'<p class="shortcode-error">Example not found in corpus: <code>{_esc(ex_id)}</code></p>'
 
     translation  = ex.findtext('Translation[@lang="eng"]', '').strip()
     glosses_raw  = ex.findtext('Glosses', '').strip()
     glosses      = glosses_raw.split() if glosses_raw else []
+    label        = (ex.findtext('Label') or '').strip()
     pangloss_url = ex.findtext('Source/PanglossURL', '').strip()
 
     # Token → dict-entry link map
@@ -287,14 +293,17 @@ def build_example_table(ex_id):
         cells = ''
         for i, form in enumerate(forms):
             dict_id = token_links.get(i, '')
+            f_esc   = _esc(form)
             if form == '—':
                 cells += '<td class="ex-cell ex-dash">—</td>'
             elif dict_id:
                 cells += (f'<td class="ex-cell">'
                           f'<a class="lexlink" href="dictionary.html#{dict_id}" '
-                          f'data-dict-id="{dict_id}">{form}</a></td>')
+                          f'data-dict-id="{dict_id}">{f_esc}</a></td>')
             else:
-                cells += f'<td class="ex-cell">{form}</td>'
+                g_esc = _esc(glosses[i]) if i < len(glosses) else ''
+                cells += (f'<td class="ex-cell" data-lang="{code}" '
+                          f'data-form="{f_esc}" data-gloss="{g_esc}">{f_esc}</td>')
 
         rows_html += (f'<tr data-lang="{lang}">'
                       f'<td class="ex-abbr" style="color:{color};">{abbr}</td>'
@@ -303,22 +312,30 @@ def build_example_table(ex_id):
     # Separator + gloss row
     n_cols     = len(glosses)
     sep_cells  = '<td></td>' + '<td></td>' * n_cols
-    gloss_cells = ''.join(f'<td class="ex-gloss">{g}</td>' for g in glosses)
+    gloss_cells = ''.join(f'<td class="ex-gloss">{_esc(g)}</td>' for g in glosses)
 
     pangloss_link = ''
     if pangloss_url:
-        pangloss_link = (f'<a class="corpus-ref" href="{pangloss_url}" target="_blank" '
+        pangloss_link = (f'<a class="corpus-ref" href="{_esc(pangloss_url)}" target="_blank" '
                          f'rel="noopener">🎧 Pangloss archive →</a>')
 
-    return f'''<div class="example-block" data-example-id="{ex_id}">
-  <div class="example-wrap">
-    <table class="ex-table">
-      {rows_html}
-      <tr class="ex-sep">{sep_cells}</tr>
-      <tr><td class="ex-gloss-empty"></td>{gloss_cells}</tr>
-    </table>
-    <div class="ex-transl">{translation}</div>
-    {pangloss_link}
+    number = f'<span class="cite-n">({n})</span>' if n is not None else ''
+    source = f'<div class="ex-source">{_esc(label)}</div>' if label else ''
+    transl = f'<div class="ex-transl">\u2018{_esc(translation)}\u2019</div>' if translation else ''
+
+    return f'''<div class="example-block grammar-cite" data-example-id="{_esc(ex_id)}">
+  {number}
+  <div class="cite-body">
+    {source}
+    <div class="example-wrap">
+      <table class="ex-table">
+        {rows_html}
+        <tr class="ex-sep">{sep_cells}</tr>
+        <tr><td class="ex-gloss-empty"></td>{gloss_cells}</tr>
+      </table>
+      {transl}
+      {pangloss_link}
+    </div>
   </div>
 </div>'''
 
@@ -371,22 +388,23 @@ def render_grammar(md_text):
     _MD.reset()
     html = _MD.convert(md_text)
 
-    html = re.sub(
-        r'\{\{\s*example\s*:\s*([^\}]+)\}\}',
-        lambda m: build_example_table(m.group(1).strip()),
-        html
-    )
+    # A shortcode alone on a line becomes <p>{{…}}</p>; the block it expands to must not sit in a <p>
+    html = re.sub(r'<p>\s*(\{\{\s*(?:example|cite)\s*:[^}]*\}\})\s*</p>', r'\1', html)
+
+    # {{example:}} and {{cite:}} share one counter, numbered in document order
+    counter = [0]
+    def _numbered(m):
+        counter[0] += 1
+        kind, arg = m.group(1), m.group(2).strip()
+        return (build_example_table(arg, counter[0]) if kind == 'example'
+                else build_citation(arg, counter[0]))
+    html = re.sub(r'\{\{\s*(example|cite)\s*:\s*([^\}]+)\}\}', _numbered, html)
+
     html = re.sub(
         r'\{\{\s*entry\s*:\s*([^\}]+)\}\}',
         lambda m: build_entry_chip(m.group(1).strip()),
         html
     )
-    # {{cite:}} — numbered automatically within each section
-    _counter = [0]
-    def _resolve_cite(m):
-        _counter[0] += 1
-        return build_citation(m.group(1).strip(), _counter[0])
-    html = re.sub(r'\{\{\s*cite\s*:\s*([^\}]+)\}\}', _resolve_cite, html)
     return html
 
 
@@ -1198,6 +1216,7 @@ def _example_latex(ex_id, n):
         return f'\\textit{{[Example {_le(ex_id)} not found]}}'
     glosses_raw = (ex.findtext('Glosses') or '').split()
     translation = (ex.findtext('Translation[@lang="eng"]') or '').strip()
+    label = (ex.findtext('Label') or '').strip()
     cols = [_le(g) for g in glosses_raw]
     rows = []
     for code in LANG_CODES:
@@ -1218,8 +1237,9 @@ def _example_latex(ex_id, n):
         + r'\end{tabular}'
     )
     transl = _le(translation)
+    label_tex = f'\\textit{{{_le(label)}}}\\\\\n' if label else ''
     return (f'\\begin{{exe}}\n\\ex\\label{{ex:{_le(ex_id)}}}\n'
-            f'{tabular}\\\\\n'
+            f'{label_tex}{tabular}\\\\\n'
             f'\\trans `{transl}\'\n'
             f'\\end{{exe}}')
 
