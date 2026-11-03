@@ -460,6 +460,7 @@ async function loadSection(id) {
         </ul>
         <li><code>{{cite: file.xml#sentId}}</code> — numbered example from a transcribed narrative</li>
           <li><code>{{cite: fieldnotes#0#d01.Road:01}}</code> — numbered example from fieldnotes</li>
+          <li><code>{{cite: papers#negation_example_01}}</code> — numbered example from "Examples from papers"</li>
         </ul>
         Markdown: <code>**bold**</code>, <code>*italic*</code>,
         <code>### heading</code>, <code>| col | col |</code> tables.
@@ -727,17 +728,37 @@ function bindDictLinksInSection(container) {
     el.addEventListener('mouseenter', () => { clearTimeout(gHideTimer); showGrammarTooltip(el, entry); });
     el.addEventListener('mouseleave', hideGrammarTooltip);
   });
+  // Cited words that carry an explicit dictionary entry (data-dict-id): link them directly,
+  // whatever orthography the dictionary happens to be written in.
+  container.querySelectorAll('td[data-dict-id]').forEach(el => {
+    const entry = gDictById[el.dataset.dictId];
+    if (!entry) return;
+    el.style.cursor = 'pointer';
+    el.style.textDecorationLine = 'underline';
+    el.style.textDecorationStyle = 'dotted';
+    el.addEventListener('mouseenter', () => { clearTimeout(gHideTimer); showGrammarTooltip(el, entry); });
+    el.addEventListener('mouseleave', hideGrammarTooltip);
+    el.addEventListener('click', () => {
+      const langName = G_CODE2LANG[el.dataset.lang] || el.dataset.lang;
+      window.location.href = `dictionary.html?lang=${encodeURIComponent(langName)}#${entry.id}`;
+    });
+  });
+
   // Form cells from {{cite:}} — data-lang + data-form
   container.querySelectorAll('[data-lang][data-form]').forEach(el => {
+    if (el.dataset.dictId) return;            // already linked explicitly above
     const lang = el.dataset.lang, form = el.dataset.form;
     if (!form || form==='—' || form==='—') return;
     const clean = form.replace(/^[-=]+|[-=.,;]+$/g,'').toLowerCase();
     const entry = gDictByForm[`${lang}:${form.toLowerCase()}`]||gDictByForm[`${lang}:${clean}`];
     if (!entry) return;
-    // Examples carry the word's gloss: only link when it agrees with the entry's gloss, so a
-    // homophone (e.g. Dorig na '1sg' vs na 'ART') is not tied to the wrong dictionary entry.
-    if (el.dataset.gloss && entry.gloss &&
-        el.dataset.gloss.trim().toLowerCase() !== entry.gloss.trim().toLowerCase()) return;
+    // Cited words carry their column's gloss. Link by form only when that gloss agrees with the
+    // entry's gloss, so a homophone (Dorig na '1sg' vs na 'ART') is never tied to the wrong
+    // entry; an unglossed word is not linked until it has been glossed.
+    if (el.hasAttribute('data-gloss')) {
+      const gl = (el.dataset.gloss || '').trim().toLowerCase();
+      if (!gl || !entry.gloss || gl !== entry.gloss.trim().toLowerCase()) return;
+    }
     el.style.cursor = 'pointer';
     el.style.textDecorationLine = 'underline';
     el.style.textDecorationStyle = 'dotted';
