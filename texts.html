@@ -438,22 +438,36 @@ async function renderFieldnotesCards() {
   const grid  = document.getElementById('fn-grid');
   const stats = document.getElementById('fn-stats');
   try {
-    const resp = await fetch('/api/fieldnotes/groups');
-    const data = await resp.json();
-    const groups = data.groups || [];
-    stats.textContent = `${groups.length} topic${groups.length !== 1 ? 's' : ''}`;
-    if (!groups.length) {
-      grid.innerHTML = '<p class="no-results">No fieldnotes XML loaded. Log in and use ✏ Edit to upload one.</p>';
-      return;
-    }
-    grid.innerHTML = groups.map(g => {
+    const [fnResp, ppResp] = await Promise.all([fetch('/api/fieldnotes/groups'), fetch('/api/papers/groups')]);
+    const groups = (await fnResp.json()).groups || [];
+    const papers = ppResp.ok ? ((await ppResp.json()).groups || []) : [];
+
+    // "Examples from papers": published examples, opened in the same viewer as the fieldwork texts
+    const paperCards = papers.map(g => {
+      const url = `transcription.html?papers=1&index=${g.index}&title=${encodeURIComponent(g.title)}`;
+      return `<div class="text-card" style="border-left-color:#2a4a6a;">
+        <span class="tc-lang" style="color:#2a4a6a;">Published examples</span>
+        <span class="tc-title">${g.title}</span>
+        <div class="tc-meta"><span>${g.count} example${g.count !== 1 ? 's' : ''}</span></div>
+        <a class="tc-link" href="${url}">📜 View transcription →</a>
+      </div>`;
+    });
+    const fnCards = groups.map(g => {
       const txUrl = `transcription.html?fieldnotes=1&index=${g.index}&title=${encodeURIComponent(g.title)}`;
       return `<div class="text-card" style="border-left-color:var(--gold);">
         <span class="tc-lang" style="color:var(--gold);">All languages</span>
         <span class="tc-title">${g.title}</span>
         <a class="tc-link" href="${txUrl}">📜 View transcription →</a>
       </div>`;
-    }).join('');
+    });
+
+    stats.textContent = `${groups.length} topic${groups.length !== 1 ? 's' : ''}` +
+                        (papers.length ? ' · plus examples from papers' : '');
+    if (!fnCards.length && !paperCards.length) {
+      grid.innerHTML = '<p class="no-results">No fieldnotes XML loaded. Log in and use ✏ Edit to upload one.</p>';
+      return;
+    }
+    grid.innerHTML = paperCards.concat(fnCards).join('');
   } catch(e) {
     grid.innerHTML = `<p class="no-results" style="color:#922810;">Error: ${e.message}</p>`;
   }
