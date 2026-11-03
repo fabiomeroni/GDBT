@@ -407,6 +407,7 @@ sup.hom-num { font-family: 'Crimson Pro', serif; font-size: 0.55em; font-weight:
 
   <main class="dict-main" id="dict-main">
     <div style="display:flex;align-items:center;justify-content:flex-end;gap:0.5rem;padding:0.25rem 3.5rem 0;background:#f0e8d8;border-bottom:1px solid var(--border);">
+      <button class="edit-tab" id="ortho-btn" title="Convert forms written in IPA to the orthography">🔤 IPA → orthography</button>
       <button class="edit-tab" id="add-entry-btn" title="Add a new dictionary entry">＋ Add entry</button>
       <button class="edit-tab" id="dict-edit-tab" title="Upload new dictionary XML">⬆ Upload XML</button>
     </div>
@@ -1354,6 +1355,13 @@ function _bindEntryModal() {
   });
   document.getElementById('em-submit').addEventListener('click', _submitEntry);
   document.getElementById('add-entry-btn')?.addEventListener('click', openAddEntry);
+  document.getElementById('ortho-btn')?.addEventListener('click', openOrthoPreview);
+  document.getElementById('ortho-apply').addEventListener('click', applyOrtho);
+  document.getElementById('ortho-cancel').addEventListener('click', () =>
+    document.getElementById('ortho-modal').classList.remove('visible'));
+  document.getElementById('ortho-modal').addEventListener('click', e => {
+    if (e.target === e.currentTarget) e.currentTarget.classList.remove('visible');
+  });
 
   // senses: typing updates the card's data; ▲ ▼ ✕ and "Add sense" change the list
   const box = document.getElementById('em-senses');
@@ -1389,6 +1397,59 @@ function _bindEntryModal() {
     document.getElementById('ef-' + id).addEventListener('input', () => { _etymDirty = true; }));
 }
 
+
+
+// ── Convert IPA forms to the orthography (preview first; the server keeps a backup) ──
+async function openOrthoPreview() {
+  if (!isLoggedIn) { showLoginModal(); return; }
+  const modal = document.getElementById('ortho-modal'), desc = document.getElementById('ortho-desc'),
+        list = document.getElementById('ortho-list'), msg = document.getElementById('ortho-msg'),
+        apply = document.getElementById('ortho-apply');
+  list.innerHTML = ''; msg.textContent = ''; msg.className = 'dbt-modal-msg'; apply.style.display = 'none';
+  desc.textContent = 'Looking for forms written in IPA…';
+  modal.classList.add('visible');
+  try {
+    const r = await fetch('/api/dictionary/orthography');
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || ('HTTP ' + r.status));
+    if (!d.changes.length) {
+      desc.textContent = `All ${d.unchanged} forms in the ${d.entries} entries already look orthographic. Nothing to convert.`;
+      return;
+    }
+    desc.textContent = `${d.changes.length} form${d.changes.length > 1 ? 's' : ''} in IPA will be rewritten in the orthography ` +
+      `(${d.unchanged} others already look orthographic and are left alone). A backup of the dictionary is kept.`;
+    list.innerHTML = '<table style="border-collapse:collapse;width:100%;font-size:0.95rem;">' +
+      d.changes.map(c => {
+        const lang = CODE2LANG[c.lang], col = COLORS5[lang] || '#888';
+        return `<tr style="border-bottom:1px solid var(--border-lt);">
+          <td style="padding:2px 8px 2px 0;font-family:'Source Code Pro',monospace;font-size:0.72rem;color:var(--ink-light);">${escHTML(c.id)}</td>
+          <td style="padding:2px 8px 2px 0;color:${col};font-weight:600;font-variant:small-caps;">${ABBR5[lang]}</td>
+          <td style="padding:2px 6px 2px 0;color:var(--ink-light);">${escHTML(c.from)}</td>
+          <td style="padding:2px 6px;color:var(--ink-light);">→</td>
+          <td style="padding:2px 0;font-family:'EB Garamond',serif;font-size:1.05rem;color:${col};">${escHTML(c.to)}</td></tr>`;
+      }).join('') + '</table>';
+    apply.style.display = '';
+  } catch (e) {
+    desc.textContent = ''; msg.textContent = 'Could not check the dictionary: ' + e.message; msg.className = 'dbt-modal-msg error';
+  }
+}
+
+async function applyOrtho() {
+  const msg = document.getElementById('ortho-msg'), apply = document.getElementById('ortho-apply');
+  msg.textContent = 'Converting…'; msg.className = 'dbt-modal-msg'; apply.disabled = true;
+  try {
+    const r = await fetch('/api/dictionary/orthography', { method: 'POST' });
+    const d = await r.json();
+    if (!r.ok || !d.ok) throw new Error(d.error || ('HTTP ' + r.status));
+    msg.textContent = `Done: ${d.converted} form${d.converted === 1 ? '' : 's'} converted. Backup: ${d.backup}`;
+    msg.className = 'dbt-modal-msg success';
+    apply.style.display = 'none';
+    document.getElementById('ortho-list').innerHTML = '';
+    await reloadDictionary();
+  } catch (e) {
+    msg.textContent = 'Conversion failed: ' + e.message; msg.className = 'dbt-modal-msg error';
+  } finally { apply.disabled = false; }
+}
 
 async function init() {
   // ── Read URL params: ?lang=Nume#speech ──────────────────────
@@ -1507,6 +1568,20 @@ init();
     <div class="dbt-modal-row">
       <button class="modal-btn" id="em-cancel">Cancel</button>
       <button class="modal-btn primary" id="em-submit">Save entry</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── IPA → orthography dialog ── -->
+<div class="dbt-modal-backdrop" id="ortho-modal">
+  <div class="dbt-modal" style="max-width:620px;width:94vw;max-height:88vh;overflow-y:auto;">
+    <h3>Convert IPA forms to orthography</h3>
+    <p class="modal-desc" id="ortho-desc">Looking for forms written in IPA…</p>
+    <div id="ortho-list" style="max-height:46vh;overflow-y:auto;margin-bottom:0.7rem;"></div>
+    <div class="dbt-modal-msg" id="ortho-msg"></div>
+    <div class="dbt-modal-row">
+      <button class="modal-btn" id="ortho-cancel">Close</button>
+      <button class="modal-btn primary" id="ortho-apply" style="display:none;">Convert these forms</button>
     </div>
   </div>
 </div>
