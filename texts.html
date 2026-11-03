@@ -221,18 +221,6 @@
   </div>
 </div>
 
-<!-- ── Upload modal: recordings ── -->
-<div class="dbt-modal-backdrop" id="upload-rec-modal">
-  <div class="dbt-modal">
-    <h3>Upload Recordings Corpus XML</h3>
-    <p class="modal-desc">Replace the current audio corpus XML. The page reloads after upload.</p>
-    <input type="file" id="rec-file" accept=".xml">
-    <div class="dbt-modal-msg" id="upload-rec-msg"></div>
-    <div class="dbt-modal-row">
-      <button class="modal-btn" id="upload-rec-cancel">Cancel</button>
-      <button class="modal-btn primary" id="upload-rec-submit">Upload</button>
-    </div>
-  </div>
 </div>
 
 <!-- ── Upload modal: fieldnotes ── -->
@@ -517,8 +505,6 @@ checkAuth();
 
 renderRecordings();
 
-bindUploadModal('rec-edit-tab','upload-rec-modal','rec-file','upload-rec-msg',
-  'upload-rec-cancel','upload-rec-submit','/api/upload/corpus', true);
 
 // ── Upload transcription XML ──────────────────────────────────
 const txUploadTab = document.getElementById('tx-upload-tab');
