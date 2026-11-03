@@ -438,14 +438,16 @@
 // ── Read URL params ───────────────────────────────────────────
 const params        = new URLSearchParams(window.location.search);
 const isFieldnotes  = params.get('fieldnotes') === '1';
+const isPapers      = params.get('papers') === '1';   // the "Examples from papers" text
 const textKey       = params.get('key')   || '';
 const fnIndex       = parseInt(params.get('index') || '0', 10);
 const textTitle     = params.get('title') || 'Transcription';
 const textLangParam = params.get('lang')  || '';
 // Gloss key: filename for recordings, fieldnotes_N for fieldnotes
-const glossKey = isFieldnotes ? ('fieldnotes_' + fnIndex) : textKey;
+const glossKey = isPapers ? ('papers_' + fnIndex) : isFieldnotes ? ('fieldnotes_' + fnIndex) : textKey;
 // Gloss endpoint: dedicated routes for fieldnotes, /api/transcription/ for recordings
 function glossUrl() {
+  if (isPapers) return `/api/papers/tx/${fnIndex}/glosses`;
   return isFieldnotes
     ? `/api/fieldnotes/tx/${fnIndex}/glosses`
     : `/api/transcription/${encodeURIComponent(textKey)}/glosses`;
@@ -1746,7 +1748,7 @@ function render(data) {
       <div class="tx-title" style="color:${langColor};">${data.title || textTitle}</div>
       <div class="tx-meta">
         <span style="color:${langColor};">${textLang}</span>
-        <span>Recorded 2003 · A. François</span>
+        <span>${isPapers ? 'Published examples' : 'Recorded 2003 · A. François'}</span>
         <span>${nSentences} phrase${nSentences !== 1 ? 's' : ''}</span>
       </div>
     </div>
@@ -1807,7 +1809,7 @@ function render(data) {
       : `<div class="tx-transl">${translLangTag}${s.transl}</div>`;
 
     div.innerHTML = `
-      <div class="tx-phrase-id">${s.id} ${audioInfo}</div>
+      <div class="tx-phrase-id">${s.id}${s.label ? ' · ' + s.label : ''} ${audioInfo}</div>
       ${formLine}
       ${glossSection}
       ${translDiv}`;
@@ -1916,7 +1918,7 @@ async function init() {
   bindLoginModal();
   await Promise.all([checkAuth(), loadDictionary(), loadAbbrevLinks(), loadTextsConcordance()]);
 
-  const hasSrc = isFieldnotes ? true : !!textKey;
+  const hasSrc = (isFieldnotes || isPapers) ? true : !!textKey;
   if (!hasSrc) {
     document.getElementById('tx-main').innerHTML =
       '<p class="tx-loading tx-error">No text key specified in URL.</p>';
@@ -1925,7 +1927,9 @@ async function init() {
 
   try {
     // Choose endpoint based on source type
-    const txEndpoint = isFieldnotes
+    const txEndpoint = isPapers
+      ? `/api/papers/tx/${fnIndex}`
+      : isFieldnotes
       ? `/api/fieldnotes/tx/${fnIndex}`
       : `/api/transcription/${encodeURIComponent(textKey)}`;
     const glEndpoint = glossUrl();
