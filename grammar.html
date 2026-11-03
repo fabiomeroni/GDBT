@@ -734,6 +734,10 @@ function bindDictLinksInSection(container) {
     const clean = form.replace(/^[-=]+|[-=.,;]+$/g,'').toLowerCase();
     const entry = gDictByForm[`${lang}:${form.toLowerCase()}`]||gDictByForm[`${lang}:${clean}`];
     if (!entry) return;
+    // Examples carry the word's gloss: only link when it agrees with the entry's gloss, so a
+    // homophone (e.g. Dorig na '1sg' vs na 'ART') is not tied to the wrong dictionary entry.
+    if (el.dataset.gloss && entry.gloss &&
+        el.dataset.gloss.trim().toLowerCase() !== entry.gloss.trim().toLowerCase()) return;
     el.style.cursor = 'pointer';
     el.style.textDecorationLine = 'underline';
     el.style.textDecorationStyle = 'dotted';
