@@ -383,3 +383,12 @@ footer a { color: #9a8060; }
 .grammar-section .ex-table td        { padding: 2px 16px 2px 0; }
 .grammar-section .ex-table .ex-abbr  { padding: 2px 14px 2px 0; }
 .grammar-section .ex-table .ex-gloss { padding: 5px 16px 3px 0; }
+
+/* Cited examples ({{cite:}}): same two fixes as the example tables — the generic
+   ".grammar-section table td" padding made wide examples overflow, and gloss lines
+   should show exactly what the author typed (lexical lower-case, grammatical capitals). */
+.grammar-section .cite-fn-table td            { padding: 2px 16px 2px 0; }
+.grammar-section .cite-fn-table .cite-fn-abbr { padding: 2px 12px 2px 0; }
+.grammar-section .cite-fn-table .cite-fn-gloss,
+.grammar-section .cite-ilg-table .cite-gloss-cell { padding: 4px 16px 2px 0; text-transform: none; font-size: 0.74rem; letter-spacing: 0.02em; }
+.grammar-section .cite-ilg-table td           { padding: 1px 18px 1px 0; }
