@@ -385,7 +385,7 @@ body { overflow: hidden; }
       </div>
     </div>
     <div class="dict-content" id="dict-content">
-      <p class="dict-status">Loading <code>dbt_dictionary.xml</code>…</p>
+      <p class="dict-status">Loading the dictionary…</p>
     </div>
   </main>
 </div>
@@ -410,7 +410,7 @@ let searchQ    = '';
 
 // ══════════════════════════════════════════════════════════════
 //  XML PARSER  —  LEXICA format → DICTIONARY array
-//  Reads dbt_dictionary.xml directly; no conversion step.
+//  Reads the active dictionary XML directly; no conversion step.
 // ══════════════════════════════════════════════════════════════
 async function parseLexicaXML(url) {
   const resp = await fetch(url);
@@ -477,6 +477,19 @@ async function parseLexicaXML(url) {
     const shortGloss   = shortGlossEl ? shortGlossEl.textContent.trim() : '';
     return { id, hw, langs, pos, domain, gloss, glossRich, notes, etym, shortGloss };
   });
+}
+
+// The server decides which dictionary file is active (an uploaded one if there is one,
+// otherwise dbt_dictionary.xml), so ask it rather than guessing the file name here.
+async function loadActiveDictionary() {
+  try {
+    return await parseLexicaXML('/api/dictionary/xml');
+  } catch (e) {
+    // Fall back only when the endpoint itself is unreachable - never hide a parse error
+    if (/Cannot fetch|Failed to fetch|NetworkError/i.test(e.message))
+      return await parseLexicaXML('dbt_dictionary.xml');
+    throw e;
+  }
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1058,11 +1071,8 @@ async function dismissProposed(colKey) {
 
 // Reload dictionary XML after any modification
 async function reloadDictionary() {
-  try {
-    DICTIONARY = await parseLexicaXML('uploads/dictionary.xml');
-  } catch(e) {
-    DICTIONARY = await parseLexicaXML('dbt_dictionary.xml');
-  }
+  DICTIONARY = await loadActiveDictionary();
+  DICT_MAP = {};
   DICTIONARY.forEach(e => { DICT_MAP[e.id] = e; });
   buildFormIndex();
   await loadDictExamples();
@@ -1223,7 +1233,7 @@ async function init() {
   } catch(e) {}
 
   try {
-    DICTIONARY = await parseLexicaXML('dbt_dictionary.xml');
+    DICTIONARY = await loadActiveDictionary();
     DICTIONARY.forEach(e => { DICT_MAP[e.id] = e; });
     buildFormIndex();
     await Promise.all([loadProposedEntries(), loadDictExamples()]);
@@ -1259,7 +1269,7 @@ async function init() {
       `<p class="dict-status error">Could not load dictionary.<br>
        <small>${err.message}</small><br><br>
        ${isNet
-         ? 'Make sure <code>dbt_dictionary.xml</code> is in the same folder and the page is served over HTTP (not opened as a local file).'
+         ? 'Make sure the dictionary XML is available and the page is served by the Flask app (not opened as a local file).'
          : 'This looks like a script error, not a missing file \u2014 open the browser console (F12) for details.'}</p>`;
     console.error(err);
   }
@@ -1403,11 +1413,7 @@ document.getElementById('upload-submit').addEventListener('click', async () => {
       msg.className = 'dbt-modal-msg success';
       setTimeout(async () => {
         document.getElementById('upload-modal').classList.remove('visible');
-        DICTIONARY = await parseLexicaXML('uploads/dictionary.xml').catch(
-          () => parseLexicaXML('dbt_dictionary.xml')
-        );
-        DICTIONARY.forEach(e => { DICT_MAP[e.id] = e; });
-        render();
+        await reloadDictionary();
       }, 800);
     } else {
       msg.textContent = d.error || 'Upload failed.';
