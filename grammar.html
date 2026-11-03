@@ -692,8 +692,11 @@ async function loadGrammarDict() {
 function showGrammarTooltip(anchor, entry) {
   if (!entry) return;
   const tt = document.getElementById('grammar-tooltip');
-  document.getElementById('gtt-hw').textContent  = entry.gloss || entry.id;
-  document.getElementById('gtt-def').textContent = entry.gloss || '';
+  const senses = entry.senses || [];
+  const line = senses.length > 1 ? senses.map(s => `${s.n}. ${s.gloss}`).join('   ') : (entry.gloss || entry.id);
+  document.getElementById('gtt-hw').textContent  = line;
+  document.getElementById('gtt-def').textContent =
+    (senses.length === 1 && senses[0].definition && senses[0].definition !== line) ? senses[0].definition : '';
   document.getElementById('gtt-equivs').innerHTML = G_LANGS5.map(lang => {
     const col = G_LANG_COLORS[lang]||'#888', form = entry.forms?.[G_CODES5[lang]]||'—';
     return `<span style="font-family:'Source Code Pro',monospace;font-size:.7rem;
@@ -757,7 +760,8 @@ function bindDictLinksInSection(container) {
     // entry; an unglossed word is not linked until it has been glossed.
     if (el.hasAttribute('data-gloss')) {
       const gl = (el.dataset.gloss || '').trim().toLowerCase();
-      if (!gl || !entry.gloss || gl !== entry.gloss.trim().toLowerCase()) return;
+      const gs = (entry.glosses && entry.glosses.length ? entry.glosses : [entry.gloss || '']).map(x => x.trim().toLowerCase());
+      if (!gl || !gs.includes(gl)) return;      // the gloss must be one of the entry's senses
     }
     el.style.cursor = 'pointer';
     el.style.textDecorationLine = 'underline';
