@@ -1205,7 +1205,7 @@ def _apply_entry_data(el, eid, data):
     forms = data.get('forms') or {}
     lemme = _entry_child(el, 'Lemme', create=True)
     for code in _LANG5:
-        form = (forms.get(code) or '').strip()
+        form = unicodedata.normalize('NFC', (forms.get(code) or '').strip())
         node = lemme.find(f'ReprésentationDeForme[@langue="{code}"]')
         if form:
             if node is None:
@@ -1309,6 +1309,72 @@ def _number_homonyms(root, el):
         used.add(n)
         _set_text(_entry_child(e, 'NuméroDHomonyme', create=True), str(n))
 
+# ── IPA -> François (2003-) orthography ─────────────────────────────────────────────────
+# Consonants: the author's table. Rows whose orthography cell is blank continue the row above
+# (k͡pʷ is written q like kʷ; ŋʷ is written m̄ like ŋ͡mʷ). Vowels: the regular correspondences
+# of the author's data (ɪ→ē, ʊ→ō, ɛ→e, ɔ→o, æ→ä; a, i, u unchanged; length ː doubles the vowel).
+_ORTH_CONS = [      # longest IPA sequence first
+    ('ŋ͡mʷ', 'm̄'), ('ŋʷ', 'm̄'), ('k͡pʷ', 'q'), ('kʷ', 'q'), ('t͡ʃ', 'j'), ('ʧ', 'j'),
+    ('mb', 'b'), ('nd', 'd'), ('ŋ', 'n̄'), ('ɣ', 'g'), ('β', 'v'), ('j', 'y'),
+]
+_ORTH_VOWEL = {'ɪ': 'ē', 'ʊ': 'ō', 'ɛ': 'e', 'ɔ': 'o', 'æ': 'ä'}
+_IPA_ONLY = set('ɪʊɛɔɣβŋʧʃæɑɲʔɾʰʷːˈˌ\u0361')
+
+def _ipa_to_orth(s):
+    s, out, i = (s or '').replace('\u2011', '-'), [], 0
+    while i < len(s):
+        for ipa, orth in _ORTH_CONS:
+            if s.startswith(ipa, i):
+                out.append(orth); i += len(ipa); break
+        else:
+            ch = s[i]
+            out.append((out[-1] if out else '') if ch == 'ː' else _ORTH_VOWEL.get(ch, ch))
+            i += 1
+    return unicodedata.normalize('NFC', ''.join(out))
+
+def _looks_ipa(s):
+    """True only when the form shows IPA-only signs. A form made of plain letters is left alone:
+    it is either identical in both notations, or already orthographic (where j is /t͡ʃ/, not [j])."""
+    t = (s or '').replace('\u2011', '-')
+    return any(c in _IPA_ONLY for c in t) or bool(re.search(r'mb|nd', t))
+
+@app.route('/api/dictionary/orthography', methods=['GET', 'POST'])
+def dictionary_orthography():
+    """GET: preview which forms of the ACTIVE dictionary would be converted from IPA to
+    orthography. POST: do it (the file is backed up first)."""
+    if not session.get('author'):
+        return jsonify({'error': 'Unauthorized'}), 401
+    try:
+        tree = _read_dict()
+        changes, kept, total = [], 0, 0
+        for el in tree.getroot().findall('.//EntréeLexicale'):
+            total += 1
+            for node in el.findall('Lemme/ReprésentationDeForme'):
+                code, text = node.get('langue', ''), (node.text or '').strip()
+                if code not in _LANG5 or not text or text == '\u2014':
+                    continue
+                new = _ipa_to_orth(text) if _looks_ipa(text) else text
+                if new != text:
+                    changes.append({'id': el.get('identifiant', ''), 'lang': code, 'from': text, 'to': new, '_n': node})
+                else:
+                    kept += 1
+        if request.method == 'GET':
+            return jsonify({'entries': total, 'unchanged': kept,
+                            'changes': [{k: v for k, v in c.items() if k != '_n'} for c in changes]})
+        if not changes:
+            return jsonify({'ok': True, 'converted': 0, 'backup': None})
+        import shutil, datetime
+        bdir = os.path.join(UPLOAD_FOLDER, 'backups')
+        os.makedirs(bdir, exist_ok=True)
+        backup = os.path.join(bdir, 'dictionary-' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S') + '.xml')
+        shutil.copyfile(_dict_path(), backup)
+        for c in changes:
+            c['_n'].text = c['to']
+        _write_dict(tree)
+        return jsonify({'ok': True, 'converted': len(changes), 'backup': backup})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 # ── Dictionary CRUD ───────────────────────────────────────────
 
 @app.route('/api/dictionary/xml')
@@ -1392,7 +1458,8 @@ _TX_LANG_TO_CODE = {'wwo': 'drg', 'drg': 'drg', 'lkn': 'lkn', 'krf': 'kro',
 
 def _clean_form(s):
     """Lower-case a form and strip morpheme-boundary and punctuation marks."""
-    return re.sub(r'^[-=]+|[-=.,;!?]+$', '', (s or '').strip()).lower()
+    s = unicodedata.normalize('NFC', (s or '').strip())     # ō typed as o + macron == ō
+    return re.sub(r'^[-=]+|[-=.,;!?]+$', '', s).lower()
 
 @app.route('/api/dictionary/examples')
 def dictionary_examples():
