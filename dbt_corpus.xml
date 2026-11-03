@@ -25,11 +25,11 @@
   ══════════════════════════════════════════════════════════ -->
   <Example id="negation_example_01" topic="negation">
     <Label>François (2011a, p. 178)</Label>
-    <Tier lang="num">nir βitis ɣil liŋliŋi mi u luwluw namɣin</Tier>
-    <Tier lang="drg">nɪr sɔwsɛ βrɪɣɪl taβul tɛ na lŋa ‑ɣɪn</Tier>
-    <Tier lang="kro">nɪr tɪ rɔŋ taβul wʊs.mɛlɛ ɔ βalβalaw namɪɣɪn</Tier>
-    <Tier lang="olr">nɪj tɪ rɔŋ βɪlɪː wʊs.mɛlɛ — ususraː mʊʧ</Tier>
-    <Tier lang="lkn">ɣɪː atɪ rɔŋ kɛrɛ aβʊh.malɛ — ɛlŋa ‑nɣɪʧ</Tier>
+    <Tier lang="num">nir vitis gil lin̄lin̄i mi u luwluw namgin</Tier>
+    <Tier lang="drg">nēr sowse vrēgēl tavul te na ln̄a -gēn</Tier>
+    <Tier lang="kro">nēr tē ron̄ tavul wōs.mele o valvalaw namēgēn</Tier>
+    <Tier lang="olr">nēy tē ron̄ vēlēē wōs.mele — ususraa mōj</Tier>
+    <Tier lang="lkn">gēē atē ron̄ kere avōh.male — eln̄a -ngēj</Tier>
     <Glosses>3PL NONDUM₁ know properly NONDUM₂ ART speech POSS:1INCL.PL</Glosses>
     <Translation lang="eng">They don’t know our language very well yet</Translation>
     <TokenLinks>
@@ -47,32 +47,6 @@
     </Source>
   </Example>
 
-  <!-- ══════════════════════════════════════════════════════════
-       EXAMPLE road_01 — greeting (fieldnotes D01, Road:01)
-  ══════════════════════════════════════════════════════════ -->
-  <Example id="road_01" topic="tamp">
-    <Label>Road:01</Label>
-    <Tier lang="num">Talʊw βɛ- mbɔŋ</Tier>
-    <Tier lang="drg">Rɔrwɔr βa- wɪ</Tier>
-    <Tier lang="kro">Rɔrwɔr β- wɪ</Tier>
-    <Tier lang="olr">Matβas ɣa wɪ</Tier>
-    <Tier lang="lkn">Matpæh ɣa wɪ</Tier>
-    <Glosses>morning STA good</Glosses>
-    <Translation lang="eng">Good morning.</Translation>
-  </Example>
 
-  <!-- ══════════════════════════════════════════════════════════
-       EXAMPLE road_23 — standalone nondumitive (fieldnotes D01, Road:23)
-  ══════════════════════════════════════════════════════════ -->
-  <Example id="road_23" topic="tamp">
-    <Label>Road:23</Label>
-    <Tier lang="num">na βɛ- mʊrʊs, wat tuk͡pʷa</Tier>
-    <Tier lang="drg">na βa- mrʊs, la tuk͡pʷa</Tier>
-    <Tier lang="kro">na β- mʊrʊs, la tuk͡pʷa</Tier>
-    <Tier lang="olr">na ɣa mɪrɪs, la taɣa.mɛlɛ</Tier>
-    <Tier lang="lkn">na a marɪs, la ta.malɛ</Tier>
-    <Glosses>1sg STA want but NONDUM</Glosses>
-    <Translation lang="eng">I want to, but not yet</Translation>
-  </Example>
 
 </Corpus>
