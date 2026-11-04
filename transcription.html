@@ -490,8 +490,21 @@ function bindScrollspy() {
 
 // ── Fieldnotes column-aligned table helpers ───────────────────
 
-const FN_CODES = ['num','drg','kro','olr','lkn'];
+const ALL5 = ['num','drg','kro','olr','lkn'];
+// A recording is one language: the dictionary's code for it (tgs -> num, wwo -> drg …). Fieldwork texts show all five.
+const TX_LANG_TO_CODE = {wwo:'drg', drg:'drg', lkn:'lkn', krf:'kro', kro:'kro', num:'num', tgs:'num', olr:'olr'};
+const SINGLE  = !(isFieldnotes || isPapers);
+const recCode = TX_LANG_TO_CODE[textLangParam] || textLangParam;
+const FN_CODES = SINGLE ? [recCode] : ALL5;
 const FN_ABBRS = {num:'Num',drg:'Drg',kro:'Kro',olr:'Olr',lkn:'Lkn'};
+if (SINGLE && !FN_ABBRS[recCode]) FN_ABBRS[recCode] = String(recCode || '?').toUpperCase();   // a language outside the five
+// The key that identifies a column across all texts and on the server: five slots, one per language
+// (a recording fills only its own slot), so the same word is recognised wherever it occurs.
+function slotKey(tokens, i) { return ALL5.map(c => FN_CODES.includes(c) ? (tokens[c]?.[i] || '').toLowerCase() : '').join('|'); }
+// A sentence of a recording, presented like a one-language fieldwork sentence
+function toSingleLang(s) {
+  return {...s, is_comparative: true, words: [{form: s.form, gloss: '', lang: recCode, lang_name: ''}]};
+}
 
 function tokenizeForm(form) {
   // Split on whitespace first, then on morpheme boundary markers (- and =)
@@ -521,6 +534,8 @@ function tokenizeForm(form) {
 
 function buildAlignment(words, stored) {
   // Returns {tokens: {code: [...]}, colGlosses: [...], nCols: N}
+  if (stored && typeof stored === 'object' && Array.isArray(stored.tokens))
+    stored = {...stored, tokens: {[recCode]: stored.tokens}};
   if (stored && typeof stored === 'object' && stored.tokens) {
     const nCols = Math.max(...FN_CODES.map(c => (stored.tokens[c] || []).length), 0);
     const tokens = {};
@@ -557,7 +572,7 @@ function renderAlignedTable(words, tokens, colGlosses, nCols, sid, editable) {
                   data-form="${form || '—'}">${form || '—'}</td>`;
     }).join('');
     return `<tr>
-      <td class="fn-lang-abbr" style="color:${col};">${FN_ABBRS[w.lang]}</td>
+      <td class="fn-lang-abbr" style="color:${col};">${SINGLE ? '' : FN_ABBRS[w.lang]}</td>
       ${cells}
     </tr>`;
   }).join('');
@@ -595,10 +610,9 @@ function renderAlignedTable(words, tokens, colGlosses, nCols, sid, editable) {
 
 function buildComparativeSection(s, storedGloss, editable) {
   const {tokens, colGlosses, nCols} = buildAlignment(s.words, storedGloss);
-  const editBtn = editable
-    ? `<button class="fn-edit-btn" onclick="showAlignmentEditor('${s.id}',this)"
-              title="Edit column alignment">✏</button>`
-    : '';
+  // always drawn, hidden for visitors: logging in on the page then reveals it
+  const editBtn = `<button class="fn-edit-btn" onclick="showAlignmentEditor('${s.id}',this)"
+              title="Edit column alignment" style="${editable ? '' : 'display:none;'}">✏</button>`;
   const tableHTML  = renderAlignedTable(s.words, tokens, colGlosses, nCols, s.id, editable);
   const storedT    = (glosses[s.id]?.translation !== undefined)
     ? glosses[s.id].translation : s.transl;
@@ -611,6 +625,7 @@ function buildComparativeSection(s, storedGloss, editable) {
 }
 
 function showAlignmentEditor(sid, btn) {
+  if (!isLoggedIn) { showLoginModal(); return; }
   const phrase   = btn.closest('.tx-phrase');
   const stored   = glosses[sid];
   const wordEls  = [...phrase.querySelectorAll('.fn-form-cell, .fn-lang-abbr')]; // unused, use data
@@ -638,8 +653,7 @@ function showAlignmentEditor(sid, btn) {
         const val = (editTokens[w.lang]?.[i] || '').replace(/"/g, '&quot;');
         return `<td><input class="fn-cell-input" data-lang="${w.lang}" data-col="${i}"
                        value="${val}" spellcheck="false"
-                       style="color:${col};"
-                       oninput="editTokens['${w.lang}'][${i}]=this.value"></td>`;
+                       style="color:${col};"></td>`;
       }).join('');
       return `<tr>
         <td class="fn-editor-abbr" style="color:${col};">${FN_ABBRS[w.lang]}</td>
@@ -652,7 +666,6 @@ function showAlignmentEditor(sid, btn) {
       const val = (editGlosses[i] || '').replace(/"/g, '&quot;');
       return `<td><input class="fn-cell-input" data-col="${i}"
                      value="${val}" placeholder="gloss" spellcheck="false"
-                     oninput="editGlosses[${i}]=this.value"
                      style="font-family:'Source Code Pro',monospace;font-size:0.75rem;"></td>`;
     }).join('');
 
@@ -711,7 +724,8 @@ function showAlignmentEditor(sid, btn) {
   };
   window.saveAlignment = async (s) => {
     // Editing the alignment resets confirmation
-    const newData = {tokens: editTokens, glosses: editGlosses, confirmed: false};
+    const prev = (glosses[s] && typeof glosses[s] === 'object') ? glosses[s] : {};
+    const newData = {...prev, tokens: editTokens, glosses: editGlosses, confirmed: false};
     glosses[s] = newData;
     try {
       await fetch(glossUrl(), {
@@ -729,7 +743,6 @@ function showAlignmentEditor(sid, btn) {
     );
     buildConcordanceFromGlosses();
     bindColGlossFull();
-    bindNarrGlossInputs();
     bindTranslationInputs();
     bindHoverTooltips();
     document.getElementById('fn-editor-' + s).style.display = 'none';
@@ -866,7 +879,13 @@ let textsConcordance = {};
 async function loadTextsConcordance() {
   try {
     const r = await fetch('/api/confirmed_glosses');
-    if (r.ok) textsConcordance = await r.json();
+    if (r.ok) {                                   // keys are compared in lower case; older ones keep their capitals on disk
+      textsConcordance = {};
+      for (const [k, v] of Object.entries(await r.json())) {
+        const lk = k.toLowerCase(), list = textsConcordance[lk] = textsConcordance[lk] || [];
+        v.forEach(g => { if (!list.includes(g)) list.push(g); });
+      }
+    }
   } catch(e) {}
 }
 
@@ -885,7 +904,7 @@ async function saveToTextsConcordance(sid) {
   for (let i = 0; i < nCols; i++) {
     const g = colGlosses[i] || '';
     if (!g) continue;
-    const key = FN_CODES.map(c => (tokens[c]?.[i] || '')).join('|');
+    const key = slotKey(tokens, i);
     if (!toSave[key]) toSave[key] = [];
     if (!toSave[key].includes(g)) toSave[key].push(g);
     // Update local cache immediately
@@ -909,10 +928,11 @@ async function saveToTextsConcordance(sid) {
     for (let i = 0; i < nCols; i++) {
       const g = colGlosses[i] || '';
       if (!g) continue;
-      const key = FN_CODES.map(c => (tokens[c]?.[i] || '')).join('|');
+      const key = slotKey(tokens, i);
       const stored2 = glosses[sid];
       const transl  = stored2?.translation || sentences.find(x => x.id === sid)?.transl || '';
-      proposed[key] = proposed[key] || {gloss: g, examples: []};
+      proposed[key] = proposed[key] || {gloss: g, examples: [],
+        forms: Object.fromEntries(FN_CODES.map(c => [c, tokens[c]?.[i] || '']).filter(([, v]) => v))};
       proposed[key].examples.push({
         sentence_id: sid,
         translation: transl,
@@ -940,7 +960,7 @@ function addTextsOptionToDropdowns(key, newGloss) {
     const stored2 = glosses[sid];
     const {tokens: t2} = buildAlignment(s.words,
       stored2 && typeof stored2 === 'object' ? stored2 : null);
-    const ctrlKey = FN_CODES.map(c => (t2[c]?.[col] || '')).join('|');
+    const ctrlKey = slotKey(t2, col);
     if (ctrlKey !== key) return;
     const sel = ctrl.querySelector('.fn-gloss-select');
     if (!sel || [...sel.options].some(o => o.value === newGloss)) return;
@@ -961,10 +981,11 @@ function addTextsOptionToDropdowns(key, newGloss) {
 
 function getTextsGlosses(tokens, colIdx) {
   if (!Object.keys(textsConcordance).length) return {full: [], partial: []};
-  const key      = FN_CODES.map(c => (tokens[c]?.[colIdx] || '')).join('|');
+  const key      = slotKey(tokens, colIdx);
   const full     = textsConcordance[key] ? [...textsConcordance[key]] : [];
   // Partial: keys sharing ≥ 2 non-empty forms with this column
-  const colForms = FN_CODES.map(c => tokens[c]?.[colIdx] || '');
+  const colForms = ALL5.map(c => FN_CODES.includes(c) ? (tokens[c]?.[colIdx] || '').toLowerCase() : '');
+  const need     = Math.min(2, FN_CODES.length);         // a one-language text can only share one form
   const partial  = [];
   for (const [tKey, tGlosses] of Object.entries(textsConcordance)) {
     if (tKey === key) continue;
@@ -973,7 +994,7 @@ function getTextsGlosses(tokens, colIdx) {
     for (let i = 0; i < 5; i++) {
       if (colForms[i] && colForms[i] === tForms[i]) matches++;
     }
-    if (matches >= 2) {
+    if (matches >= need) {
       for (const tg of tGlosses) {
         if (!full.includes(tg) && !partial.includes(tg)) partial.push(tg);
       }
@@ -1028,7 +1049,7 @@ const _ABBRS5  = {num:'Num',drg:'Drg',kro:'Kro',olr:'Olr',lkn:'Lkn'};
 const _COLORS5 = {num:'#2e5c8a',drg:'#c07820',kro:'#922810',olr:'#267040',lkn:'#5c2878'};
 
 function _dictTooltipHTML(entry) {
-  const equivs = FN_CODES.map(c =>
+  const equivs = ALL5.map(c =>
     `<span class="tt-eq"><b style="color:${_COLORS5[c]};">${_ABBRS5[c]}</b> ${entry.forms?.[c] || '—'}</span>`
   ).join('');
   const line = (entry.senses || []).length > 1
@@ -1242,212 +1263,11 @@ function bindTranslationInputs() {
   });
 }
 
-// ── Narrative column-aligned section (Case B: no XML W/M glosses) ────────────
-
-function buildNarrativeSection(s, storedGloss, editable) {
-  // Resolve tokens and glosses
-  let tokens, colGlosses, translation;
-  if (storedGloss && typeof storedGloss === 'object' && storedGloss.tokens) {
-    tokens      = storedGloss.tokens;
-    colGlosses  = storedGloss.glosses || [];
-    translation = storedGloss.translation !== undefined
-      ? storedGloss.translation : s.transl;
-  } else {
-    tokens      = tokenizeForm(s.form);
-    colGlosses  = [];
-    translation = s.transl || '';
-  }
-  const nCols = tokens.length;
-  while (colGlosses.length < nCols) colGlosses.push('');
-
-  const confirmed   = storedGloss?.confirmed === true;
-  const hasAnyGloss = colGlosses.some(g => g);
-
-  // Badge
-  const badgeEl = hasAnyGloss
-    ? `<span class="gloss-badge${confirmed ? ' confirmed' : ''}${editable ? '' : ' no-click'}"
-             id="gbadge-${s.id}" data-sid="${s.id}"
-             data-tooltip="${confirmed
-               ? 'Gloss confirmed by the author'
-               : 'Automatically glossed from previous examples, needs confirmation by the author'
-             }">${confirmed ? '✓' : '?'}</span>`
-    : `<span class="gloss-badge-empty" id="gbadge-${s.id}"></span>`;
-
-  // Form row (single language, using the transcription's colour)
-  const langCode = textLangParam;
-  const formCells = tokens.map((form, i) =>
-    `<td class="fn-form-cell${!form ? ' missing' : ''}"
-         style="color:${langColor};"
-         data-lang="${langCode}" data-form="${form}">${form || '—'}</td>`
-  ).join('');
-
-  // Gloss row — simple inputs per column, with morpheme-connector classes
-  const glossCells = tokens.map((form, i) => {
-    const g         = (colGlosses[i] || '').replace(/"/g, '&quot;');
-    const endsHyph  = form.endsWith('-') || form.endsWith('=');
-    const startsHyph= form.startsWith('-') || form.startsWith('=');
-    const extraClass= endsHyph ? ' morph-right' : startsHyph ? ' morph-left' : '';
-    const ctrl = editable
-      ? `<input class="fn-col-gloss narr-gloss" data-sid="${s.id}" data-col="${i}"
-               value="${g}" placeholder="…" spellcheck="false">`
-      : `<span class="${g ? 'tx-gloss-text' : 'tx-gloss-text empty'}">${g || '—'}</span>`;
-    return `<td class="fn-gloss-input-cell fn-gloss-cell${extraClass}"
-                data-gloss="${g}">${ctrl}</td>`;
-  }).join('');
-
-  const sepCells = '<td></td>'.repeat(nCols);
-
-  const editBtn = editable
-    ? `<button class="fn-edit-btn"
-              onclick="showNarrativeAlignmentEditor('${s.id}', this)"
-              title="Edit column alignment">✏</button>`
-    : '';
-
-  const translField = renderTranslationField(s.id, translation || '', editable);
-
-  return `<div class="fn-interlinear" style="position:relative;">
-    ${editBtn}
-    <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">${badgeEl}</div>
-    <div id="fn-display-${s.id}">
-      <table class="fn-il-table">
-        <tr>${formCells}</tr>
-        <tr class="fn-sep">${sepCells}</tr>
-        <tr>${glossCells}</tr>
-      </table>
-    </div>
-    <div id="fn-editor-${s.id}" style="display:none;"></div>
-  </div>
-  ${translField}`;
-}
-
-function showNarrativeAlignmentEditor(sid, btn) {
-  if (!isLoggedIn) { showLoginModal(); return; }
-  const s = sentences.find(x => x.id === sid);
-  if (!s) return;
-  const stored = glosses[sid];
-  let editTokens = (stored?.tokens) ? [...stored.tokens] : tokenizeForm(s.form);
-  let editGlosses = (stored?.glosses) ? [...stored.glosses] : Array(editTokens.length).fill('');
-  while (editGlosses.length < editTokens.length) editGlosses.push('');
-
-  function renderNarrativeEditor() {
-    const colHeaders = editTokens.map((_, i) =>
-      `<td style="text-align:center;padding:0 4px 2px;">
-         <button class="fn-col-del" onclick="narDelCol(${i})">×</button>
-       </td>`
-    ).join('');
-    const formCells = editTokens.map((form, i) =>
-      `<td><input class="fn-cell-input" data-col="${i}" value="${form.replace(/"/g,'&quot;')}"
-                  spellcheck="false" style="color:${langColor};"
-                  oninput="editTokens[${i}]=this.value"></td>`
-    ).join('');
-    const glossCells = editTokens.map((_, i) =>
-      `<td><input class="fn-cell-input" data-col="${i}"
-                  value="${(editGlosses[i]||'').replace(/"/g,'&quot;')}" placeholder="gloss"
-                  spellcheck="false"
-                  style="font-family:'Source Code Pro',monospace;font-size:0.75rem;"
-                  oninput="editGlosses[${i}]=this.value"></td>`
-    ).join('');
-    const editorDiv = document.getElementById('fn-editor-' + sid);
-    editorDiv.innerHTML = `<div class="fn-editor">
-      <table class="fn-editor-table">
-        <tr><td></td>${colHeaders}<td></td></tr>
-        <tr><td class="fn-editor-abbr" style="color:${langColor};">${textLang}</td>${formCells}<td></td></tr>
-        <tr><td style="font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-light);padding-right:8px;">gloss</td>${glossCells}<td></td></tr>
-      </table>
-      <div class="fn-editor-actions">
-        <button class="fn-col-add" onclick="narAddCol()">+ Column</button>
-        <button class="modal-btn" onclick="cancelNarrEdit('${sid}')">Cancel</button>
-        <button class="modal-btn primary" onclick="saveNarrAlignment('${sid}')">Save</button>
-      </div>
-    </div>`;
-    editorDiv.querySelectorAll('input[data-col]').forEach(inp => {
-      inp.addEventListener('input', () => {
-        const col = parseInt(inp.dataset.col);
-        // Determine if form or gloss row
-        if (inp.closest('tr').querySelectorAll('input').length === editTokens.length) {
-          const isFormRow = Array.from(inp.closest('tr').previousElementSibling?.querySelectorAll('td') || []).some(td => td.textContent === textLang);
-          // Just rely on oninput inline handlers above
-        }
-      });
-    });
-  }
-
-  window.narAddCol  = () => { editTokens.push(''); editGlosses.push(''); renderNarrativeEditor(); };
-  window.narDelCol  = (i) => { if (editTokens.length <= 1) return; editTokens.splice(i,1); editGlosses.splice(i,1); renderNarrativeEditor(); };
-  window.cancelNarrEdit = (s) => {
-    document.getElementById('fn-editor-'+s).style.display = 'none';
-    document.getElementById('fn-display-'+s).style.display = '';
-    btn.style.display = '';
-  };
-  window.saveNarrAlignment = async (s) => {
-    const stored2   = glosses[s];
-    const prevTransl = stored2?.translation !== undefined
-      ? stored2.translation
-      : sentences.find(x=>x.id===s)?.transl || '';
-    const newData   = {
-      ...(typeof stored2==='object' ? stored2 : {}),
-      tokens: editTokens, glosses: editGlosses, confirmed: false,
-      translation: prevTransl
-    };
-    glosses[s] = newData;
-    updateBadge(s, editGlosses);
-    await fetch(glossUrl(), {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({sentence_id: s, gloss: newData}),
-      keepalive: true,
-    });
-    // Re-render the display section
-    const sent    = sentences.find(x => x.id === s);
-    const wrapper = document.getElementById('fn-display-'+s).closest('.fn-interlinear');
-    if (wrapper && sent) {
-      const tmp = document.createElement('div');
-      tmp.innerHTML = buildNarrativeSection(sent, newData, true);
-      const newInterlinear = tmp.querySelector('.fn-interlinear');
-      if (newInterlinear) wrapper.replaceWith(newInterlinear);
-    }
-    buildConcordanceFromGlosses();
-    bindNarrGlossInputs();
-    bindHoverTooltips();
-    bindTranslationInputs();
-  };
-
-  document.getElementById('fn-display-'+sid).style.display='none';
-  document.getElementById('fn-editor-'+sid).style.display='';
-  btn.style.display='none';
-  renderNarrativeEditor();
-}
-
-function bindNarrGlossInputs() {
-  document.querySelectorAll('input.narr-gloss').forEach(inp => {
-    const sid = inp.dataset.sid;
-    const col = parseInt(inp.dataset.col);
-    const statusEl = document.getElementById('gstatus-' + sid + '-' + col);
-    inp.addEventListener('input', () => {
-      clearTimeout(saveTimers[`${sid}_nc${col}`]);
-      saveTimers[`${sid}_nc${col}`] = setTimeout(() => {
-        const stored = glosses[sid];
-        const toks   = stored?.tokens || tokenizeForm(sentences.find(x=>x.id===sid)?.form || '');
-        const cg     = stored?.glosses ? [...stored.glosses] : Array(toks.length).fill('');
-        while (cg.length < toks.length) cg.push('');
-        cg[col] = inp.value;
-        const newData = {...(typeof stored==='object'?stored:{}), tokens:toks, glosses:cg, confirmed:false};
-        glosses[sid] = newData;
-        updateBadge(sid, cg);
-        fetch(glossUrl(), {
-          method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({sentence_id: sid, gloss: newData}),
-          keepalive: true,
-        }).catch(console.error);
-      }, 600);
-    });
-  });
-}
-
 // ── Concordance: colKey → Set of glosses ─────────────────────
 let concordance = {};
 
 function getColKey(words, tokens, colIdx) {
-  return FN_CODES.map(c => (tokens[c]?.[colIdx] || '')).join('|');
+  return slotKey(tokens, colIdx);
 }
 
 function buildConcordanceFromGlosses() {
@@ -1603,7 +1423,7 @@ async function saveColGloss(sid, colIdx, value, statusEl) {
     stored && typeof stored === 'object' ? stored : null);
   colGlosses[colIdx] = value;
   // Changing a gloss resets confirmation — author must re-confirm
-  const newData = {tokens, glosses: colGlosses, confirmed: false};
+  const newData = {...((stored && typeof stored === 'object') ? stored : {}), tokens, glosses: colGlosses, confirmed: false};
   glosses[sid]  = newData;
   updateBadge(sid, colGlosses);
 
@@ -1688,12 +1508,6 @@ function bindColGlossFull() {
     inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); saveNew(); }});
   });
 
-  // Confirmation badges — clickable only when logged in
-  document.querySelectorAll('.gloss-badge:not(.no-click)').forEach(badge => {
-    if (badge.dataset.bound) return;          // already has its handler
-    badge.dataset.bound = '1';
-    badge.addEventListener('click', () => toggleConfirmation(badge.dataset.sid));
-  });
 
   // Plain inputs (no prior concordance entry)
   document.querySelectorAll('.fn-col-gloss').forEach(inp => {
@@ -1737,7 +1551,8 @@ async function saveGloss(sentenceId, value, statusEl) {
 
 // ── Render ────────────────────────────────────────────────────
 function render(data) {
-  sentences = data.sentences;
+  sentences = data.sentences.map(s => (SINGLE && !(s.has_gloss && s.words && s.words.length)) ? toSingleLang(s) : s);
+  buildConcordanceFromGlosses();
   const main = document.getElementById('tx-main');
   const nav  = document.getElementById('tx-nav');
 
@@ -1788,9 +1603,6 @@ function render(data) {
         </span>`
       ).join('');
       glossSection = `<div class="tx-aligned">${wordCols}</div>`;
-    } else {
-      // Case B: no embedded XML glosses → column-aligned table (same as fieldnotes)
-      glossSection = buildNarrativeSection(s, glosses[s.id] || null, isLoggedIn);
     }
 
     // ── Translation line ───────────────────────────────────────
@@ -1865,52 +1677,18 @@ function onAuthChange(loggedIn) {
     display.innerHTML = renderAlignedTable(s.words, tokens, colGlosses, nCols, sid, loggedIn);
     const editBtn = phrase.querySelector('.fn-edit-btn');
     if (editBtn) editBtn.style.display = loggedIn ? '' : 'none';
+    const t = phrase.querySelector('.tx-transl, .tx-transl-wrap');       // the translation: editable for the author
+    if (t) t.outerHTML = renderTranslationField(sid,
+      glosses[sid]?.translation !== undefined ? glosses[sid].translation : s.transl, loggedIn);
   });
+  bindHoverTooltips();
 
   // Global work, once (not once per phrase)
   document.querySelectorAll('.gloss-badge').forEach(b => {
     b.classList.toggle('no-click', !loggedIn);
   });
   document.getElementById('tx-tooltip').classList.toggle('interactive', loggedIn);
-  if (loggedIn) { buildConcordanceFromGlosses(); bindColGlossFull(); bindNarrGlossInputs(); bindTranslationInputs(); }
-
-  // Re-render editable gloss inputs for Case B phrases (single-line)
-  document.querySelectorAll('.tx-phrase[data-has-gloss="0"]').forEach(phrase => {
-    const sid  = phrase.id;
-    const wrap = phrase.querySelector('.tx-gloss-wrap');
-    if (!wrap) return;
-    const g     = glosses[sid] || '';
-    const label = wrap.querySelector('.tx-gloss-label');
-    // Remove everything after the label
-    while (wrap.children.length > 1) wrap.removeChild(wrap.lastChild);
-    if (loggedIn) {
-      const input = document.createElement('input');
-      input.className    = 'tx-gloss-input';
-      input.type         = 'text';
-      input.dataset.sid  = sid;
-      input.value        = g;
-      input.placeholder  = 'Add interlinear gloss…';
-      input.spellcheck   = false;
-      const statusEl = document.createElement('span');
-      statusEl.className = 'tx-gloss-save-status';
-      statusEl.id = 'status-' + sid;
-      wrap.appendChild(input);
-      wrap.appendChild(statusEl);
-      input.addEventListener('input', () => {
-        clearTimeout(saveTimers[sid]);
-        saveTimers[sid] = setTimeout(() => saveGloss(sid, input.value, statusEl), 600);
-      });
-      input.addEventListener('blur', () => {
-        clearTimeout(saveTimers[sid]);
-        saveGloss(sid, input.value, statusEl);
-      });
-    } else {
-      const span = document.createElement('span');
-      span.className   = g ? 'tx-gloss-text' : 'tx-gloss-text empty';
-      span.textContent = g || '—';
-      wrap.appendChild(span);
-    }
-  });
+  if (loggedIn) { buildConcordanceFromGlosses(); bindColGlossFull(); bindTranslationInputs(); }
 
   const legend = document.getElementById('gloss-legend');
   // Show legend only if there are Case B (manually gloss-able) sentences
@@ -1919,6 +1697,13 @@ function onAuthChange(loggedIn) {
 }
 
 // ── Init ─────────────────────────────────────────────────────
+// Confirmation badges (clickable only when logged in). One listener for all of them, because a badge
+// is also created later: the first gloss typed on a sentence turns its empty placeholder into a badge.
+document.addEventListener('click', e => {
+  const b = e.target.closest('.gloss-badge:not(.no-click)');
+  if (b) toggleConfirmation(b.dataset.sid || b.id.replace('gbadge-', ''));
+});
+
 async function init() {
   bindLoginModal();
   await Promise.all([checkAuth(), loadDictionary(), loadAbbrevLinks(), loadTextsConcordance()]);
@@ -1951,14 +1736,15 @@ async function init() {
       glResp.ok ? glResp.json() : Promise.resolve({})
     ]);
     glosses = glData;
-    buildConcordanceFromGlosses();
+    Object.values(glosses).forEach(g => {                     // older recordings: tokens were one list
+      if (g && typeof g === 'object' && Array.isArray(g.tokens)) g.tokens = {[recCode]: g.tokens};
+    });
     render(txData);
     // Land on the phrase named in the URL hash (e.g. from a dictionary example)
     if (location.hash.length > 1) {
       const target = document.getElementById(decodeURIComponent(location.hash.slice(1)));
       if (target) setTimeout(() => target.scrollIntoView({ block: 'start' }), 60);
     }
-    bindNarrGlossInputs();
     bindTranslationInputs();
     bindHoverTooltips();
     _bindTooltipInteraction();
