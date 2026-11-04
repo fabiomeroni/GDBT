@@ -297,6 +297,53 @@ body { overflow: hidden; }
 .ex-more-btn:hover { color: #b84c10; }
 
 
+
+/* ── Phonetic form [IPA] next to the headword ── */
+.entry-ipa { font-family: 'EB Garamond', serif; font-size: 1.2rem; color: var(--ink-light); margin-left: 0.15rem; }
+.ipa-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 15px; height: 15px; min-width: 15px; border-radius: 50%;
+  background: #1c0f06; color: white; font-size: 0.62rem; font-weight: 700; line-height: 1;
+  user-select: none; position: relative; margin-left: 5px; vertical-align: middle; cursor: default;
+}
+.ipa-badge.confirmed { background: #267040; }
+.ipa-badge.can-click { cursor: pointer; }
+.ipa-badge.can-click:hover { transform: scale(1.12); }
+.ipa-badge::after {
+  content: attr(data-tooltip); position: absolute; left: 130%; top: 50%; transform: translateY(-50%);
+  background: #1c0f06; color: #f0dfc0; font-family: 'Crimson Pro', serif; font-size: 0.78rem; font-weight: 400;
+  white-space: nowrap; padding: 4px 10px 5px; border-radius: 3px; box-shadow: 0 2px 10px rgba(0,0,0,.35);
+  pointer-events: none; opacity: 0; transition: opacity 0.12s; z-index: 200; letter-spacing: 0;
+}
+.ipa-badge:hover::after { opacity: 1; }
+/* editor: orthography + IPA side by side */
+.em-lang-grid { display: grid; grid-template-columns: auto 1fr 1fr; gap: 0.35rem 0.8rem; margin-bottom: 0.9rem; align-items: center; }
+.em-lang-grid .em-colhead { font-family: 'Crimson Pro', serif; font-size: 0.68rem; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--ink-light); }
+.em-ipa { font-family: 'EB Garamond', serif; }
+.em-ipa.auto { color: #8a6a3a; font-style: italic; }
+
+/* ── Settings dialog ── */
+.st-h { font-family: 'EB Garamond', serif; font-size: 1.1rem; font-weight: 500; margin: 0.2rem 0 0.3rem; color: var(--ink); }
+.st-top { display: flex; align-items: flex-end; gap: 1.2rem; flex-wrap: wrap; margin-bottom: 0.6rem; font-family: 'Crimson Pro', serif; font-size: 0.85rem; color: var(--ink-light); }
+.st-top label { display: flex; flex-direction: column; gap: 2px; }
+.st-check { flex-direction: row !important; align-items: center; gap: 6px !important; }
+.st-table { border-collapse: collapse; width: 100%; font-family: 'Crimson Pro', serif; }
+.st-table th { position: sticky; top: 0; background: #f0e8d8; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ink-light); text-align: left; padding: 4px 8px; font-weight: 600; }
+.st-table td { padding: 2px 6px; border-bottom: 1px solid var(--border-lt); }
+.st-table tr.st-shared td { background: #fbf4e2; }
+.st-table input.em-input { font-size: 1.05rem; padding: 1px 2px; }
+.st-table select { font-family: 'Crimson Pro', serif; font-size: 0.85rem; border: 1px solid var(--border); border-radius: 3px; background: white; }
+.st-table .st-del { background: none; border: none; color: #c06060; cursor: pointer; font-size: 0.8rem; }
+.st-table .st-del:hover { color: #922810; }
+.st-actions { display: flex; gap: 0.6rem; margin: 0.6rem 0; }
+.st-try { background: #faf6ef; border: 1px solid var(--border); border-radius: 4px; padding: 0.5rem 0.8rem 0.6rem;
+  font-family: 'Crimson Pro', serif; font-size: 0.85rem; color: var(--ink-light); }
+.st-try > div { display: flex; align-items: baseline; gap: 0.5rem; margin-top: 0.3rem; flex-wrap: wrap; }
+.st-try input.em-input { width: 9rem; font-size: 1.05rem; }
+.st-out { font-family: 'EB Garamond', serif; font-size: 1.25rem; color: var(--ink); min-width: 6rem; }
+
 /* ── Homonyms and senses ── */
 sup.hom-num { font-family: 'Crimson Pro', serif; font-size: 0.55em; font-weight: 600; margin-left: 1px;
   color: var(--ink-light); vertical-align: super; letter-spacing: 0; }
@@ -407,6 +454,7 @@ sup.hom-num { font-family: 'Crimson Pro', serif; font-size: 0.55em; font-weight:
 
   <main class="dict-main" id="dict-main">
     <div style="display:flex;align-items:center;justify-content:flex-end;gap:0.5rem;padding:0.25rem 3.5rem 0;background:#f0e8d8;border-bottom:1px solid var(--border);">
+      <button class="edit-tab" id="settings-btn" title="Dictionary settings: the orthography ↔ IPA correspondences">⚙ Settings</button>
       <button class="edit-tab" id="ortho-btn" title="Convert forms written in IPA to the orthography">🔤 IPA → orthography</button>
       <button class="edit-tab" id="add-entry-btn" title="Add a new dictionary entry">＋ Add entry</button>
       <button class="edit-tab" id="dict-edit-tab" title="Upload new dictionary XML">⬆ Upload XML</button>
@@ -479,6 +527,13 @@ async function parseLexicaXML(url) {
     // ── Semantic domain ────────────────────────────────────────
     const domain = el.querySelector('DomaineSémantique')?.textContent.trim() ?? '';
 
+    // ── Phonetic forms: Lemme/FormePhonétique[@langue], statut="auto" = derived, not yet confirmed ──
+    const ipa = {};
+    LANGS5.forEach(lang => {
+      const n = el.querySelector(`:scope > Lemme > FormePhonétique[langue="${LANG_CODE[lang]}"]`);
+      ipa[lang] = n && n.textContent.trim() ? { text: n.textContent.trim(), auto: n.getAttribute('statut') === 'auto' } : null;
+    });
+
     // ── Homonym number (entries with the same lemma are told apart by <NuméroDHomonyme>) ──
     const homonym = el.querySelector(':scope > NuméroDHomonyme')?.textContent.trim() ?? '';
 
@@ -511,7 +566,7 @@ async function parseLexicaXML(url) {
       etym = { label: `${lang} ${forme} '${glose}'`, tlopo, etymograph };
     }
 
-    return { id, hw, langs, pos, domain, homonym, senses, gloss, glossRich, notes, etym, shortGloss };
+    return { id, hw, langs, ipa, pos, domain, homonym, senses, gloss, glossRich, notes, etym, shortGloss };
   });
 }
 
@@ -728,6 +783,21 @@ function textExamplesHTML(entry, list, tag) {
   return `<div class="text-examples">${blocks}${more}</div>`;
 }
 
+async function toggleIpaConfirm(badge) {
+  if (!isLoggedIn) return;
+  const entry = DICT_MAP[badge.dataset.entry], lang = CODE2LANG[badge.dataset.lang], v = entry?.ipa?.[lang];
+  if (!v) return;
+  const r = await fetch(`/api/dictionary/entry/${encodeURIComponent(entry.id)}/ipa`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ lang: badge.dataset.lang, confirmed: v.auto })   // auto -> confirm; confirmed -> back to "to check"
+  });
+  const d = await r.json();
+  if (!d.ok) { alert(d.error || 'Could not save.'); return; }
+  v.auto = d.auto;
+  const wrap = badge.closest('.ipa-wrap');
+  wrap.outerHTML = ipaHTML(entry);
+}
+
 function toggleTextExample(uid, btn) {
   const t = document.getElementById(uid);
   if (!t) return;
@@ -750,6 +820,25 @@ function senseLine(entry) {
   if (ss.length > 1)
     return ss.map(s => `${s.n}. ${s.shortGloss || s.gloss || s.definition}`).join('   ');
   return entry.gloss;
+}
+
+// [IPA] of the headword, in the language the headword is shown in. '?' = derived, awaiting the author.
+function headwordLang(entry) {
+  return entry.langs[activeLang] ? activeLang : (LANGS5.find(l => entry.langs[l] && entry.langs[l] !== '\u2014') || activeLang);
+}
+function ipaHTML(entry) {
+  const lang = headwordLang(entry), v = entry.ipa && entry.ipa[lang];
+  if (!v) return '';
+  const code = LANG_CODE[lang];
+  let badge = '';
+  if (v.auto) {
+    badge = `<span class="ipa-badge${isLoggedIn ? ' can-click' : ''}" data-entry="${entry.id}" data-lang="${code}"
+      data-tooltip="Derived automatically from the orthography, needs confirmation by the author">?</span>`;
+  } else if (isLoggedIn) {
+    badge = `<span class="ipa-badge confirmed can-click" data-entry="${entry.id}" data-lang="${code}"
+      data-tooltip="Phonetic form confirmed by the author">✓</span>`;
+  }
+  return `<span class="ipa-wrap"><span class="entry-ipa">[${escHTML(v.text)}]</span>${badge}</span>`;
 }
 
 function headwordHTML(entry) {
@@ -796,7 +885,7 @@ function entryHTML(entry) {
     ? `<div class="other-examples-label">Other examples</div>${textExamplesHTML(entry, other, 'o')}` : '';
   return `<div class="entry" id="${entry.id}">
     <div class="entry-header">
-      <span class="entry-headword" style="color:${color};">${headwordHTML(entry)}</span>
+      <span class="entry-headword" style="color:${color};">${headwordHTML(entry)}</span>${ipaHTML(entry)}
       <span class="entry-pos">${entry.pos}</span>
       <span class="entry-domain">${entry.domain}</span>
     </div>
@@ -816,6 +905,7 @@ function filtered() {
   if (!searchQ) return DICTIONARY.slice();
   return DICTIONARY.filter(e => {
     return (e.langs[activeLang] || '').toLowerCase().includes(searchQ)
+      || LANGS5.some(l => (e.ipa?.[l]?.text || '').toLowerCase().includes(searchQ))
       || e.senses.some(s => [s.gloss, s.definition, s.shortGloss].some(t => (t || '').toLowerCase().includes(searchQ)))
       || Object.values(e.langs).some(v => v.toLowerCase().includes(searchQ));
   });
@@ -992,6 +1082,8 @@ function bindTooltip() {
 // switches the headword language to Dorig and scrolls to that dictionary entry.
 function bindLexlinkClicks() {
   document.getElementById('dict-content').addEventListener('click', e => {
+    const ib = e.target.closest('.ipa-badge.can-click');
+    if (ib) { toggleIpaConfirm(ib); return; }
     const a = e.target.closest('a.lexlink');
     if (!a) return;
     e.preventDefault();
@@ -1218,6 +1310,32 @@ function updateHomHint() {
   }
 }
 
+// ── IPA boxes of the editor ──
+// A box holds either what the author wrote (data-auto="0") or a suggestion derived from the
+// orthography (data-auto="1"): the suggestion follows the orthography until the author edits the box.
+function setIpaBox(code, text, auto) {
+  const box = document.getElementById('ef-ipa-' + code);
+  box.value = text || '';
+  box.dataset.auto = auto ? '1' : '0';
+  box.classList.toggle('auto', !!auto && !!text);
+}
+const _ipaTimers = {};
+function suggestIpa(code) {
+  clearTimeout(_ipaTimers[code]);
+  _ipaTimers[code] = setTimeout(async () => {
+    const box = document.getElementById('ef-ipa-' + code);
+    if (box.dataset.auto !== '1') return;                         // the author's own IPA is never overwritten
+    const orth = document.getElementById('ef-' + code).value.trim();
+    if (!orth || orth === '\u2014') { setIpaBox(code, '', true); return; }     // — = no form, nothing to transcribe
+    try {
+      const r = await fetch('/api/dictionary/ipa-suggest', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                                           body: JSON.stringify({ forms: { [code]: orth } }) });
+      const d = await r.json();
+      if (box.dataset.auto === '1' && d[code]) setIpaBox(code, d[code], true);
+    } catch (e) { /* offline: the box simply stays empty and is filled in on save */ }
+  }, 220);
+}
+
 function _openEntryModal(title, entry) {
   _editingId = entry ? entry.id : null;
   _etymDirty = false; _homTouched = false;
@@ -1229,11 +1347,17 @@ function _openEntryModal(title, entry) {
     const el = document.getElementById('ef-'+id);
     if (el) el.value = '';
   });
+  LANGS5.forEach(l => setIpaBox(LANG_CODE[l], '', true));
 
   if (entry) {
     LANGS5.forEach(lang => {
       const el = document.getElementById('ef-' + LANG_CODE[lang]);
       if (el) el.value = entry.langs[lang] || '';
+    });
+    LANGS5.forEach(lang => {
+      const v = entry.ipa?.[lang];
+      setIpaBox(LANG_CODE[lang], v?.text || '', v ? v.auto : true);
+      if (!v && entry.langs[lang] && entry.langs[lang] !== '\u2014') suggestIpa(LANG_CODE[lang]);        // a form without IPA gets a suggestion
     });
     document.getElementById('ef-pos').value    = entry.pos    || '';
     document.getElementById('ef-domain').value = entry.domain || '';
@@ -1273,8 +1397,13 @@ function _collectEntryData() {
     tlopo:      document.getElementById('ef-et')?.value.trim() || '',
     etymograph: document.getElementById('ef-ee')?.value.trim() || '',
   } : (hadEtym ? {} : null);
+  const ipa = {};
+  LANGS5.forEach(lang => {
+    const c = LANG_CODE[lang], box = document.getElementById('ef-ipa-' + c), text = box.value.trim();
+    ipa[c] = { text, auto: box.dataset.auto === '1' && !!text };
+  });
   return {
-    forms,
+    forms, ipa,
     pos:     document.getElementById('ef-pos')?.value.trim()    || '',
     domain:  document.getElementById('ef-domain')?.value.trim() || '',
     homonym: document.getElementById('ef-hom')?.value.trim()    || '',
@@ -1356,6 +1485,7 @@ function _bindEntryModal() {
   document.getElementById('em-submit').addEventListener('click', _submitEntry);
   document.getElementById('add-entry-btn')?.addEventListener('click', openAddEntry);
   document.getElementById('ortho-btn')?.addEventListener('click', openOrthoPreview);
+  bindSettings();
   document.getElementById('ortho-apply').addEventListener('click', applyOrtho);
   document.getElementById('ortho-cancel').addEventListener('click', () =>
     document.getElementById('ortho-modal').classList.remove('visible'));
@@ -1391,7 +1521,13 @@ function _bindEntryModal() {
   });
 
   // homonym hint follows the forms; etymology edits are tracked so an untouched one is never rewritten
-  LANGS5.forEach(lang => document.getElementById('ef-' + LANG_CODE[lang]).addEventListener('input', updateHomHint));
+  LANGS5.forEach(lang => {
+    const c = LANG_CODE[lang];
+    document.getElementById('ef-' + c).addEventListener('input', () => { updateHomHint(); suggestIpa(c); });
+    document.getElementById('ef-ipa-' + c).addEventListener('input', e => {
+      e.target.dataset.auto = '0'; e.target.classList.remove('auto');        // the author wrote it: confirmed
+    });
+  });
   document.getElementById('ef-hom').addEventListener('input', () => { _homTouched = true; });
   ['el','ef','eg','et','ee'].forEach(id =>
     document.getElementById('ef-' + id).addEventListener('input', () => { _etymDirty = true; }));
@@ -1449,6 +1585,132 @@ async function applyOrtho() {
   } catch (e) {
     msg.textContent = 'Conversion failed: ' + e.message; msg.className = 'dbt-modal-msg error';
   } finally { apply.disabled = false; }
+}
+
+
+// ── Settings: the orthography ↔ IPA correspondence table ──
+let _stRows = [], _stDefaults = null, _stTryTimer = null;
+
+function renderSettingsRows() {
+  const count = {};
+  _stRows.forEach(r => { count[r.orth] = (count[r.orth] || 0) + 1; });
+  document.getElementById('st-rows').innerHTML = _stRows.map((r, i) => `
+    <tr data-i="${i}" class="${r.orth && count[r.orth] > 1 ? 'st-shared' : ''}">
+      <td><input class="em-input" data-f="orth" value="${escHTML(r.orth)}" size="4" spellcheck="false"></td>
+      <td><input class="em-input" data-f="ipa" value="${escHTML(r.ipa)}" size="8" spellcheck="false"></td>
+      <td><select data-f="type"><option value="consonant"${r.type !== 'vowel' ? ' selected' : ''}>consonant</option>
+                                <option value="vowel"${r.type === 'vowel' ? ' selected' : ''}>vowel</option></select></td>
+      <td style="text-align:center;"><input type="checkbox" data-f="default"${r.default ? ' checked' : ''}
+          title="${count[r.orth] > 1 ? 'Several sounds share this letter: tick the one to suggest' : 'Suggested for this letter'}"></td>
+      <td><button type="button" class="st-del" data-act="del" title="Remove this row">✕</button></td>
+    </tr>`).join('');
+}
+
+function stCollect() {
+  return { name: document.getElementById('st-name').value.trim(),
+           long_vowel_doubling: document.getElementById('st-long').checked,
+           rows: _stRows.map(r => ({ orth: r.orth.trim(), ipa: r.ipa.trim(), type: r.type, default: !!r.default })) };
+}
+
+function stTry() {
+  clearTimeout(_stTryTimer);
+  _stTryTimer = setTimeout(async () => {
+    const orth = document.getElementById('st-try-orth').value, ipa = document.getElementById('st-try-ipa-in').value;
+    try {
+      const r = await fetch('/api/dictionary/settings/test', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                                             body: JSON.stringify({ correspondences: stCollect(), orth, ipa }) });
+      const d = await r.json();
+      document.getElementById('st-try-ipa').textContent      = r.ok && orth ? '[' + d.ipa + ']' : '';
+      document.getElementById('st-try-orth-out').textContent = r.ok && ipa  ? d.orth : '';
+    } catch (e) { /* offline */ }
+  }, 200);
+}
+
+function stLoad(cfg) {
+  document.getElementById('st-name').value = cfg.name || '';
+  document.getElementById('st-long').checked = !!cfg.long_vowel_doubling;
+  _stRows = cfg.rows.map(r => ({ orth: r.orth, ipa: r.ipa, type: r.type === 'vowel' ? 'vowel' : 'consonant', default: !!r.default }));
+  renderSettingsRows(); stTry();
+}
+
+async function openSettings() {
+  if (!isLoggedIn) { showLoginModal(); return; }
+  const msg = document.getElementById('st-msg');
+  msg.textContent = ''; msg.className = 'dbt-modal-msg';
+  document.getElementById('settings-modal').classList.add('visible');
+  try {
+    const r = await fetch('/api/dictionary/settings');
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || ('HTTP ' + r.status));
+    _stDefaults = d.defaults;
+    stLoad(d.correspondences);
+  } catch (e) { msg.textContent = 'Could not load the settings: ' + e.message; msg.className = 'dbt-modal-msg error'; }
+}
+
+async function saveSettings() {
+  const msg = document.getElementById('st-msg'), btn = document.getElementById('st-save');
+  msg.textContent = 'Saving…'; msg.className = 'dbt-modal-msg'; btn.disabled = true;
+  try {
+    const r = await fetch('/api/dictionary/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ correspondences: stCollect(), rederive: document.getElementById('st-rederive').checked }) });
+    const d = await r.json();
+    if (!r.ok || !d.ok) throw new Error(d.error || ('HTTP ' + r.status));
+    msg.textContent = 'Saved.' + (d.rederived ? ` ${d.rederived} provisional transcription${d.rederived > 1 ? 's' : ''} re-derived.` : '');
+    msg.className = 'dbt-modal-msg success';
+    const g = await (await fetch('/api/dictionary/settings')).json();      // show what the server really kept
+    if (g.correspondences) stLoad(g.correspondences);
+    await reloadDictionary();
+  } catch (e) { msg.textContent = 'Not saved: ' + e.message; msg.className = 'dbt-modal-msg error'; }
+  finally { btn.disabled = false; }
+}
+
+function bindSettings() {
+  document.getElementById('settings-btn')?.addEventListener('click', openSettings);
+  document.getElementById('st-cancel').addEventListener('click', () => document.getElementById('settings-modal').classList.remove('visible'));
+  document.getElementById('settings-modal').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('visible'); });
+  document.getElementById('st-save').addEventListener('click', saveSettings);
+  document.getElementById('st-add-row').addEventListener('click', () => {
+    _stRows.push({ orth: '', ipa: '', type: 'consonant', default: true }); renderSettingsRows();
+    document.getElementById('st-rows').lastElementChild?.querySelector('input')?.focus();
+  });
+  document.getElementById('st-reset').addEventListener('click', () => {
+    if (_stDefaults && confirm('Replace the table by the one of François (2003-)? Nothing is saved until you press "Save settings".')) stLoad(_stDefaults);
+  });
+  ['st-try-orth', 'st-try-ipa-in', 'st-long'].forEach(id => document.getElementById(id).addEventListener('input', stTry));
+  const body = document.getElementById('st-rows');
+  body.addEventListener('input', e => {
+    const tr = e.target.closest('tr'), f = e.target.dataset.f;
+    if (!tr || !f || f === 'default') return;
+    _stRows[+tr.dataset.i][f] = e.target.value;
+    if (f === 'orth') renderSettingsRowsKeepFocus(tr, e.target); else stTry();
+    stTry();
+  });
+  body.addEventListener('change', e => {
+    const tr = e.target.closest('tr'), f = e.target.dataset.f;
+    if (!tr) return;
+    const row = _stRows[+tr.dataset.i];
+    if (f === 'type') row.type = e.target.value;
+    if (f === 'default') {
+      row.default = e.target.checked;
+      if (row.default) _stRows.forEach(o => { if (o !== row && o.orth === row.orth) o.default = false; });
+      else if (!_stRows.some(o => o !== row && o.orth === row.orth && o.default) && !_stRows.some(o => o !== row && o.orth === row.orth)) row.default = true;
+      renderSettingsRows(); stTry();
+    }
+  });
+  body.addEventListener('click', e => {
+    const b = e.target.closest('button[data-act="del"]');
+    if (!b) return;
+    _stRows.splice(+b.closest('tr').dataset.i, 1); renderSettingsRows(); stTry();
+  });
+}
+// re-colour the "shared letter" rows while typing in an orthography box, without losing the cursor
+function renderSettingsRowsKeepFocus(tr, input) {
+  const count = {};
+  _stRows.forEach(r => { count[r.orth] = (count[r.orth] || 0) + 1; });
+  document.querySelectorAll('#st-rows tr').forEach(row => {
+    const r = _stRows[+row.dataset.i];
+    row.classList.toggle('st-shared', !!(r && r.orth && count[r.orth] > 1));
+  });
 }
 
 async function init() {
@@ -1513,27 +1775,23 @@ init();
   <div class="dbt-modal" style="max-width:560px;width:94vw;max-height:90vh;overflow-y:auto;">
     <h3 id="em-title">Add entry</h3>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem 1rem;margin-bottom:0.9rem;">
-      <label style="font-family:'Crimson Pro',serif;font-size:0.8rem;
-                       font-weight:600;color:#2e5c8a;align-self:center;">Nume</label>
-      <input id="ef-num" class="em-input" style="border-bottom-color:#2e5c8a;"
-             placeholder="Nume form…" spellcheck="false">
-      <label style="font-family:'Crimson Pro',serif;font-size:0.8rem;
-                       font-weight:600;color:#c07820;align-self:center;">Dorig</label>
-      <input id="ef-drg" class="em-input" style="border-bottom-color:#c07820;"
-             placeholder="Dorig form…" spellcheck="false">
-      <label style="font-family:'Crimson Pro',serif;font-size:0.8rem;
-                       font-weight:600;color:#922810;align-self:center;">Koro</label>
-      <input id="ef-kro" class="em-input" style="border-bottom-color:#922810;"
-             placeholder="Koro form…" spellcheck="false">
-      <label style="font-family:'Crimson Pro',serif;font-size:0.8rem;
-                       font-weight:600;color:#267040;align-self:center;">Olrat</label>
-      <input id="ef-olr" class="em-input" style="border-bottom-color:#267040;"
-             placeholder="Olrat form…" spellcheck="false">
-      <label style="font-family:'Crimson Pro',serif;font-size:0.8rem;
-                       font-weight:600;color:#5c2878;align-self:center;">Lakon</label>
-      <input id="ef-lkn" class="em-input" style="border-bottom-color:#5c2878;"
-             placeholder="Lakon form…" spellcheck="false">
+    <div class="em-lang-grid">
+      <span></span><span class="em-colhead">Orthography</span><span class="em-colhead">IPA [ ]</span>
+      <label style="font-family:'Crimson Pro',serif;font-size:0.8rem;font-weight:600;color:#2e5c8a;">Nume</label>
+      <input id="ef-num" class="em-input" style="border-bottom-color:#2e5c8a;" placeholder="orthography" spellcheck="false">
+      <input id="ef-ipa-num" class="em-input em-ipa" style="border-bottom-color:#2e5c8a;" placeholder="IPA" spellcheck="false" title="Phonetic form, shown as [ ] next to the headword">
+      <label style="font-family:'Crimson Pro',serif;font-size:0.8rem;font-weight:600;color:#c07820;">Dorig</label>
+      <input id="ef-drg" class="em-input" style="border-bottom-color:#c07820;" placeholder="orthography" spellcheck="false">
+      <input id="ef-ipa-drg" class="em-input em-ipa" style="border-bottom-color:#c07820;" placeholder="IPA" spellcheck="false" title="Phonetic form, shown as [ ] next to the headword">
+      <label style="font-family:'Crimson Pro',serif;font-size:0.8rem;font-weight:600;color:#922810;">Koro</label>
+      <input id="ef-kro" class="em-input" style="border-bottom-color:#922810;" placeholder="orthography" spellcheck="false">
+      <input id="ef-ipa-kro" class="em-input em-ipa" style="border-bottom-color:#922810;" placeholder="IPA" spellcheck="false" title="Phonetic form, shown as [ ] next to the headword">
+      <label style="font-family:'Crimson Pro',serif;font-size:0.8rem;font-weight:600;color:#267040;">Olrat</label>
+      <input id="ef-olr" class="em-input" style="border-bottom-color:#267040;" placeholder="orthography" spellcheck="false">
+      <input id="ef-ipa-olr" class="em-input em-ipa" style="border-bottom-color:#267040;" placeholder="IPA" spellcheck="false" title="Phonetic form, shown as [ ] next to the headword">
+      <label style="font-family:'Crimson Pro',serif;font-size:0.8rem;font-weight:600;color:#5c2878;">Lakon</label>
+      <input id="ef-lkn" class="em-input" style="border-bottom-color:#5c2878;" placeholder="orthography" spellcheck="false">
+      <input id="ef-ipa-lkn" class="em-input em-ipa" style="border-bottom-color:#5c2878;" placeholder="IPA" spellcheck="false" title="Phonetic form, shown as [ ] next to the headword">
     </div>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem 1rem;margin-bottom:0.9rem;">
@@ -1568,6 +1826,43 @@ init();
     <div class="dbt-modal-row">
       <button class="modal-btn" id="em-cancel">Cancel</button>
       <button class="modal-btn primary" id="em-submit">Save entry</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Settings dialog ── -->
+<div class="dbt-modal-backdrop" id="settings-modal">
+  <div class="dbt-modal" style="max-width:700px;width:96vw;max-height:92vh;overflow-y:auto;">
+    <h3>Dictionary settings</h3>
+    <h4 class="st-h">Orthography ↔ IPA</h4>
+    <p class="modal-desc">One row per correspondence. These rows suggest the IPA of a form from its orthography, and read forms
+      typed in IPA. Where one letter stands for several sounds (<i>q</i> = kʷ or k͡pʷ), tick <b>default</b> on the one to suggest;
+      every row is still understood when reading IPA.</p>
+    <div class="st-top">
+      <label>Orthography <input id="st-name" class="em-input" placeholder="e.g. François (2003-)" spellcheck="false"></label>
+      <label class="st-check"><input type="checkbox" id="st-long"> A doubled vowel letter is a long vowel (ēē = ɪː)</label>
+    </div>
+    <div style="max-height:40vh;overflow-y:auto;border:1px solid var(--border);border-radius:4px;">
+      <table class="st-table">
+        <thead><tr><th>Orthography</th><th>IPA</th><th>Type</th><th title="Suggested when going from orthography to IPA">Default</th><th></th></tr></thead>
+        <tbody id="st-rows"></tbody>
+      </table>
+    </div>
+    <div class="st-actions">
+      <button type="button" class="fn-col-add" id="st-add-row">＋ Add a correspondence</button>
+      <button type="button" class="fn-col-add" id="st-reset" style="border-color:#c06060;color:#c06060;">↺ Reset to François (2003-)</button>
+    </div>
+    <div class="st-try">
+      <b>Try it</b> (uses the table as it is now, saved or not)
+      <div><span>orthography</span> <input id="st-try-orth" class="em-input" placeholder="tuqa" spellcheck="false"> → <b>IPA</b> <span id="st-try-ipa" class="st-out"></span></div>
+      <div><span>IPA</span> <input id="st-try-ipa-in" class="em-input" placeholder="tuk͡pʷa" spellcheck="false"> → <b>orthography</b> <span id="st-try-orth-out" class="st-out"></span></div>
+    </div>
+    <label class="st-check" style="margin-top:0.7rem;"><input type="checkbox" id="st-rederive" checked>
+      Also re-derive the transcriptions still marked <b>?</b> with this table (confirmed ones are never changed)</label>
+    <div class="dbt-modal-msg" id="st-msg"></div>
+    <div class="dbt-modal-row">
+      <button class="modal-btn" id="st-cancel">Close</button>
+      <button class="modal-btn primary" id="st-save">Save settings</button>
     </div>
   </div>
 </div>
@@ -1616,6 +1911,11 @@ init();
 function onAuthChange(loggedIn) {
   document.querySelectorAll('.entry-actions').forEach(el =>
     el.classList.toggle('visible', loggedIn));
+  // the IPA badges differ for the author (✓ on confirmed forms, clickable ones): redraw them in place
+  document.querySelectorAll('#dict-content .entry').forEach(el => {
+    const entry = DICT_MAP[el.id], w = el.querySelector('.ipa-wrap');
+    if (entry && w) w.outerHTML = ipaHTML(entry);
+  });
   if (typeof renderProposedEntries === 'function') renderProposedEntries();
 }
 
