@@ -64,7 +64,7 @@ def get_fieldnotes_xml():
 # ISO / Pangloss lang-code → Gaua language name (for transcription metadata)
 _LANG_FROM_CODE = {
     'wwo':'Dorig','drg':'Dorig','lkn':'Lakon',
-    'krf':'Koro', 'kro':'Koro', 'num':'Nume','olr':'Olrat',
+    'krf':'Koro', 'kro':'Koro', 'num':'Nume', 'tgs':'Nume', 'olr':'Olrat',
 }
 
 # ── Citation builders ─────────────────────────────────────────
@@ -1812,7 +1812,7 @@ _DBT_CODES = ['num', 'drg', 'kro', 'olr', 'lkn']
 # Language code used in a transcription XML (xml:lang) -> DBT language code.
 # Languages that are not Gaua languages (e.g. Lo-Toga, Mwotlap) are simply absent.
 _TX_LANG_TO_CODE = {'wwo': 'drg', 'drg': 'drg', 'lkn': 'lkn', 'krf': 'kro',
-                    'kro': 'kro', 'num': 'num', 'olr': 'olr'}
+                    'kro': 'kro', 'num': 'num', 'tgs': 'num', 'olr': 'olr'}
 
 def _clean_form(s):
     """Lower-case a form and strip morpheme-boundary and punctuation marks."""
