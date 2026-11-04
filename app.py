@@ -69,6 +69,15 @@ _LANG_FROM_CODE = {
 
 # ── Citation builders ─────────────────────────────────────────
 
+def _stored_tokens(g, code):
+    """The tokens of a recording's saved alignment: {code: [...]} (shared with fieldwork texts) or the older plain list."""
+    t = g.get('tokens') if isinstance(g, dict) else None
+    if isinstance(t, list):
+        return t
+    if isinstance(t, dict):
+        return t[code] if code in t else next(iter(t.values()), [])
+    return []
+
 def _tokenize_form(form):
     """Python mirror of the JS tokenizeForm() in transcription.html.
     Splits on whitespace then on morpheme boundaries (- and =),
@@ -151,8 +160,15 @@ def build_narrative_citation(filename, sent_id, n):
     lang_code = data.get('lang', '')
     lang_name = _LANG_FROM_CODE.get(lang_code, lang_code)
     color     = LANG_COLORS.get(lang_name, '#8a5f18')
-    ilg       = _cite_ilg_table(sent.get('words', []), stored, lang_code)
     ref       = f'{lang_name} · {filename[:-4]} · {sent_id} · A. François 2003'
+    if isinstance(stored, dict) and stored.get('tokens'):          # glossed and aligned in the viewer
+        code = _TX_LANG_TO_CODE.get(lang_code) or lang_code
+        toks = _stored_tokens(stored, code)
+        transl = stored.get('translation') if stored.get('translation') is not None else sent['transl']
+        abbr = next((x[1] for x in _FN_LANGS if x[0] == code), str(code).upper())
+        return _cite_fn_table({code: toks}, stored.get('glosses', []), len(toks), transl, ref, n,
+                              langs=[(code, abbr, lang_name)], show_abbr=False)
+    ilg       = _cite_ilg_table(sent.get('words', []), stored, lang_code)
     return (f'<div class="grammar-cite">'
             f'<span class="cite-n">({n})</span>'
             f'<div class="cite-body">'
@@ -286,13 +302,13 @@ def _paper_state(ex):
               else (ex.findtext('Translation[@lang="eng"]') or '').strip())
     return tokens, glosses, n_cols, transl
 
-def _cite_fn_table(tokens, col_glosses, n_cols, transl, ref, n, dict_links=None):
+def _cite_fn_table(tokens, col_glosses, n_cols, transl, ref, n, dict_links=None, langs=None, show_abbr=True):
     """Numbered five-language example: aligned forms, gloss line, translation, reference.
     Each form carries data-lang / data-form / data-gloss so the page can link it to the
     dictionary (only where the gloss agrees); words with a known entry also carry data-dict-id."""
     dict_links = dict_links or {}
     lang_rows = ''
-    for code, abbr, name in _FN_LANGS:
+    for code, abbr, name in (langs or _FN_LANGS):
         color = LANG_COLORS.get(name, '#888')
         toks, cells = tokens.get(code, []), ''
         for i in range(n_cols):
@@ -303,7 +319,7 @@ def _cite_fn_table(tokens, col_glosses, n_cols, transl, ref, n, dict_links=None)
             attrs = (f' data-lang="{code}" data-form="{_esc(shown)}" data-gloss="{_esc(gl)}"'
                      + (f' data-dict-id="{_esc(link)}"' if link else ''))
             cells += f'<td class="cite-fn-form" style="color:{color};"{attrs}>{_esc(shown)}</td>'
-        lang_rows += f'<tr><td class="cite-fn-abbr" style="color:{color};">{abbr}</td>{cells}</tr>'
+        lang_rows += f'<tr><td class="cite-fn-abbr" style="color:{color};">{abbr if show_abbr else ""}</td>{cells}</tr>'
     sep    = '<td></td>' * (n_cols + 1)
     gcells = ''.join(f'<td class="cite-fn-gloss">{_esc(col_glosses[i]) if i < len(col_glosses) else ""}</td>'
                      for i in range(n_cols))
@@ -924,9 +940,13 @@ def save_proposed_entries():
         examples = entry_data.get('examples', [])
         if not gloss:
             continue
-        # Decode forms from col_key (positional: num|drg|kro|olr|lkn)
-        parts = col_key.split('|')
-        forms = {fn_codes[i]: parts[i] for i in range(min(len(fn_codes), len(parts)))}
+        # The forms as written (a name keeps its capital); older callers only send the positional key
+        sent = entry_data.get('forms')
+        if isinstance(sent, dict):
+            forms = {c: str(v).strip() for c, v in sent.items() if c in fn_codes and str(v).strip()}
+        else:
+            parts = col_key.split('|')
+            forms = {fn_codes[i]: parts[i] for i in range(min(len(fn_codes), len(parts)))}
         # Skip if any form already in dictionary
         if any(f.strip().lower() in existing for f in forms.values() if f and f != '—'):
             continue
@@ -1910,7 +1930,7 @@ def dictionary_examples():
             stored = _load_stored_glosses(fn)
             confirmed = {sid: g for sid, g in stored.items()
                          if isinstance(g, dict) and g.get('confirmed') is True
-                         and isinstance(g.get('tokens'), list)}
+                         and isinstance(g.get('tokens'), (list, dict))}
             if not confirmed:
                 continue
             try:
@@ -1922,7 +1942,8 @@ def dictionary_examples():
                 continue
             sent_transl = {s['id']: s['transl'] for s in data['sentences']}
             for sid, g in confirmed.items():
-                toks = [_clean_form(t) for t in g['tokens']]
+                raw_toks = _stored_tokens(g, code)
+                toks = [_clean_form(t) for t in raw_toks]
                 col_glosses = g.get('glosses', [])
                 hit_cols = {eid: [i for i, t in enumerate(toks) if t == ef[code]]
                             for eid, ef in entry_forms.items() if code in ef}
@@ -1939,7 +1960,7 @@ def dictionary_examples():
                         result[eid].append({
                             'type': 'narrative', 'file': fn, 'title': data['title'],
                             'lang': code, 'sentence_id': sid,
-                            'tokens': g['tokens'], 'glosses': g.get('glosses', []),
+                            'tokens': raw_toks, 'glosses': g.get('glosses', []),
                             'translation': transl, 'match_cols': cols})
         return jsonify({k: v for k, v in result.items() if v})
     except Exception as e:
@@ -2110,7 +2131,15 @@ def _cite_narrative_latex(filename, sent_id, n):
     stored = _load_stored_glosses(filename).get(sent_id)
     transl = (stored.get('translation') if stored and isinstance(stored, dict)
               and stored.get('translation') is not None else sent['transl'])
-    if sent['has_gloss'] and sent['words']:
+    lang_code = data.get('lang', '')
+    if isinstance(stored, dict) and stored.get('tokens'):
+        toks = _stored_tokens(stored, _TX_LANG_TO_CODE.get(lang_code) or lang_code)
+        gl = stored.get('glosses', [])
+        form_cells  = ' & '.join(_le(t) for t in toks)
+        gloss_cells = ' & '.join(_le(gl[i] if i < len(gl) else '') for i in range(len(toks)))
+        body = (f'\\begin{{tabular}}[t]{{@{{}}{"l" * len(toks)}@{{}}}}\n'
+                f'{form_cells}\\\\\n{gloss_cells}\\\\\n\\end{{tabular}}')
+    elif sent['has_gloss'] and sent['words']:
         form_cells  = ' & '.join(_le(w['form'])  for w in sent['words'])
         gloss_cells = ' & '.join(_le(w['gloss'] or '') for w in sent['words'])
         sep = 'l' * len(sent['words'])
