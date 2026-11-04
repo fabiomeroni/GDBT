@@ -557,6 +557,8 @@ def _handle_upload(filename):
         return jsonify({'error': f'Invalid XML: {e}'}), 400
     f.seek(0)
     f.save(os.path.join(UPLOAD_FOLDER, filename))
+    if filename == 'dictionary.xml':           # an uploaded dictionary gets the same care as the shipped one
+        _auto_orthography(); _auto_ipa()
     return jsonify({'ok': True, 'message': f'{filename} saved.'})
 
 
@@ -1214,6 +1216,28 @@ def _apply_entry_data(el, eid, data):
         elif node is not None:
             lemme.remove(node)
 
+    # phonetic forms: {code: {text, auto}}; a language whose form was removed loses its IPA too
+    ipa = data.get('ipa') if isinstance(data.get('ipa'), dict) else {}
+    for code in _LANG5:
+        node = lemme.find(f'FormePhonétique[@langue="{code}"]')
+        rf_node = lemme.find(f'ReprésentationDeForme[@langue="{code}"]')
+        has_form = rf_node is not None and _text_of(rf_node) not in ('', '\u2014')
+        v = ipa.get(code)
+        text = ((v.get('text') if isinstance(v, dict) else v) or '').strip() if v is not None else None
+        if not has_form:
+            if node is not None:
+                lemme.remove(node)
+        elif text:
+            if node is None:
+                node = etree.SubElement(lemme, 'FormePhonétique', langue=code)
+            _set_text(node, text)
+            if isinstance(v, dict) and v.get('auto'):
+                node.set('statut', 'auto')
+            else:
+                node.attrib.pop('statut', None)
+        elif text == '' and node is not None:
+            lemme.remove(node)                 # cleared: it is re-derived just below
+
     hom = str(data.get('homonym') or '').strip()
     h = _entry_child(el, 'NuméroDHomonyme')
     if hom.isdigit():
@@ -1260,6 +1284,7 @@ def _apply_entry_data(el, eid, data):
             put('LienEtymograph', etym.get('etymograph', ''), keep_blank=False)
 
     _apply_senses(el, eid, _senses_payload(data))
+    _ensure_ipa(el)                              # whatever is still missing is derived
 
 def _build_entry_el(data, existing_ids=None, force_id=None):
     """A new <EntréeLexicale> built from the editor's data. Returns (element, id)."""
@@ -1309,36 +1334,332 @@ def _number_homonyms(root, el):
         used.add(n)
         _set_text(_entry_child(e, 'NuméroDHomonyme', create=True), str(n))
 
-# ── IPA -> François (2003-) orthography ─────────────────────────────────────────────────
-# Consonants: the author's table. Rows whose orthography cell is blank continue the row above
-# (k͡pʷ is written q like kʷ; ŋʷ is written m̄ like ŋ͡mʷ). Vowels: the regular correspondences
-# of the author's data (ɪ→ē, ʊ→ō, ɛ→e, ɔ→o, æ→ä; a, i, u unchanged; length ː doubles the vowel).
-_ORTH_CONS = [      # longest IPA sequence first
-    ('ŋ͡mʷ', 'm̄'), ('ŋʷ', 'm̄'), ('k͡pʷ', 'q'), ('kʷ', 'q'), ('t͡ʃ', 'j'), ('ʧ', 'j'),
-    ('mb', 'b'), ('nd', 'd'), ('ŋ', 'n̄'), ('ɣ', 'g'), ('β', 'v'), ('j', 'y'),
-]
-_ORTH_VOWEL = {'ɪ': 'ē', 'ʊ': 'ō', 'ɛ': 'e', 'ɔ': 'o', 'æ': 'ä'}
-_IPA_ONLY = set('ɪʊɛɔɣβŋʧʃæɑɲʔɾʰʷːˈˌ\u0361')
+# ── Orthography <-> IPA correspondences ─────────────────────────────────────────────────
+# One table drives every conversion: the IPA suggested for a form, the reading of forms typed in
+# IPA, and the start-up clean-up. It is edited in the dictionary's Settings (⚙) and kept in
+# uploads/dictionary_settings.json; without that file the table of François (2003-) below applies.
+# Several rows may share an orthographic letter (q = kʷ or k͡pʷ); the row ticked "default" is the
+# one suggested when going from orthography to IPA, while EVERY row is understood when reading IPA.
+_SETTINGS_PATH = os.path.join(UPLOAD_FOLDER, 'dictionary_settings.json')
 
-def _ipa_to_orth(s):
-    s, out, i = (s or '').replace('\u2011', '-'), [], 0
+def _row(orth, ipa, typ='consonant', default=True):
+    return {'orth': unicodedata.normalize('NFC', orth), 'ipa': ipa, 'type': typ, 'default': default}
+
+_DEFAULT_CORR = {
+    'name': 'François (2003-)',
+    'long_vowel_doubling': True,           # a doubled vowel letter is a long vowel: ēē = ɪː
+    'rows': [
+        _row('b', 'mb'), _row('d', 'nd'), _row('g', 'ɣ'), _row('h', 'h'), _row('j', 't͡ʃ'),
+        _row('k', 'k'), _row('l', 'l'), _row('m', 'm'),
+        _row('m\u0304', 'ŋ͡mʷ'), _row('m\u0304', 'ŋʷ', default=False),
+        _row('n', 'n'), _row('n\u0304', 'ŋ'), _row('p', 'p'),
+        _row('q', 'k͡pʷ'), _row('q', 'kʷ', default=False),
+        _row('r', 'r'), _row('s', 's'), _row('t', 't'), _row('v', 'β'), _row('w', 'w'), _row('y', 'j'),
+        _row('a', 'a', 'vowel'), _row('e', 'ɛ', 'vowel'), _row('i', 'i', 'vowel'), _row('o', 'ɔ', 'vowel'),
+        _row('u', 'u', 'vowel'), _row('ē', 'ɪ', 'vowel'), _row('ō', 'ʊ', 'vowel'), _row('ä', 'æ', 'vowel'),
+    ],
+}
+_AFFRICATES = {'ʧ': 't͡ʃ', 'ʤ': 'd͡ʒ', 'ʦ': 't͡s', 'ʣ': 'd͡z'}   # the one-glyph and the tie-bar spelling of an affricate
+
+def _ipa_norm(s):
+    return (s or '').replace('\u2011', '-')
+
+def _clean_corr(cfg):
+    """Validate a correspondence table from the Settings dialog. Returns (clean table, error)."""
+    if not isinstance(cfg, dict) or not isinstance(cfg.get('rows'), list):
+        return None, 'The table is missing.'
+    rows, seen = [], set()
+    for r in cfg['rows'][:500]:
+        if not isinstance(r, dict):
+            continue
+        o = unicodedata.normalize('NFC', str(r.get('orth') or '').strip())
+        i = str(r.get('ipa') or '').strip()
+        if not o and not i:
+            continue                                   # a blank line
+        if not o or not i:
+            return None, f'Each row needs both an orthographic letter and an IPA value ("{o or "?"}" / "{i or "?"}").'
+        if len(o) > 6 or len(i) > 14:
+            return None, f'"{o}" / "{i}" is too long for a single letter or sound.'
+        if (o, i) in seen:
+            continue
+        seen.add((o, i))
+        rows.append({'orth': o, 'ipa': i, 'type': 'vowel' if r.get('type') == 'vowel' else 'consonant',
+                     'default': bool(r.get('default'))})
+    if not rows:
+        return None, 'The table needs at least one correspondence.'
+    chosen = set()                                     # exactly one default per orthographic letter
+    for r in rows:
+        if r['default'] and r['orth'] not in chosen:
+            chosen.add(r['orth'])
+        else:
+            r['default'] = False
+    for r in rows:
+        if r['orth'] not in chosen:
+            r['default'] = True; chosen.add(r['orth'])
+    return {'name': str(cfg.get('name') or '').strip()[:80],
+            'long_vowel_doubling': bool(cfg.get('long_vowel_doubling', True)), 'rows': rows}, None
+
+def _compile_corr(cfg):
+    rows = [{'orth': unicodedata.normalize('NFC', r['orth']), 'ipa': r['ipa'],
+             'vowel': r.get('type') == 'vowel', 'default': bool(r.get('default'))} for r in cfg['rows']]
+    default = {}
+    for r in rows:
+        if r['default']:
+            default.setdefault(r['orth'], r['ipa'])
+    for r in rows:
+        default.setdefault(r['orth'], r['ipa'])
+    ipa_to_orth = {}
+    for r in rows:
+        ipa_to_orth.setdefault(r['ipa'], r['orth'])
+    for glyph, tie in _AFFRICATES.items():           # t͡ʃ and ʧ are one sound: a table row serves both spellings
+        if tie in ipa_to_orth and glyph not in ipa_to_orth:
+            ipa_to_orth[glyph] = ipa_to_orth[tie]
+        elif glyph in ipa_to_orth and tie not in ipa_to_orth:
+            ipa_to_orth[tie] = ipa_to_orth[glyph]
+    orth_chars = set(''.join(r['orth'] for r in rows))
+    ipa_only = {c for c in ''.join(ipa_to_orth) if c not in orth_chars}
+    long_v = bool(cfg.get('long_vowel_doubling', True))
+    if long_v:
+        ipa_only.add('ː')
+    return {
+        'orth_syms': sorted(default, key=len, reverse=True),          # longest letter first (n̄ before n)
+        'default': default, 'ipa_syms': sorted(ipa_to_orth, key=len, reverse=True),
+        'ipa_to_orth': ipa_to_orth, 'vowels': {r['orth'] for r in rows if r['vowel']}, 'long': long_v,
+        'ipa_only': ipa_only,
+        # sequences made of orthographic letters that the orthography writes differently (mb -> b)
+        'ambiguous': [i for i, o in ipa_to_orth.items() if len(i) > 1 and i != o and all(c in orth_chars for c in i)],
+    }
+
+_corr_cache = {'mtime': None, 'cfg': None, 'compiled': None}
+
+def _cfg_current():
+    """The author's table (from Settings) or, if none was saved, the default one."""
+    try:
+        with open(_SETTINGS_PATH, encoding='utf-8') as f:
+            cfg, err = _clean_corr((json.load(f) or {}).get('correspondences'))
+        if cfg:
+            return cfg, True
+    except (OSError, ValueError):
+        pass
+    return _DEFAULT_CORR, False
+
+def _corr(cfg=None):
+    """The compiled table (cached until the settings file changes)."""
+    if cfg is not None:
+        return _compile_corr(cfg)
+    try:
+        mt = os.path.getmtime(_SETTINGS_PATH)
+    except OSError:
+        mt = None
+    if _corr_cache['compiled'] is None or _corr_cache['mtime'] != mt:
+        c, _custom = _cfg_current()
+        _corr_cache.update(mtime=mt, cfg=c, compiled=_compile_corr(c))
+    return _corr_cache['compiled']
+
+def _ipa_to_orth(s, corr=None):
+    c = corr or _corr()
+    s, out, i = _ipa_norm(s), [], 0
     while i < len(s):
-        for ipa, orth in _ORTH_CONS:
+        for ipa in c['ipa_syms']:
             if s.startswith(ipa, i):
-                out.append(orth); i += len(ipa); break
+                out.append(c['ipa_to_orth'][ipa]); i += len(ipa); break
         else:
             ch = s[i]
-            out.append((out[-1] if out else '') if ch == 'ː' else _ORTH_VOWEL.get(ch, ch))
+            out.append(out[-1] if (ch == 'ː' and c['long'] and out and out[-1] in c['vowels']) else ch)
             i += 1
     return unicodedata.normalize('NFC', ''.join(out))
 
-def _looks_ipa(s, strict=False):
+def _looks_ipa(s, strict=False, corr=None):
     """True only when the form shows IPA-only signs. A form made of plain letters is left alone:
     it is either identical in both notations, or already orthographic (where j is /t͡ʃ/, not [j]).
     strict=True looks for unmistakable IPA symbols only (no 'mb'/'nd' guess): that is what runs
     on its own, because there is nobody to review the preview."""
-    t = (s or '').replace('\u2011', '-')
-    return any(c in _IPA_ONLY for c in t) or (not strict and bool(re.search(r'mb|nd', t)))
+    c = corr or _corr()
+    t = _ipa_norm(s)
+    return any(ch in c['ipa_only'] for ch in t) or (not strict and any(q in t for q in c['ambiguous']))
+
+def _orth_to_ipa(s, corr=None):
+    """Orthography -> IPA by the default row of each letter (a doubled vowel is long)."""
+    c = corr or _corr()
+    s = unicodedata.normalize('NFC', (s or '').replace('\u2011', '-')).lower()
+    out, i, prev = [], 0, None
+    while i < len(s):
+        for sym in c['orth_syms']:
+            if s.startswith(sym, i):
+                long_here = c['long'] and sym in c['vowels'] and prev == sym
+                out.append('ː' if long_here else c['default'][sym])
+                prev = sym if sym in c['vowels'] else None
+                i += len(sym); break
+        else:
+            out.append(s[i]); prev = None; i += 1
+    return ''.join(out)
+
+# ── Phonetic forms: <Lemme><FormePhonétique langue="…"> (as in the Mwotlap dictionary) ─────────
+# Every form of an entry carries its IPA, shown in [ ] next to the headword. A transcription that
+# was DERIVED from the orthography is stored with statut="auto" until the author confirms it:
+# the derivation follows the correspondence table of the Settings (⚙).
+# The IPA the author gave for the original eight entries (these are not derived: they are confirmed).
+_ORIGINAL_IPA = {
+    '3pl':      {'num': 'nir',     'drg': 'nɪr',     'kro': 'nɪr',      'olr': 'nɪj',      'lkn': 'ɣɪː'},
+    'nondum1':  {'num': 'βitis',   'drg': 'sɔwsɛ',   'kro': 'tɪ',       'olr': 'tɪ',       'lkn': 'atɪ'},
+    'know':     {'num': 'ɣil',     'drg': 'βrɪɣɪl',  'kro': 'rɔŋ',      'olr': 'rɔŋ',      'lkn': 'rɔŋ'},
+    'properly': {'num': 'liŋliŋi', 'drg': 'taβul',   'kro': 'taβul',    'olr': 'βɪlɪː',    'lkn': 'kɛrɛ'},
+    'nondum2':  {'num': 'mi',      'drg': 'tɛ',      'kro': 'wʊsmɛlɛ',  'olr': 'wʊsmɛlɛ',  'lkn': 'aβʊh.malɛ'},
+    'art':      {'num': 'u',       'drg': 'na',      'kro': 'ɔ'},
+    'speech':   {'num': 'luwluw',  'drg': 'lŋa',     'kro': 'βalβalaw', 'olr': 'ususraː',  'lkn': 'ɛlŋa'},
+    'poss':     {'num': 'namɣin',  'drg': '-ɣɪn',    'kro': 'namɪɣɪn',  'olr': 'mʊt͡ʃ',     'lkn': '-nɣɪt͡ʃ'},
+}
+
+def _ensure_ipa(el):
+    """Give every form of the entry its phonetic form (none is overwritten). Returns how many were added."""
+    lemme = el.find('Lemme')
+    if lemme is None:
+        return 0
+    added, eid = 0, el.get('identifiant', '')
+
+    def tail():                                # the last orthographic / phonetic form: new IPA goes right after it
+        kids = [c for c in lemme if c.tag in ('ReprésentationDeForme', 'FormePhonétique')]
+        return kids[-1] if kids else None
+
+    for rf in lemme.findall('ReprésentationDeForme'):
+        code, text = rf.get('langue', ''), (rf.text or '').strip()
+        if code not in _LANG5 or not text or text == '\u2014':
+            continue
+        node = lemme.find(f'FormePhonétique[@langue="{code}"]')
+        if node is not None and _text_of(node):
+            continue
+        known = (_ORIGINAL_IPA.get(eid) or {}).get(code)
+        confirmed = bool(known) and _ipa_to_orth(known) == text      # the entry still has the author's own form
+        ipa = known if confirmed else _orth_to_ipa(text)
+        if node is None:
+            node = etree.Element('FormePhonétique', langue=code)
+            anchor = tail()
+            lemme.insert(list(lemme).index(anchor) + 1 if anchor is not None else 0, node)
+        node.text = ipa
+        if confirmed:
+            node.attrib.pop('statut', None)
+        else:
+            node.set('statut', 'auto')
+        added += 1
+    return added
+
+def _rederive_auto(tree):
+    """Re-derive the phonetic forms still marked statut="auto" from the CURRENT table. A form the
+    author wrote or confirmed is never touched. Returns how many changed."""
+    n = 0
+    for el in tree.getroot().findall('.//EntréeLexicale'):
+        lemme = el.find('Lemme')
+        if lemme is None:
+            continue
+        for fp in lemme.findall('FormePhonétique'):
+            if fp.get('statut') != 'auto':
+                continue
+            rf = lemme.find(f'ReprésentationDeForme[@langue="{fp.get("langue", "")}"]')
+            text = _text_of(rf) if rf is not None else ''
+            if not text or text == '\u2014':
+                continue
+            new = _orth_to_ipa(text)
+            if new != _text_of(fp):
+                fp.text = new; n += 1
+    return n
+
+def _backup_dictionary(tag=''):
+    import shutil, datetime
+    bdir = os.path.join(UPLOAD_FOLDER, 'backups'); os.makedirs(bdir, exist_ok=True)
+    path = os.path.join(bdir, 'dictionary-' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S') + tag + '.xml')
+    shutil.copyfile(_dict_path(), path)
+    return path
+
+def _auto_ipa():
+    """On start-up (and after a dictionary upload): every entry gets its IPA, and the provisional
+    ones are kept in line with the correspondence table. Backed up first."""
+    try:
+        if not os.path.exists(_dict_path()):
+            return
+        tree = _read_dict()
+        added = sum(_ensure_ipa(el) for el in tree.getroot().findall('.//EntréeLexicale'))
+        refreshed = _rederive_auto(tree)
+        if added or refreshed:
+            backup = _backup_dictionary('-ipa')
+            _write_dict(tree)
+            print(f"[dictionary] phonetic forms: {added} added, {refreshed} provisional one(s) re-derived "
+                  f"from the correspondence table. Backup: {backup}")
+    except Exception as e:
+        print(f"[dictionary] automatic IPA step skipped: {e}")
+
+@app.route('/api/dictionary/ipa-suggest', methods=['POST'])
+def ipa_suggest():
+    """IPA suggested for orthographic forms: {num: 'ron̄', …} -> {num: 'rɔŋ', …}."""
+    forms = (request.get_json(silent=True) or {}).get('forms') or {}
+    return jsonify({c: _orth_to_ipa(f) for c, f in forms.items()
+                    if c in _LANG5 and (f or '').strip() not in ('', '\u2014')})
+
+@app.route('/api/dictionary/entry/<entry_id>/ipa', methods=['POST'])
+def ipa_confirm(entry_id):
+    """Confirm (or un-confirm) the derived phonetic form of one language of an entry."""
+    if not session.get('author'):
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json(silent=True) or {}
+    code = data.get('lang', '')
+    try:
+        tree = _read_dict()
+        node = tree.getroot().find(f'.//EntréeLexicale[@identifiant="{entry_id}"]/Lemme/FormePhonétique[@langue="{code}"]')
+        if node is None:
+            return jsonify({'error': 'Phonetic form not found'}), 404
+        if data.get('confirmed', True):
+            node.attrib.pop('statut', None)
+        else:
+            node.set('statut', 'auto')
+        _write_dict(tree)
+        return jsonify({'ok': True, 'auto': node.get('statut') == 'auto'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/dictionary/settings', methods=['GET', 'POST'])
+def dictionary_settings():
+    """The orthography <-> IPA correspondence table of the dictionary (author only)."""
+    if not session.get('author'):
+        return jsonify({'error': 'Unauthorized'}), 401
+    if request.method == 'GET':
+        cfg, custom = _cfg_current()
+        return jsonify({'correspondences': cfg, 'defaults': _DEFAULT_CORR, 'custom': custom})
+    data = request.get_json(silent=True) or {}
+    cfg, err = _clean_corr(data.get('correspondences'))
+    if err:
+        return jsonify({'error': err}), 400
+    try:
+        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+        tmp = _SETTINGS_PATH + '.tmp'
+        with open(tmp, 'w', encoding='utf-8') as f:
+            json.dump({'correspondences': cfg}, f, ensure_ascii=False, indent=2)
+        os.replace(tmp, _SETTINGS_PATH)
+        _corr_cache['compiled'] = None
+        rederived = 0
+        if data.get('rederive') and os.path.exists(_dict_path()):
+            tree = _read_dict()
+            rederived = _rederive_auto(tree)
+            if rederived:
+                _backup_dictionary('-settings')
+                _write_dict(tree)
+        return jsonify({'ok': True, 'rederived': rederived})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/dictionary/settings/test', methods=['POST'])
+def dictionary_settings_test():
+    """Try a (not yet saved) table on a word: {correspondences, orth, ipa} -> {ipa, orth}."""
+    if not session.get('author'):
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json(silent=True) or {}
+    corr = data.get('correspondences') if isinstance(data.get('correspondences'), dict) else {}
+    # while the author is still typing, a half-filled row is simply ignored (saving does refuse it)
+    corr = dict(corr, rows=[r for r in (corr.get('rows') or []) if isinstance(r, dict)
+                            and str(r.get('orth') or '').strip() and str(r.get('ipa') or '').strip()])
+    cfg, err = _clean_corr(corr)
+    if err:
+        return jsonify({'error': err}), 400
+    c = _compile_corr(cfg)
+    return jsonify({'ipa': _orth_to_ipa(data.get('orth', ''), c), 'orth': _ipa_to_orth(data.get('ipa', ''), c)})
 
 def _ortho_collect(tree, strict=False):
     """The Lemme forms of the dictionary that are written in IPA: (changes, already-fine, entries)."""
@@ -2196,6 +2517,7 @@ def static_files(filename):
 
 
 _auto_orthography()
+_auto_ipa()
 
 # ── Dev entry point ───────────────────────────────────────────
 
